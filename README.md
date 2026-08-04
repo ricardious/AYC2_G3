@@ -15,3 +15,7 @@ En este repositorio almacenamos las prácticas y proyectos que realizamos como G
 ## Contenido
 
 - [Práctica 1 — SmartEgg](Practica1/README.md)
+
+## Contribuciones
+
+Consulta nuestra [guía de contribución](CONTRIBUTING.md) antes de realizar cambios.
