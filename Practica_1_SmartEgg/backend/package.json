@@ -1,0 +1,29 @@
+{
+  "name": "smartegg-backend",
+  "version": "1.0.0",
+  "description": "API REST + puente serial de la incubadora inteligente SmartEgg",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "sim": "node src/index.js --simular",
+    "seed": "node src/db/seed.js",
+    "reset-db": "node src/db/seed.js --reset",
+    "puertos": "node src/serial/listar-puertos.js"
+  },
+  "keywords": ["iot", "arduino", "incubadora", "usac"],
+  "author": "Grupo 3 - Arquitectura de Computadoras y Ensambladores 2",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "serialport": "^12.0.0",
+    "socket.io": "^4.8.1"
+  }
+}
