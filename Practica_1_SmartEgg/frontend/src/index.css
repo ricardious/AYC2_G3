@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   SmartEgg — sistema de diseño
+   Paleta: base fría (incubadora de noche) + acentos cálidos (calor/incubación)
+   ========================================================================== */
+
+@theme {
+  --color-base-950: #070b14;
+  --color-base-900: #0d1424;
+  --color-base-850: #131c30;
+  --color-base-800: #1a2540;
+  --color-base-700: #26334f;
+  --color-base-600: #3a4a6b;
+  --color-base-400: #7d8db0;
+  --color-base-300: #a6b3ce;
+  --color-base-100: #e6ebf5;
+
+  /* Calor / temperatura */
+  --color-calor-300: #fcd34d;
+  --color-calor-400: #fbbf24;
+  --color-calor-500: #f59e0b;
+  --color-calor-600: #d97706;
+
+  /* Humedad / ventilación */
+  --color-humedad-300: #67e8f9;
+  --color-humedad-400: #22d3ee;
+  --color-humedad-500: #06b6d4;
+
+  /* Semánticos */
+  --color-ok-400: #34d399;
+  --color-ok-500: #10b981;
+  --color-alerta-400: #fb923c;
+  --color-peligro-400: #fb7185;
+  --color-peligro-500: #f43f5e;
+
+  --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Consolas", ui-monospace, monospace;
+}
+
+/* -------------------------------------------------------------------------- */
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-base-950 text-base-100 font-sans antialiased;
+  background-image:
+    radial-gradient(60rem 40rem at 15% -10%, rgba(245, 158, 11, 0.09), transparent 60%),
+    radial-gradient(50rem 35rem at 95% 0%, rgba(6, 182, 212, 0.08), transparent 55%);
+  background-attachment: fixed;
+  min-height: 100dvh;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--color-base-700);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--color-base-600); background-clip: padding-box; }
+
+/* ==========================================================================
+   Componentes reutilizables
+   ========================================================================== */
+
+@layer components {
+
+  .panel {
+    @apply rounded-2xl border border-white/8 bg-base-900/70 backdrop-blur-sm
+           shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,0_10px_30px_-15px_rgba(0,0,0,0.8)];
+  }
+
+  .panel-titulo {
+    @apply flex items-center gap-2 px-5 pt-4 pb-3 text-sm font-semibold
+           tracking-wide text-base-300 uppercase;
+  }
+
+  /* --- Botones ---
+     En Tailwind v4 `@apply` sólo acepta utilidades reales, no clases propias.
+     Por eso la base se declara una sola vez con un selector agrupado. */
+  .btn,
+  .btn-primario,
+  .btn-secundario,
+  .btn-fantasma,
+  .btn-peligro {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
+           text-sm font-semibold transition-all duration-150
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-calor-400/60
+           disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98];
+  }
+  .btn-primario {
+    @apply bg-calor-500 text-base-950 hover:bg-calor-400
+           shadow-[0_6px_20px_-8px_rgba(245,158,11,0.9)];
+  }
+  .btn-secundario {
+    @apply bg-base-800 text-base-100 border border-white/10 hover:bg-base-700;
+  }
+  .btn-fantasma {
+    @apply text-base-300 hover:bg-white/5 hover:text-base-100;
+  }
+  .btn-peligro {
+    @apply bg-peligro-500/15 text-peligro-400 border border-peligro-500/30
+           hover:bg-peligro-500/25;
+  }
+  .btn-sm { @apply px-3 py-1.5 text-xs rounded-lg; }
+
+  /* --- Formularios --- */
+  .campo {
+    @apply w-full rounded-xl border border-white/10 bg-base-950/60 px-3.5 py-2.5
+           text-sm text-base-100 placeholder:text-base-600
+           transition-colors duration-150
+           focus:border-calor-500/70 focus:outline-none focus:ring-2 focus:ring-calor-500/20;
+  }
+  .campo-error {
+    @apply border-peligro-500/60 focus:border-peligro-500 focus:ring-peligro-500/20;
+  }
+  .etiqueta {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-base-400;
+  }
+  .mensaje-error {
+    @apply mt-1.5 flex items-start gap-1.5 text-xs font-medium text-peligro-400;
+  }
+  .ayuda { @apply mt-1.5 text-xs text-base-600; }
+
+  /* --- Insignias --- */
+  .insignia,
+  .insignia-ok,
+  .insignia-calor,
+  .insignia-humedad,
+  .insignia-alerta,
+  .insignia-peligro,
+  .insignia-neutra {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1
+           text-xs font-semibold whitespace-nowrap;
+  }
+  .insignia-ok      { @apply bg-ok-500/15 text-ok-400 ring-1 ring-ok-500/25; }
+  .insignia-calor   { @apply bg-calor-500/15 text-calor-400 ring-1 ring-calor-500/25; }
+  .insignia-humedad { @apply bg-humedad-500/15 text-humedad-400 ring-1 ring-humedad-500/25; }
+  .insignia-alerta  { @apply bg-alerta-400/15 text-alerta-400 ring-1 ring-alerta-400/25; }
+  .insignia-peligro { @apply bg-peligro-500/15 text-peligro-400 ring-1 ring-peligro-500/25; }
+  .insignia-neutra  { @apply bg-white/5 text-base-400 ring-1 ring-white/10; }
+
+  /* --- Tablas --- */
+  .tabla { @apply w-full text-sm border-collapse; }
+  .tabla thead th {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide
+           text-base-400 border-b border-white/10 whitespace-nowrap;
+  }
+  .tabla tbody td { @apply px-4 py-3 border-b border-white/5 align-middle; }
+  .tabla tbody tr { @apply transition-colors hover:bg-white/[0.03]; }
+
+  .numero { @apply font-mono tabular-nums tracking-tight; }
+}
+
+/* ==========================================================================
+   Animaciones
+   ========================================================================== */
+
+@keyframes pulso-alarma {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+.animar-alarma { animation: pulso-alarma 1.1s ease-in-out infinite; }
+
+@keyframes latido {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.35); opacity: 0.5; }
+}
+.animar-latido { animation: latido 2s ease-in-out infinite; }
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animar-aparecer { animation: aparecer 0.28s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Impresión: por si alguien imprime la vista en lugar de generar el PDF */
+@media print {
+  body { background: white; color: black; }
+  .no-imprimir { display: none !important; }
+}
