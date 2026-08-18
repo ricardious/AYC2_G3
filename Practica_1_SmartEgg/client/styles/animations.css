@@ -1,0 +1,79 @@
+/* Keyframes de la consola.
+   Los tokens `--animate-*` que las usan viven en `theme.css`; el movimiento
+   con duración o retardo calculado en tiempo de ejecución (las partículas)
+   las referencia por nombre desde un estilo en línea. */
+
+@keyframes se-dash {
+  to {
+    stroke-dashoffset: -600;
+  }
+}
+
+@keyframes se-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes se-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes se-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.7;
+  }
+  88% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate3d(18px, -160px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes se-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes se-heat {
+  0%,
+  100% {
+    opacity: 0.28;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes se-scan {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(300px);
+    opacity: 0;
+  }
+}
