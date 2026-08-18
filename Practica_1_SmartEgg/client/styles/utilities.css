@@ -1,0 +1,285 @@
+/* Materiales de la consola: los degradados, sombras y siluetas que
+   describen un objeto físico del diseño. Se nombran una sola vez aquí para
+   que el JSX se quede con la composición (posición, tamaño, tipografía). */
+
+/* --------------------------------------------- columnas del plano elástico
+
+   El plano se ensancha hasta cubrir la ventana y publica el ancho de más en
+   `--stage-slack`. Los anclajes lo reparten: la columna izquierda no se mueve,
+   la central se desplaza la mitad y la derecha todo. Crecen los huecos, no los
+   instrumentos.
+
+   `--stage-x` y `--stage-top` son las coordenadas del diseño sobre el plano de
+   1680 × 1000. Sólo se usan con el prefijo `console:`. */
+
+@utility stage-left {
+  position: absolute;
+  top: var(--stage-top);
+  left: var(--stage-x);
+}
+
+@utility stage-center {
+  position: absolute;
+  top: var(--stage-top);
+  left: calc(var(--stage-x) + var(--stage-slack) / 2);
+}
+
+@utility stage-right {
+  position: absolute;
+  top: var(--stage-top);
+  left: calc(var(--stage-x) + var(--stage-slack));
+}
+
+/* ------------------------------------------------------------- escenario */
+
+@utility console-backdrop {
+  background: radial-gradient(
+    120% 90% at 50% 8%,
+    #0d1319 0%,
+    #080b10 45%,
+    #05070a 100%
+  );
+}
+
+@utility console-grid {
+  background-image: linear-gradient(
+      rgba(95, 227, 232, 0.045) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(95, 227, 232, 0.045) 1px, transparent 1px);
+  background-size: 120px 120px;
+}
+
+@utility console-glow {
+  background: radial-gradient(
+    60% 45% at 50% 45%,
+    rgba(95, 227, 232, 0.07),
+    transparent 70%
+  );
+}
+
+@utility console-vignette {
+  box-shadow: inset 0 0 260px 90px rgba(0, 0, 0, 0.85);
+}
+
+/* ----------------------------------------------------------------- huevo */
+
+@utility egg-shape {
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+}
+
+@utility egg-fill {
+  background: radial-gradient(
+    ellipse at 32% 26%,
+    #f4f1e6,
+    #d9cfba 42%,
+    #8d8271 78%,
+    #4a4740
+  );
+}
+
+@utility egg-glow {
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.6),
+    inset -6px -8px 18px rgba(0, 0, 0, 0.5);
+}
+
+@utility egg-glow-alarm {
+  box-shadow:
+    0 0 26px rgba(255, 90, 77, 0.35),
+    inset -6px -8px 18px rgba(0, 0, 0, 0.5);
+}
+
+@utility egg-glow-hot {
+  box-shadow:
+    0 0 0 2px rgba(95, 227, 232, 0.55),
+    0 0 34px rgba(95, 227, 232, 0.55),
+    inset -6px -8px 18px rgba(0, 0, 0, 0.45);
+}
+
+@utility egg-glow-chip {
+  box-shadow: 0 0 22px rgba(95, 227, 232, 0.5);
+}
+
+/* Brillo especular; `--specular-alpha` ajusta la intensidad. */
+@utility egg-specular {
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, var(--specular-alpha, 0.55)),
+      transparent
+    );
+  }
+}
+
+@utility rail-metal {
+  background: linear-gradient(180deg, #2a333b, #141a20);
+}
+
+/* ----------------------------------------------------------- incubadora */
+
+@utility chamber-shell {
+  background: linear-gradient(
+    150deg,
+    rgba(30, 38, 46, 0.9),
+    rgba(12, 16, 21, 0.94)
+  );
+  box-shadow:
+    0 40px 90px -30px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(220, 240, 245, 0.09);
+}
+
+@utility chamber-glass {
+  background: linear-gradient(
+    160deg,
+    rgba(120, 160, 175, 0.1),
+    rgba(20, 28, 35, 0.35) 45%,
+    rgba(95, 227, 232, 0.06)
+  );
+}
+
+@utility chamber-plate {
+  background: linear-gradient(
+    180deg,
+    rgba(24, 31, 38, 0.95),
+    rgba(10, 14, 18, 0.95)
+  );
+}
+
+@utility edge-light {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(200, 235, 240, 0.6),
+    transparent
+  );
+}
+
+@utility glass-sheen {
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.07), transparent);
+}
+
+@utility tray-hairline {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(160, 190, 205, 0.4),
+    transparent
+  );
+}
+
+@utility scan-beam {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(95, 227, 232, 0.5),
+    transparent
+  );
+}
+
+@utility heat-plume {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(240, 164, 74, 0.3),
+    transparent 70%
+  );
+}
+
+@utility alarm-plume {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(255, 90, 77, 0.42),
+    transparent 70%
+  );
+}
+
+@utility flow-bars {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(95, 227, 232, 0.45) 0 1px,
+    transparent 1px 6px
+  );
+}
+
+@utility heat-bar {
+  background: linear-gradient(180deg, rgba(240, 164, 74, 0.22), transparent);
+}
+
+/* ------------------------------------------------------------- humedad */
+
+@utility humidity-tube {
+  background: linear-gradient(
+    180deg,
+    rgba(95, 227, 232, 0.03),
+    rgba(95, 227, 232, 0.09)
+  );
+}
+
+@utility humidity-fill {
+  background: linear-gradient(
+    180deg,
+    rgba(95, 227, 232, 0.55),
+    rgba(95, 227, 232, 0.14)
+  );
+  box-shadow: 0 0 22px rgba(95, 227, 232, 0.35) inset;
+}
+
+@utility humidity-graduations {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(180, 210, 220, 0.28) 0 1px,
+    transparent 1px 21px
+  );
+}
+
+/* ---------------------------------------------------------- plataforma */
+
+@utility platform-face {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(95, 227, 232, 0.1),
+    transparent 68%
+  );
+}
+
+@utility platform-sweep {
+  background: conic-gradient(
+    from 0deg,
+    rgba(95, 227, 232, 0.2),
+    transparent 25%,
+    transparent 100%
+  );
+}
+
+/* ------------------------------------------------- estación y reportes */
+
+@utility bench-surface {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 29, 36, 0.7),
+    rgba(9, 12, 16, 0.8)
+  );
+  box-shadow: 0 60px 120px -50px #000;
+}
+
+@utility bench-pad {
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(95, 227, 232, 0.14),
+    transparent 70%
+  );
+}
+
+@utility report-surface {
+  background: linear-gradient(
+    170deg,
+    rgba(226, 238, 241, 0.13),
+    rgba(150, 175, 185, 0.06)
+  );
+  box-shadow:
+    0 70px 130px -40px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
