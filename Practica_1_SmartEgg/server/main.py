@@ -1,8 +1,5 @@
-from fastapi import FastAPI
+"""ASGI entrypoint used by FastAPI CLI and Uvicorn."""
 
-app = FastAPI()
+from app.main import create_app
 
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+app = create_app()
