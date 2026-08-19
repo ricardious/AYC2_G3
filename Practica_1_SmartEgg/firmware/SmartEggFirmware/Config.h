@@ -1,0 +1,62 @@
+#pragma once
+
+#include <Arduino.h>
+
+namespace smartegg {
+namespace config {
+
+// ---------------------------------------------------------------- Hardware
+// Arduino Uno R3: D0/D1 remain reserved for UART/USB and A4/A5 for I2C.
+constexpr uint8_t kPowerButtonPin = 2;  // INT0, momentary button to GND.
+constexpr uint8_t kDoorSwitchPin = 3;  // INT1, NC/NO limit switch to GND.
+constexpr uint8_t kDhtPin = 4;
+constexpr uint8_t kHeaterRelayPin = 5;
+constexpr uint8_t kFanRelayPin = 6;
+constexpr uint8_t kBuzzerPin = 7;  // Active 5 V buzzer; do not use tone().
+constexpr uint8_t kServoPin = 8;
+constexpr uint8_t kSlotPins[] = {9, 10, 11, 12};
+constexpr uint8_t kSlotCount = sizeof(kSlotPins) / sizeof(kSlotPins[0]);
+constexpr uint8_t kStatusLedPin = LED_BUILTIN;
+
+// Change these levels only if the selected relay/switch module works inverted.
+constexpr bool kRelaysActiveLow = false;
+constexpr uint8_t kSwitchActiveLevel = LOW;
+
+// Confirmed component for the physical prototype.
+constexpr uint8_t kDhtType = 11;
+constexpr uint8_t kMaxConsecutiveDhtFailures = 3;
+
+// Confirmed I2C address for the physical LCD backpack.
+constexpr uint8_t kLcdAddress = 0x27;
+constexpr uint8_t kLcdColumns = 16;
+constexpr uint8_t kLcdRows = 2;
+
+// ------------------------------------------------------------- Set points
+// Explicit values from the practice statement/rubric. They can be updated at
+// runtime through a CONFIG command from the backend.
+constexpr float kDefaultTemperatureMinC = 37.0F;
+constexpr float kDefaultTemperatureMaxC = 38.0F;
+constexpr float kDefaultHumidityMinPct = 50.0F;
+constexpr float kDefaultHumidityMaxPct = 65.0F;
+constexpr float kTemperatureHysteresisC = 0.2F;
+constexpr int8_t kDefaultRotationAngleDegrees = 45;
+constexpr uint32_t kDefaultRotationIntervalMs = 120000UL;
+constexpr uint8_t kServoCenterDegrees = 90;
+
+// ----------------------------------------------------------------- Timing
+constexpr uint32_t kSerialBaudRate = 115200UL;
+constexpr uint16_t kSensorControlPeriodMs = 50;
+constexpr uint16_t kSlotSamplePeriodMs = 100;
+constexpr uint16_t kDhtSamplePeriodMs = 2000;
+constexpr uint16_t kDisplayPeriodMs = 500;
+constexpr uint16_t kTelemetryPeriodMs = 2000;
+constexpr uint16_t kButtonDebounceMs = 250;
+
+// ---------------------------------------------------------- FreeRTOS stacks
+// Values are bytes on the AVR port. The local DHT driver uses a 5-byte frame,
+// keeping both task stacks viable on the 2 KB Uno.
+constexpr uint16_t kSensorControlStackBytes = 192;
+constexpr uint16_t kCommunicationStackBytes = 128;
+
+}  // namespace config
+}  // namespace smartegg
