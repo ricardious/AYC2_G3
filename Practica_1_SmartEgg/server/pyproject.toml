@@ -4,7 +4,26 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.141.1",
+    "pwdlib[argon2]>=0.3.1",
+    "pydantic-settings>=2.15.0",
+    "pyjwt>=2.13.0",
+    "pyserial>=3.5",
+    "reportlab>=5.0.0",
+    "sqlalchemy>=2.0.52",
 ]
 
 [tool.fastapi]
 entrypoint = "main:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.3",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "BLE", "DTZ"]
+# FastAPI dependencies intentionally use Depends() in defaults. Serial and
+# WebSocket boundaries must catch transport/driver exceptions to reconnect.
+ignore = ["B008", "BLE001"]
