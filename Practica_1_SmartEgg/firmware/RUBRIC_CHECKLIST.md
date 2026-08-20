@@ -11,7 +11,7 @@
 | Alarmas | Temperatura/humedad fuera de rango o DHT desconectado; buzzer activo de 5 V confirmado | Comprobar alarma con el montaje final |
 | Rotación periódica | Servo 90°±45° cada 120 s, alternando sentidos | Verificar geometría sin forzar bandeja |
 | Multitarea | Dos tareas FreeRTOS preemptivas con responsabilidades independientes | Evidenciar ejecución concurrente |
-| Mínimo de interrupciones | INT0 para botón e INT1 para puerta | Accionar ambos durante telemetría |
+| Mínimo de interrupciones | INT0 `CHANGE` para palanca e INT1 para puerta | Accionar ambos durante telemetría |
 | UART/USB | Protocolo numérico y comandos JSON a 115200 | Integrar con `server/` |
 | Manejo de errores | Salida segura, DHT, configuración, comandos y overflow | Desconectar componentes individualmente |
 

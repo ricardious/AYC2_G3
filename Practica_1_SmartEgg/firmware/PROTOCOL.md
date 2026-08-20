@@ -52,10 +52,10 @@ de error sólo contiene `MSG`, `ERROR` y `SENSOR`; no se fabrican valores ambien
 | `DOOR` | Final de carrera de puerta (`1` abierta) |
 | `SLOTS` | Espacios ocupados, de 0 a 4 |
 | `HEATER` | Estado efectivo del relé de calefacción |
-| `FAN` | Estado efectivo del relé del ventilador |
+| `FAN` | Estado efectivo del relé CH2 del ventilador de 5 V |
 | `SERVO` | Ángulo firmado respecto del centro: −45, 0 o +45 |
 | `BUZZER` | Estado efectivo de alarma |
-| `POWER` | Sistema lógico habilitado por el botón |
+| `POWER` | Sistema lógico habilitado por la posición de la palanca |
 | `SENSOR` | Última lectura DHT saludable |
 
 ## Comandos computadora → Arduino
