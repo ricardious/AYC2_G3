@@ -11,12 +11,13 @@ Las alternativas del PDF se concretaron así:
 - Arduino Uno R3 (ATmega328P, 5 V, 2 KB SRAM).
 - Sensor DHT11 confirmado para temperatura y humedad.
 - LCD 16×2 con backpack I2C PCF8574.
-- Bombilla de calefacción controlada exclusivamente mediante módulo relé.
-- Ventilador DC controlado mediante un segundo canal de relé.
+- Bombilla de calefacción de 110 V controlada mediante CH1 del módulo de cuatro relés;
+  su sección de red debe ir aislada, encerrada y ser instalada por personal calificado.
+- Ventilador de 5 V controlado mediante CH2 del módulo de cuatro relés.
 - Servomotor RC para la bandeja, centrado en 90° y rotado ±45°.
 - Buzzer **activo** de 5 V; no se usa `tone()`.
 - Un final de carrera de puerta y cuatro finales de carrera, uno por espacio.
-- Pulsador momentáneo para habilitar/deshabilitar lógicamente el sistema.
+- Switch de palanca SPDT de tres terminales para habilitar/deshabilitar el sistema.
 
 El DHT11, la dirección LCD `0x27`, el buzzer activo de 5 V y los relés activos en alto
 están confirmados. La configuración del hardware está centralizada en `Config.h`.
@@ -26,11 +27,11 @@ están confirmados. La configuración del hardware está centralizada en `Config
 | Pin | Componente | Conexión/lógica |
 |---|---|---|
 | D0 / D1 | USB UART | Reservados; no conectar sensores |
-| D2 / INT0 | Botón ON/OFF | Pulsador entre D2 y GND, `INPUT_PULLUP` |
+| D2 / INT0 | Palanca ON/OFF | COM a D2, lateral ON a GND y otro lateral libre |
 | D3 / INT1 | Final de puerta | Interruptor entre D3 y GND, abierto=`LOW` configurable |
 | D4 | DHT11 DATA | Pull-up de 10 kΩ a 5 V si el módulo no lo incluye |
 | D5 | Relé calefacción | Entrada de módulo relé, activo en alto |
-| D6 | Relé ventilador | Entrada de módulo relé, activo en alto |
+| D6 | Relé del ventilador | IN2 del módulo de relés, activo en alto |
 | D7 | Buzzer activo | Mediante transistor si supera la corriente admitida por pin |
 | D8 | Señal del servo | Servo alimentado externamente, tierra común |
 | D9–D12 | Espacios 1–4 | Un final de carrera a GND por espacio, `INPUT_PULLUP` |
@@ -47,7 +48,7 @@ están confirmados. La configuración del hardware está centralizada en `Config
 
 ```mermaid
 flowchart TD
-    INT0[ISR INT0: botón] --> SC[SensorControl · prioridad 3]
+    INT0[ISR INT0: palanca] --> SC[SensorControl · prioridad 3]
     INT1[ISR INT1: puerta] --> SC
     DHT[DHT11 + 4 espacios] --> SC
     SC --> OUT[Relés + buzzer + servo]
@@ -77,8 +78,8 @@ el buzzer activo evita reservar otro temporizador.
 - Alarma: temperatura fuera de 37–38 °C, humedad fuera de 50–65 % o tres fallos DHT.
 - Rotación: alterna +45° y −45° cada 120 segundos, como exige el objetivo del PDF.
 - Espacios: los cuatro interruptores producen el conteo ocupado/libre en tiempo real.
-- Botón: deshabilita todos los actuadores y centra la bandeja; el Arduino sigue
-  monitoreando para poder reactivarse con seguridad.
+- Palanca: la posición conectada a GND enciende el sistema; la posición abierta lo
+  deshabilita, apaga los actuadores y centra la bandeja. El arranque respeta su posición.
 - Seguridad: comandos manuales nunca fuerzan calor durante sobretemperatura ni apagan
   ventilación/alarma cuando existe una condición crítica.
 
@@ -86,6 +87,12 @@ el buzzer activo evita reservar otro temporizador.
 
 ```text
 firmware/
+├── CIRCUITO.md             # Conexiones, materiales y montaje seguro
+├── CIRCUITO.dot            # Fuente editable del diagrama eléctrico
+├── CIRCUITO.png            # Diagrama renderizado
+├── CIRCUITO.svg            # Versión vectorial del diagrama
+├── CIRCUITO_REALISTA.png   # Vista física del montaje y cableado
+├── CIRCUITO_REALISTA.svg   # Fuente vectorial de la vista física
 ├── SmartEggFirmware/
 │   ├── SmartEggFirmware.ino  # setup/loop y arranque seguro
 │   ├── Config.h              # pines, polaridades, umbrales, tiempos y stacks
@@ -139,13 +146,15 @@ Verificación realizada con Arduino CLI 1.5.1, `arduino:avr` 1.8.8, FreeRTOS
 11.1.0-3 y Servo 1.3.0:
 
 ```text
-Flash: 19756 / 32256 bytes (61 %)
-SRAM global: 943 / 2048 bytes (46 %); 1105 bytes libres para stacks/heap
+Flash: 19930 / 32256 bytes (61 %)
+SRAM global: 944 / 2048 bytes (46 %); 1104 bytes libres para stacks/heap
 ```
 
-Los stacks de aplicación se limitan a 192 y 128 bytes. Si una asignación falla, el
+Los stacks de aplicación se reservan en 192 y 160 bytes. Si una asignación falla, el
 firmware mantiene relés/buzzer apagados, enciende D13 permanentemente y emite
 `MSG:4,ERROR:6,SENSOR:0`; FreeRTOS también conserva su hook de desbordamiento.
+Si el LCD no responde en `0x27` o el bus I2C queda trabado, su driver abandona la
+operación y permite que el control, las alarmas y la comunicación Serial continúen.
 
 Antes de energizar actuadores, compruebe en `Config.h`:
 
@@ -166,7 +175,7 @@ Arduino. Para una prueba manual, desconecte `IN` del Arduino:
    mediante `kRelaysActiveLow = false`.
 3. Nunca conecte VCC y GND entre sí ni manipule el lado de potencia energizado.
 
-Al arrancar el firmware ambos relés deben permanecer apagados. Si alguno se activa al
+Al arrancar el firmware ambos canales utilizados deben permanecer apagados. Si alguno se activa al
 encender el Uno, desconecte la alimentación de los actuadores y revise la polaridad.
 
 ### Cómo identificar el buzzer
