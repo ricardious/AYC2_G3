@@ -23,6 +23,7 @@ void setup() {
       // Do not start a partially allocated scheduler.
     }
   }
+  smartegg::initializeInterrupts();
 }
 
 void loop() {
