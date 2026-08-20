@@ -7,11 +7,11 @@ namespace config {
 
 // ---------------------------------------------------------------- Hardware
 // Arduino Uno R3: D0/D1 remain reserved for UART/USB and A4/A5 for I2C.
-constexpr uint8_t kPowerButtonPin = 2;  // INT0, momentary button to GND.
+constexpr uint8_t kPowerButtonPin = 2;  // INT0, SPDT toggle common terminal.
 constexpr uint8_t kDoorSwitchPin = 3;  // INT1, NC/NO limit switch to GND.
 constexpr uint8_t kDhtPin = 4;
 constexpr uint8_t kHeaterRelayPin = 5;
-constexpr uint8_t kFanRelayPin = 6;
+constexpr uint8_t kFanRelayPin = 6;  // IN2 of the 5 V four-channel relay module.
 constexpr uint8_t kBuzzerPin = 7;  // Active 5 V buzzer; do not use tone().
 constexpr uint8_t kServoPin = 8;
 constexpr uint8_t kSlotPins[] = {9, 10, 11, 12};
@@ -21,6 +21,7 @@ constexpr uint8_t kStatusLedPin = LED_BUILTIN;
 // Change these levels only if the selected relay/switch module works inverted.
 constexpr bool kRelaysActiveLow = false;
 constexpr uint8_t kSwitchActiveLevel = LOW;
+constexpr uint8_t kPowerSwitchOnLevel = LOW;
 
 // Confirmed component for the physical prototype.
 constexpr uint8_t kDhtType = 11;
@@ -50,13 +51,13 @@ constexpr uint16_t kSlotSamplePeriodMs = 100;
 constexpr uint16_t kDhtSamplePeriodMs = 2000;
 constexpr uint16_t kDisplayPeriodMs = 500;
 constexpr uint16_t kTelemetryPeriodMs = 2000;
-constexpr uint16_t kButtonDebounceMs = 250;
+constexpr uint16_t kPowerSwitchDebounceMs = 250;
 
 // ---------------------------------------------------------- FreeRTOS stacks
 // Values are bytes on the AVR port. The local DHT driver uses a 5-byte frame,
 // keeping both task stacks viable on the 2 KB Uno.
 constexpr uint16_t kSensorControlStackBytes = 192;
-constexpr uint16_t kCommunicationStackBytes = 128;
+constexpr uint16_t kCommunicationStackBytes = 160;
 
 }  // namespace config
 }  // namespace smartegg

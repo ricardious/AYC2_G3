@@ -7,10 +7,11 @@ namespace smartegg {
 
 extern Servo gTrayServo;
 
-extern volatile bool gPowerButtonInterruptPending;
+extern volatile bool gPowerSwitchRequestedOn;
 extern volatile bool gDoorInterruptPending;
 
 void initializeHardware();
+void initializeInterrupts();
 void setHeater(bool enabled);
 void setFan(bool enabled);
 void setBuzzer(bool enabled);
@@ -18,6 +19,7 @@ void setStatusLed(bool enabled);
 void setTrayAngle(int8_t signedAngleDegrees);
 
 bool isDoorOpen();
+bool isPowerSwitchOn();
 uint8_t countOccupiedSlots();
 bool readDht(float& temperatureC, float& humidityPct);
 
