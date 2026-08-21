@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "Config.h"
+#include "Display.h"
 #include "Tasks.h"
 
 namespace smartegg {
@@ -22,6 +23,8 @@ constexpr uint8_t kLcdBacklight = 0x08;
 constexpr uint16_t kTwiTimeoutIterations = 2000;
 constexpr uint16_t kDhtPulseTimeoutLoops = 16000;
 bool lcdAvailable = false;
+// OR-ed into every PCF8574 write, so toggling it is what drives the backlight.
+uint8_t lcdBacklightMask = kLcdBacklight;
 
 uint16_t expectDhtPulse(bool level, volatile uint8_t* inputRegister,
                         uint8_t bitMask) {
@@ -59,7 +62,7 @@ bool writePcf8574Raw(uint8_t value) {
     stopTwi();
     return false;
   }
-  TWDR = static_cast<uint8_t>(value | kLcdBacklight);
+  TWDR = static_cast<uint8_t>(value | lcdBacklightMask);
   TWCR = _BV(TWINT) | _BV(TWEN);
   const bool written = waitForTwi() && (TWSR & 0xF8) == 0x28;
   stopTwi();
@@ -156,9 +159,7 @@ void initializeHardware() {
   gTrayServo.attach(config::kServoPin);
   setTrayAngle(0);
   initializeLcd();
-  lcdSetCursor(0, 0);
-  lcdPrint(F("SmartEgg inicia"));
-
+  display::initialize();
 }
 
 void initializeInterrupts() {
@@ -280,6 +281,23 @@ bool readDht(float& temperatureC, float& humidityPct) {
   return humidityPct >= 0.0F && humidityPct <= 100.0F &&
          temperatureC >= -40.0F && temperatureC <= 80.0F;
 }
+
+void lcdCreateChar(uint8_t index, const uint8_t* bitmapProgmem) {
+  lcdCommand(static_cast<uint8_t>(0x40 | ((index & 0x07) << 3)));
+  for (uint8_t row = 0; row < 8; ++row) {
+    sendLcdByte(pgm_read_byte(&bitmapProgmem[row]), kLcdRegisterSelect);
+  }
+  // CGRAM writes leave the address counter in character memory; callers that
+  // print next must reseat the cursor, which every display path already does.
+}
+
+void lcdSetBacklight(bool enabled) {
+  lcdBacklightMask = enabled ? kLcdBacklight : 0x00;
+  // Push the new mask out immediately instead of waiting for the next glyph.
+  writePcf8574(0x00);
+}
+
+bool lcdIsAvailable() { return lcdAvailable; }
 
 void lcdClearRow(uint8_t row) {
   lcdSetCursor(0, row);

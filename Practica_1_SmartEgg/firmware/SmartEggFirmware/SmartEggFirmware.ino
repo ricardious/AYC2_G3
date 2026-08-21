@@ -3,6 +3,7 @@
 #include <Arduino_FreeRTOS.h>
 
 #include "Config.h"
+#include "Display.h"
 #include "Hardware.h"
 #include "SerialProtocol.h"
 #include "Tasks.h"
@@ -17,6 +18,7 @@ void setup() {
     smartegg::setHeater(false);
     smartegg::setFan(false);
     smartegg::setBuzzer(false);
+    smartegg::display::showFatalRtos();
     Serial.println(F("MSG:4,ERROR:6,SENSOR:0"));
     smartegg::setStatusLed(true);
     for (;;) {

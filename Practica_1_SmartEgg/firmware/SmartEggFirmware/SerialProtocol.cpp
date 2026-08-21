@@ -10,7 +10,9 @@ namespace smartegg {
 
 namespace {
 
-constexpr uint16_t kCommandBufferSize = 208;
+// Fits every supported compact command, including the full 167-byte CONFIG
+// frame. Keeping this bounded is necessary for the Uno's 2 KB SRAM.
+constexpr uint16_t kCommandBufferSize = 176;
 char commandBuffer[kCommandBufferSize];
 uint16_t commandLength = 0;
 bool droppingOverflowedLine = false;
