@@ -5,6 +5,7 @@
 
 #include "Config.h"
 #include "ControlLogic.h"
+#include "Display.h"
 #include "Hardware.h"
 #include "SerialProtocol.h"
 #include "SystemModel.h"
@@ -32,6 +33,7 @@ bool pendingCommandReady = false;
 MessageType pendingMessageType = MessageType::kEvent;
 uint8_t pendingMessageCode = static_cast<uint8_t>(EventCode::kBoot);
 bool pendingMessageReady = true;
+TaskHandle_t sensorControlTaskHandle = nullptr;
 
 void copyState(SystemState& output) {
   taskENTER_CRITICAL();
@@ -111,25 +113,36 @@ void applyManualCommand(const ControlCommand& command,
                       static_cast<uint8_t>(EventCode::kActuatorCommand));
 }
 
-void processPowerButton(SystemState& state,
+void processPowerSwitch(SystemState& state,
                         TickType_t now,
-                        TickType_t& lastButtonTick,
-                        TickType_t& lastRotationTick) {
-  bool interrupted = false;
-  taskENTER_CRITICAL();
-  if (gPowerButtonInterruptPending) {
-    gPowerButtonInterruptPending = false;
-    interrupted = true;
+                        TickType_t& lastRotationTick,
+                        TickType_t& lastSwitchInterruptTick,
+                        bool& pendingSwitchEnabled,
+                        bool& debouncePending) {
+  const bool interrupted = ulTaskNotifyTake(pdTRUE, 0) > 0;
+  if (interrupted) {
+    taskENTER_CRITICAL();
+    pendingSwitchEnabled = gPowerSwitchRequestedOn;
+    taskEXIT_CRITICAL();
   }
-  taskEXIT_CRITICAL();
-  if (!interrupted ||
-      static_cast<TickType_t>(now - lastButtonTick) <
-          pdMS_TO_TICKS(config::kButtonDebounceMs)) {
+  if (interrupted) {
+    lastSwitchInterruptTick = now;
+    debouncePending = true;
+    return;
+  }
+  if (!debouncePending ||
+      static_cast<TickType_t>(now - lastSwitchInterruptTick) <
+          pdMS_TO_TICKS(config::kPowerSwitchDebounceMs)) {
     return;
   }
 
-  lastButtonTick = now;
-  state.systemEnabled = !state.systemEnabled;
+  debouncePending = false;
+  // One confirmation after the ISR debounce is not periodic polling.
+  if (isPowerSwitchOn() != pendingSwitchEnabled ||
+      pendingSwitchEnabled == state.systemEnabled) {
+    return;
+  }
+  state.systemEnabled = pendingSwitchEnabled;
   lastRotationTick = now;
   if (!state.systemEnabled) {
     state.servoAngleDegrees = 0;
@@ -248,41 +261,6 @@ void processPeriodicRotation(SystemState& state,
                       static_cast<uint8_t>(EventCode::kRotation));
 }
 
-void updateDisplay(const SystemState& state) {
-  lcdClearRow(0);
-  lcdClearRow(1);
-
-  if (!state.systemEnabled) {
-    lcdSetCursor(0, 0);
-    lcdPrint(F("SISTEMA APAGADO"));
-    lcdSetCursor(0, 1);
-    lcdPrint(F("Libres:"));
-    lcdPrint(static_cast<int16_t>(config::kSlotCount - state.occupiedSlots));
-    lcdPrint(F(" P:"));
-    lcdPrint(state.doorOpen ? F("AB") : F("CE"));
-  } else if (!state.sensorOk) {
-    lcdSetCursor(0, 0);
-    lcdPrint(F("ERROR SENSOR DHT"));
-    lcdSetCursor(0, 1);
-    lcdPrint(F("Fallos:"));
-    lcdPrint(static_cast<int16_t>(state.consecutiveDhtFailures));
-  } else {
-    lcdSetCursor(0, 0);
-    lcdPrint(F("T:"));
-    lcdPrint(state.temperatureC, 1);
-    lcdPrint(F("C H:"));
-    lcdPrint(state.humidityPct, 0);
-    lcdPrint(F("%"));
-    lcdSetCursor(0, 1);
-    lcdPrint(F("ON C:"));
-    lcdPrint(static_cast<int16_t>(state.heaterOn ? 1 : 0));
-    lcdPrint(F(" V:"));
-    lcdPrint(static_cast<int16_t>(state.fanOn ? 1 : 0));
-    lcdPrint(F(" L:"));
-    lcdPrint(static_cast<int16_t>(config::kSlotCount - state.occupiedSlots));
-  }
-}
-
 void sensorControlTask(void* parameters) {
   (void)parameters;
   TickType_t lastWakeTick = xTaskGetTickCount();
@@ -292,23 +270,32 @@ void sensorControlTask(void* parameters) {
       lastWakeTick - pdMS_TO_TICKS(config::kSlotSamplePeriodMs);
   TickType_t lastRotationTick = lastWakeTick;
   TickType_t lastDisplayTick =
-      lastWakeTick - pdMS_TO_TICKS(config::kDisplayPeriodMs);
-  TickType_t lastButtonTick = lastWakeTick;
+      lastWakeTick - pdMS_TO_TICKS(config::kDisplayFramePeriodMs);
+  TickType_t lastSwitchInterruptTick = lastWakeTick;
   int8_t rotationDirection = 1;
   uint8_t observedSlots = countOccupiedSlots();
   uint8_t stableSlotSamples = 0;
+  bool pendingSwitchEnabled = isPowerSwitchOn();
+  bool powerSwitchDebouncePending = false;
 
   SystemState state;
   copyState(state);
+  state.systemEnabled = isPowerSwitchOn();
   state.doorOpen = isDoorOpen();
   state.occupiedSlots = countOccupiedSlots();
+  if (!state.systemEnabled) {
+    state.servoAngleDegrees = 0;
+    setTrayAngle(0);
+  }
   storeState(state);
 
   for (;;) {
     const TickType_t now = xTaskGetTickCount();
     copyState(state);
 
-    processPowerButton(state, now, lastButtonTick, lastRotationTick);
+    processPowerSwitch(state, now, lastRotationTick,
+                       lastSwitchInterruptTick, pendingSwitchEnabled,
+                       powerSwitchDebouncePending);
     processDoorInterrupt(state);
 
     ControlCommand command;
@@ -343,8 +330,8 @@ void sensorControlTask(void* parameters) {
     applyAutomaticControl(state);
     storeState(state);
     if (static_cast<TickType_t>(now - lastDisplayTick) >=
-        pdMS_TO_TICKS(config::kDisplayPeriodMs)) {
-      updateDisplay(state);
+        pdMS_TO_TICKS(config::kDisplayFramePeriodMs)) {
+      display::render(state);
       lastDisplayTick = now;
     }
 
@@ -421,11 +408,23 @@ void postProtocolMessage(MessageType type, uint8_t code) {
 bool createSmartEggTasks() {
   const BaseType_t sensorCreated =
       xTaskCreate(sensorControlTask, "SensorControl",
-                  config::kSensorControlStackBytes, nullptr, 3, nullptr);
+                  config::kSensorControlStackBytes, nullptr, 3,
+                  &sensorControlTaskHandle);
   const BaseType_t communicationCreated =
       xTaskCreate(communicationTask, "Communication",
                   config::kCommunicationStackBytes, nullptr, 2, nullptr);
   return sensorCreated == pdPASS && communicationCreated == pdPASS;
+}
+
+void notifyPowerSwitchFromIsr() {
+  if (sensorControlTaskHandle == nullptr) {
+    return;
+  }
+  BaseType_t higherPriorityTaskWoken = pdFALSE;
+  vTaskNotifyGiveFromISR(sensorControlTaskHandle, &higherPriorityTaskWoken);
+  if (higherPriorityTaskWoken == pdTRUE) {
+    taskYIELD();
+  }
 }
 
 }  // namespace smartegg

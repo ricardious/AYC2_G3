@@ -1,23 +1,24 @@
 # Protocolo Serial SmartEgg
 
-Transporte: UART/USB del Arduino Uno R3, `115200 8N1`, una trama por línea (`\n`).
-No se usa `String` ni JSON para telemetría, reduciendo el consumo de SRAM.
+Para el transporte usamos el UART/USB del Arduino Uno R3 a `115200 8N1`, con una trama
+por línea (`\n`). En la telemetría evitamos `String` y JSON a propósito, para no
+gastarnos la SRAM que necesitábamos para los stacks de FreeRTOS.
 
 ## Tramas Arduino → computadora
 
-Formato general:
+El formato general que definimos es:
 
 ```text
 CLAVE:valor,CLAVE:valor,...
 ```
 
-Todos los valores son numéricos. Esto permite que la misma salida sea consumida por:
+Dejamos todos los valores numéricos. Eso nos permite que la misma salida la consuman:
 
-- Arduino Serial Plotter;
-- `SerialBridge` del backend, que usa `NODE-01` como nodo predeterminado;
+- el Arduino Serial Plotter;
+- el `SerialBridge` del backend, que usa `NODE-01` como nodo predeterminado;
 - cualquier lector CSV sencillo.
 
-Ejemplo:
+Un ejemplo real:
 
 ```text
 MSG:1,TEMP:37.52,HUM:58.1,DOOR:0,SLOTS:3,HEATER:0,FAN:0,SERVO:-45,BUZZER:0,POWER:1,SENSOR:1
@@ -25,23 +26,24 @@ MSG:1,TEMP:37.52,HUM:58.1,DOOR:0,SLOTS:3,HEATER:0,FAN:0,SERVO:-45,BUZZER:0,POWER
 
 ### Tipos de mensaje (`MSG`)
 
-| Código | Tipo | Cuándo se envía |
+| Código | Tipo | Cuándo lo enviamos |
 |---:|---|---|
 | 1 | Telemetría | Cada 2 segundos |
 | 2 | Estado | Cambio de actuadores |
 | 3 | Evento | Botón, puerta, rotación, configuración o recuperación |
 | 4 | Error | DHT, comando/configuración o buffer Serial inválido |
 
-Los mensajes 3 agregan `EVENT:<código>` y los 4 agregan `ERROR:<código>`.
+A los mensajes tipo 3 les agregamos `EVENT:<código>` y a los tipo 4, `ERROR:<código>`.
 
-Eventos: `1` arranque, `2` encendido, `3` apagado, `4` puerta abierta,
-`5` puerta cerrada, `6` rotación, `7` configuración actualizada,
-`8` comando de actuador y `9` DHT recuperado.
+Los eventos que manejamos son: `1` arranque, `2` encendido, `3` apagado, `4` puerta
+abierta, `5` puerta cerrada, `6` rotación, `7` configuración actualizada, `8` comando de
+actuador y `9` DHT recuperado.
 
-Errores: `1` lectura DHT, `2` configuración inválida, `3` comando desconocido,
-`4` línea Serial demasiado larga, `5` comando rechazado porque el sistema está apagado
-y `6` memoria insuficiente para crear las tareas. Si el DHT nunca produjo una lectura válida, la trama
-de error sólo contiene `MSG`, `ERROR` y `SENSOR`; no se fabrican valores ambientales.
+Los errores son: `1` lectura DHT, `2` configuración inválida, `3` comando desconocido,
+`4` línea Serial demasiado larga, `5` comando rechazado porque el sistema está apagado y
+`6` memoria insuficiente para crear las tareas. Cuando el DHT nunca llegó a producir una
+lectura válida, la trama de error sólo lleva `MSG`, `ERROR` y `SENSOR`: preferimos eso
+antes que fabricar valores ambientales que no medimos.
 
 ### Campos
 
@@ -52,16 +54,17 @@ de error sólo contiene `MSG`, `ERROR` y `SENSOR`; no se fabrican valores ambien
 | `DOOR` | Final de carrera de puerta (`1` abierta) |
 | `SLOTS` | Espacios ocupados, de 0 a 4 |
 | `HEATER` | Estado efectivo del relé de calefacción |
-| `FAN` | Estado efectivo del relé del ventilador |
+| `FAN` | Estado efectivo del relé CH2 del ventilador de 5 V |
 | `SERVO` | Ángulo firmado respecto del centro: −45, 0 o +45 |
 | `BUZZER` | Estado efectivo de alarma |
-| `POWER` | Sistema lógico habilitado por el botón |
+| `POWER` | Sistema lógico habilitado por la posición de la palanca |
 | `SENSOR` | Última lectura DHT saludable |
 
 ## Comandos computadora → Arduino
 
-El firmware acepta los JSON compactos que ya emite `server/`. Cada comando termina en
-`\n`; el buffer máximo es de 255 caracteres.
+Hicimos que el firmware acepte los mismos JSON compactos que ya emitía `server/`, para no
+tener que tocar el backend. Cada comando termina en `\n`, debe enviarse como JSON
+compacto y puede contener como máximo 175 caracteres.
 
 Rotación manual:
 
@@ -76,15 +79,16 @@ Actuador manual o regreso a automático:
 {"type":"actuator","kind":"fan","enabled":false,"mode":"automatic","value":null}
 ```
 
-`kind` admite `heater`, `fan` y `buzzer`. El servo se controla con `rotate`. Las reglas
-de seguridad prevalecen: no se permite calefacción a temperatura alta, ni apagar el
-ventilador/alarma cuando una condición crítica exige activarlos.
+En `kind` aceptamos `heater`, `fan` y `buzzer`; el servo se controla aparte, con
+`rotate`. Las reglas de seguridad siempre ganan: no dejamos que se encienda la
+calefacción con temperatura alta, ni que se apaguen el ventilador o la alarma mientras
+haya una condición crítica.
 
 Configuración:
 
 ```json
-{"type":"config","temperature_min_c":37.0,"temperature_max_c":38.0,"humidity_min_pct":50.0,"humidity_max_pct":65.0,"critical_temperature_c":39.0,"rotation_interval_seconds":120,"rotation_angle_degrees":45}
+{"type":"config","temperature_min_c":37.0,"temperature_max_c":38.0,"humidity_min_pct":50.0,"humidity_max_pct":65.0,"rotation_interval_seconds":120,"rotation_angle_degrees":45}
 ```
 
-El campo `critical_temperature_c` se tolera para compatibilidad, pero el firmware activa
-alarma desde que sale del rango seguro explícito de 37–38 °C.
+La alarma se activa apenas la lectura sale del rango seguro explícito de 37–38 °C;
+por eso no se envía un umbral crítico redundante.

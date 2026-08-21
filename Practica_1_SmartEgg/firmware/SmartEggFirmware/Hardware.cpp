@@ -5,12 +5,14 @@
 #include <stdlib.h>
 
 #include "Config.h"
+#include "Display.h"
+#include "Tasks.h"
 
 namespace smartegg {
 
 Servo gTrayServo;
 
-volatile bool gPowerButtonInterruptPending = false;
+volatile bool gPowerSwitchRequestedOn = false;
 volatile bool gDoorInterruptPending = false;
 
 namespace {
@@ -18,8 +20,11 @@ namespace {
 constexpr uint8_t kLcdEnable = 0x04;
 constexpr uint8_t kLcdRegisterSelect = 0x01;
 constexpr uint8_t kLcdBacklight = 0x08;
-constexpr uint16_t kTwiTimeoutIterations = 20000;
+constexpr uint16_t kTwiTimeoutIterations = 2000;
 constexpr uint16_t kDhtPulseTimeoutLoops = 16000;
+bool lcdAvailable = false;
+// OR-ed into every PCF8574 write, so toggling it is what drives the backlight.
+uint8_t lcdBacklightMask = kLcdBacklight;
 
 uint16_t expectDhtPulse(bool level, volatile uint8_t* inputRegister,
                         uint8_t bitMask) {
@@ -40,21 +45,40 @@ bool waitForTwi() {
   return remaining > 0;
 }
 
-bool writePcf8574(uint8_t value) {
+void stopTwi() {
+  TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTO);
+}
+
+bool writePcf8574Raw(uint8_t value) {
   TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN);
-  if (!waitForTwi()) {
+  if (!waitForTwi() ||
+      ((TWSR & 0xF8) != 0x08 && (TWSR & 0xF8) != 0x10)) {
+    stopTwi();
     return false;
   }
   TWDR = static_cast<uint8_t>(config::kLcdAddress << 1);
   TWCR = _BV(TWINT) | _BV(TWEN);
-  if (!waitForTwi()) {
+  if (!waitForTwi() || (TWSR & 0xF8) != 0x18) {
+    stopTwi();
     return false;
   }
-  TWDR = static_cast<uint8_t>(value | kLcdBacklight);
+  TWDR = static_cast<uint8_t>(value | lcdBacklightMask);
   TWCR = _BV(TWINT) | _BV(TWEN);
-  const bool written = waitForTwi();
-  TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTO);
+  const bool written = waitForTwi() && (TWSR & 0xF8) == 0x28;
+  stopTwi();
   return written;
+}
+
+bool writePcf8574(uint8_t value) {
+  if (!lcdAvailable) {
+    return false;
+  }
+  if (!writePcf8574Raw(value)) {
+    lcdAvailable = false;
+    TWCR = 0;
+    return false;
+  }
+  return true;
 }
 
 void pulseLcdEnable(uint8_t value) {
@@ -88,7 +112,11 @@ void initializeLcd() {
   TWCR = _BV(TWEN);
 
   delay(50);
-  writePcf8574(kLcdBacklight);
+  if (!writePcf8574Raw(kLcdBacklight)) {
+    TWCR = 0;
+    return;
+  }
+  lcdAvailable = true;
   writeLcdNibble(0x30);
   delayMicroseconds(4500);
   writeLcdNibble(0x30);
@@ -131,11 +159,12 @@ void initializeHardware() {
   gTrayServo.attach(config::kServoPin);
   setTrayAngle(0);
   initializeLcd();
-  lcdSetCursor(0, 0);
-  lcdPrint(F("SmartEgg inicia"));
+  display::initialize();
+}
 
+void initializeInterrupts() {
   attachInterrupt(digitalPinToInterrupt(config::kPowerButtonPin),
-                  powerButtonIsr, FALLING);
+                  powerButtonIsr, CHANGE);
   attachInterrupt(digitalPinToInterrupt(config::kDoorSwitchPin), doorSwitchIsr,
                   CHANGE);
 }
@@ -144,7 +173,9 @@ void setHeater(bool enabled) {
   writeRelay(config::kHeaterRelayPin, enabled);
 }
 
-void setFan(bool enabled) { writeRelay(config::kFanRelayPin, enabled); }
+void setFan(bool enabled) {
+  writeRelay(config::kFanRelayPin, enabled);
+}
 
 void setBuzzer(bool enabled) {
   digitalWrite(config::kBuzzerPin, enabled ? HIGH : LOW);
@@ -166,14 +197,19 @@ void setTrayAngle(int8_t signedAngleDegrees) {
 }
 
 bool isDoorOpen() {
-  return digitalRead(config::kDoorSwitchPin) == config::kSwitchActiveLevel;
+  return digitalRead(config::kDoorSwitchPin) == config::kDoorOpenLevel;
+}
+
+bool isPowerSwitchOn() {
+  return digitalRead(config::kPowerButtonPin) ==
+         config::kPowerSwitchOnLevel;
 }
 
 uint8_t countOccupiedSlots() {
   uint8_t occupied = 0;
   for (uint8_t index = 0; index < config::kSlotCount; ++index) {
     if (digitalRead(config::kSlotPins[index]) ==
-        config::kSwitchActiveLevel) {
+        config::kSlotOccupiedLevel) {
       ++occupied;
     }
   }
@@ -246,6 +282,23 @@ bool readDht(float& temperatureC, float& humidityPct) {
          temperatureC >= -40.0F && temperatureC <= 80.0F;
 }
 
+void lcdCreateChar(uint8_t index, const uint8_t* bitmapProgmem) {
+  lcdCommand(static_cast<uint8_t>(0x40 | ((index & 0x07) << 3)));
+  for (uint8_t row = 0; row < 8; ++row) {
+    sendLcdByte(pgm_read_byte(&bitmapProgmem[row]), kLcdRegisterSelect);
+  }
+  // CGRAM writes leave the address counter in character memory; callers that
+  // print next must reseat the cursor, which every display path already does.
+}
+
+void lcdSetBacklight(bool enabled) {
+  lcdBacklightMask = enabled ? kLcdBacklight : 0x00;
+  // Push the new mask out immediately instead of waiting for the next glyph.
+  writePcf8574(0x00);
+}
+
+bool lcdIsAvailable() { return lcdAvailable; }
+
 void lcdClearRow(uint8_t row) {
   lcdSetCursor(0, row);
   lcdPrint(F("                "));
@@ -291,7 +344,13 @@ void lcdPrint(float value, uint8_t decimals) {
   lcdPrint(buffer);
 }
 
-void powerButtonIsr() { gPowerButtonInterruptPending = true; }
+void powerButtonIsr() {
+  // Capture the maintained switch position at the hardware event. The task
+  // performs debounce and actuator changes outside interrupt context.
+  gPowerSwitchRequestedOn =
+      digitalRead(config::kPowerButtonPin) == config::kPowerSwitchOnLevel;
+  notifyPowerSwitchFromIsr();
+}
 
 void doorSwitchIsr() { gDoorInterruptPending = true; }
 
