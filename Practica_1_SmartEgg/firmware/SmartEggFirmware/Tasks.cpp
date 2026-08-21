@@ -5,6 +5,7 @@
 
 #include "Config.h"
 #include "ControlLogic.h"
+#include "Display.h"
 #include "Hardware.h"
 #include "SerialProtocol.h"
 #include "SystemModel.h"
@@ -260,41 +261,6 @@ void processPeriodicRotation(SystemState& state,
                       static_cast<uint8_t>(EventCode::kRotation));
 }
 
-void updateDisplay(const SystemState& state) {
-  lcdClearRow(0);
-  lcdClearRow(1);
-
-  if (!state.systemEnabled) {
-    lcdSetCursor(0, 0);
-    lcdPrint(F("SISTEMA APAGADO"));
-    lcdSetCursor(0, 1);
-    lcdPrint(F("Libres:"));
-    lcdPrint(static_cast<int16_t>(config::kSlotCount - state.occupiedSlots));
-    lcdPrint(F(" P:"));
-    lcdPrint(state.doorOpen ? F("AB") : F("CE"));
-  } else if (!state.sensorOk) {
-    lcdSetCursor(0, 0);
-    lcdPrint(F("ERROR SENSOR DHT"));
-    lcdSetCursor(0, 1);
-    lcdPrint(F("Fallos:"));
-    lcdPrint(static_cast<int16_t>(state.consecutiveDhtFailures));
-  } else {
-    lcdSetCursor(0, 0);
-    lcdPrint(F("T:"));
-    lcdPrint(state.temperatureC, 1);
-    lcdPrint(F("C H:"));
-    lcdPrint(state.humidityPct, 0);
-    lcdPrint(F("%"));
-    lcdSetCursor(0, 1);
-    lcdPrint(F("ON C:"));
-    lcdPrint(static_cast<int16_t>(state.heaterOn ? 1 : 0));
-    lcdPrint(F(" V:"));
-    lcdPrint(static_cast<int16_t>(state.fanOn ? 1 : 0));
-    lcdPrint(F(" L:"));
-    lcdPrint(static_cast<int16_t>(config::kSlotCount - state.occupiedSlots));
-  }
-}
-
 void sensorControlTask(void* parameters) {
   (void)parameters;
   TickType_t lastWakeTick = xTaskGetTickCount();
@@ -304,7 +270,7 @@ void sensorControlTask(void* parameters) {
       lastWakeTick - pdMS_TO_TICKS(config::kSlotSamplePeriodMs);
   TickType_t lastRotationTick = lastWakeTick;
   TickType_t lastDisplayTick =
-      lastWakeTick - pdMS_TO_TICKS(config::kDisplayPeriodMs);
+      lastWakeTick - pdMS_TO_TICKS(config::kDisplayFramePeriodMs);
   TickType_t lastSwitchInterruptTick = lastWakeTick;
   int8_t rotationDirection = 1;
   uint8_t observedSlots = countOccupiedSlots();
@@ -364,8 +330,8 @@ void sensorControlTask(void* parameters) {
     applyAutomaticControl(state);
     storeState(state);
     if (static_cast<TickType_t>(now - lastDisplayTick) >=
-        pdMS_TO_TICKS(config::kDisplayPeriodMs)) {
-      updateDisplay(state);
+        pdMS_TO_TICKS(config::kDisplayFramePeriodMs)) {
+      display::render(state);
       lastDisplayTick = now;
     }
 

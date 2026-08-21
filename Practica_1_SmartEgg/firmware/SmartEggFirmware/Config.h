@@ -53,14 +53,26 @@ constexpr uint32_t kSerialBaudRate = 115200UL;
 constexpr uint16_t kSensorControlPeriodMs = 50;
 constexpr uint16_t kSlotSamplePeriodMs = 100;
 constexpr uint16_t kDhtSamplePeriodMs = 2000;
-constexpr uint16_t kDisplayPeriodMs = 500;
+// The display is diff-rendered, so a frame that changes nothing costs no I2C
+// traffic. Ticking at ~7 fps is what makes the animated glyphs read smoothly.
+constexpr uint16_t kDisplayFramePeriodMs = 150;
+// Frames between marquee steps on the sensor-fault screen.
+constexpr uint8_t kMarqueeFrameDivider = 2;
 constexpr uint16_t kTelemetryPeriodMs = 2000;
 constexpr uint16_t kPowerSwitchDebounceMs = 250;
+
+// ------------------------------------------------------------- Boot splash
+// Blocking delays used only by the splash animation, which runs from setup()
+// before the scheduler starts. Total added boot time stays close to one second.
+constexpr uint8_t kSplashLetterMs = 40;
+constexpr uint8_t kSplashEggMs = 25;
+constexpr uint8_t kSplashHatchMs = 110;
+constexpr uint16_t kSplashHoldMs = 200;
 
 // ---------------------------------------------------------- FreeRTOS stacks
 // Values are bytes on the AVR port. The local DHT driver uses a 5-byte frame,
 // keeping both task stacks viable on the 2 KB Uno.
-constexpr uint16_t kSensorControlStackBytes = 192;
+constexpr uint16_t kSensorControlStackBytes = 184;
 constexpr uint16_t kCommunicationStackBytes = 160;
 
 }  // namespace config
