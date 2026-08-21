@@ -8,7 +8,7 @@ namespace config {
 // ---------------------------------------------------------------- Hardware
 // Arduino Uno R3: D0/D1 remain reserved for UART/USB and A4/A5 for I2C.
 constexpr uint8_t kPowerButtonPin = 2;  // INT0, SPDT toggle common terminal.
-constexpr uint8_t kDoorSwitchPin = 3;  // INT1, NC/NO limit switch to GND.
+constexpr uint8_t kDoorSwitchPin = 3;  // INT1, COM to GND and NO to D3.
 constexpr uint8_t kDhtPin = 4;
 constexpr uint8_t kHeaterRelayPin = 5;
 constexpr uint8_t kFanRelayPin = 6;  // IN2 of the 5 V four-channel relay module.
@@ -19,8 +19,12 @@ constexpr uint8_t kSlotCount = sizeof(kSlotPins) / sizeof(kSlotPins[0]);
 constexpr uint8_t kStatusLedPin = LED_BUILTIN;
 
 // Change these levels only if the selected relay/switch module works inverted.
-constexpr bool kRelaysActiveLow = false;
-constexpr uint8_t kSwitchActiveLevel = LOW;
+// Physical test: briefly connecting IN1 to GND energized the selected channel.
+constexpr bool kRelaysActiveLow = true;
+// With INPUT_PULLUP and COM->GND/NO->D3, a normally mounted switch is LOW
+// while the closed door presses it and HIGH when the open door releases it.
+constexpr uint8_t kDoorOpenLevel = HIGH;
+constexpr uint8_t kSlotOccupiedLevel = LOW;
 constexpr uint8_t kPowerSwitchOnLevel = LOW;
 
 // Confirmed component for the physical prototype.

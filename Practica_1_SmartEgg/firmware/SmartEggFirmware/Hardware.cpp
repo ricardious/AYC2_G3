@@ -196,7 +196,7 @@ void setTrayAngle(int8_t signedAngleDegrees) {
 }
 
 bool isDoorOpen() {
-  return digitalRead(config::kDoorSwitchPin) == config::kSwitchActiveLevel;
+  return digitalRead(config::kDoorSwitchPin) == config::kDoorOpenLevel;
 }
 
 bool isPowerSwitchOn() {
@@ -208,7 +208,7 @@ uint8_t countOccupiedSlots() {
   uint8_t occupied = 0;
   for (uint8_t index = 0; index < config::kSlotCount; ++index) {
     if (digitalRead(config::kSlotPins[index]) ==
-        config::kSwitchActiveLevel) {
+        config::kSlotOccupiedLevel) {
       ++occupied;
     }
   }
