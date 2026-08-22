@@ -45,8 +45,6 @@ export function ControlCoreScreen() {
         <IncubatorChamber />
       </StageBlock>
 
-      {/* 574 = 600 del diseño − los 26 que la perspectiva del disco añade a la
-          izquierda, ahora dentro de la caja del organismo. */}
       <StageBlock top={552} x={574} anchor="center" wide>
         <TrayAngleDial />
       </StageBlock>
