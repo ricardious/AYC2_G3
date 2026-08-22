@@ -13,6 +13,7 @@ import { HistoryScreen } from "./HistoryScreen";
 import { IncubationScreen } from "./IncubationScreen";
 import { ReportsScreen } from "./ReportsScreen";
 import { SettingsScreen } from "./SettingsScreen";
+import { ConnectionGate } from "./ConnectionGate";
 
 export type SmartEggDashboardProps = Partial<SmartEggConfig>;
 
@@ -58,9 +59,11 @@ export function SmartEggDashboard({
 
   return (
     <SmartEggProvider config={config}>
-      <ConsoleStage>
-        <ActiveScreen />
-      </ConsoleStage>
+      <ConnectionGate>
+        <ConsoleStage>
+          <ActiveScreen />
+        </ConsoleStage>
+      </ConnectionGate>
     </SmartEggProvider>
   );
 }
