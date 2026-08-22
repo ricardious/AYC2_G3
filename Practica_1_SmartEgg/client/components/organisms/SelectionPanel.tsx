@@ -3,7 +3,7 @@
 import { DetailRowItem } from "@/components/molecules/DetailRowItem";
 import { buildSelectionDetail } from "@/lib/smartegg/derive";
 import type { CSSVars } from "@/lib/smartegg/types";
-import { useSmartEgg } from "@/lib/state/hooks";
+import { useOccupiedSlots, useSmartEgg } from "@/lib/state/hooks";
 
 /**
  * Inspector del elemento seleccionado: un actuador, un sensor, un espécimen o
@@ -11,7 +11,8 @@ import { useSmartEgg } from "@/lib/state/hooks";
  */
 export function SelectionPanel() {
   const { selection, critical, actions } = useSmartEgg();
-  const detail = buildSelectionDetail(selection, critical);
+  const occupiedSlots = useOccupiedSlots();
+  const detail = buildSelectionDetail(selection, critical, occupiedSlots);
 
   if (!detail) return null;
 

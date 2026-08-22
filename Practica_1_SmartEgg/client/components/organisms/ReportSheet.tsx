@@ -3,7 +3,7 @@
 import { DataField } from "@/components/atoms/DataField";
 import { REPORT_FIELDS } from "@/lib/smartegg/catalog";
 import { HISTORY_SERIES, seriesPath } from "@/lib/smartegg/telemetry";
-import { useSmartEgg } from "@/lib/state/hooks";
+import { useOccupiedSlots, useSmartEgg } from "@/lib/state/hooks";
 
 const sparkline = seriesPath(
   HISTORY_SERIES.slice(0, 120),
@@ -18,6 +18,7 @@ const sparkline = seriesPath(
 /** El reporte generado, como una lámina inclinada. */
 export function ReportSheet() {
   const { config } = useSmartEgg();
+  const occupiedSlots = useOccupiedSlots();
 
   return (
     <article className="report-surface h-[660px] w-[520px] border border-[rgba(200,225,232,.28)] px-12 py-14 text-foreground-bright backdrop-blur-[3px] [transform:perspective(1600px)_rotateY(-14deg)_rotateX(4deg)_rotateZ(-1.5deg)]">
@@ -40,7 +41,11 @@ export function ReportSheet() {
             key={field.label}
             variant="lg"
             label={field.label}
-            value={field.value}
+            value={
+              field.label === "HUEVOS ACTIVOS"
+                ? String(occupiedSlots)
+                : field.value
+            }
           />
         ))}
       </div>
