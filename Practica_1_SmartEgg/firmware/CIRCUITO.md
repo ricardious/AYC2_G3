@@ -131,3 +131,26 @@ Consideramos armar una simulación en Wokwi, pero ahí no hay un componente DHT1
 todavía: sólo DHT22. Preferimos no incluir una simulación que aparentara usar el sensor
 real y terminara transmitiendo un formato de datos distinto. El diagrama que dejamos
 representa el montaje físico que confirmamos.
+
+## Diagrama de conexiones en Wokwi
+
+Para cumplir con el formato de diagrama que pide el enunciado (Fritzing/Proteus/KiCad/
+TinkerCad/Wokwi), agregamos [`wokwi/diagram.json`](wokwi/diagram.json): un diagrama de
+**conexiones**, no una simulación de firmware. Se abre importándolo en un proyecto Arduino
+Uno nuevo en [wokwi.com](https://wokwi.com/projects/new/arduino-uno) (pestaña `diagram.json`)
+o con la extensión de Wokwi para VS Code.
+
+Simplificaciones deliberadas frente al montaje real, para que quede claro qué mirar en el
+diagrama y qué seguir tomando de la tabla de conexiones de arriba:
+
+- El DHT11 se representa con la huella del `wokwi-dht22` (mismo pinout VCC/SDA/GND), porque
+  Wokwi no tiene un componente DHT11 oficial. No la usamos para simular lecturas, solo para
+  dibujar el cableado.
+- El buzzer se dibuja conectado directo a D7 y 5 V. El montaje real lo maneja con un
+  transistor 2N2222 (ver "Alimentación y protección" arriba); el catálogo básico de Wokwi no
+  trae un transistor discreto fácil de cablear en el diagrama, así que esa etapa de
+  protección queda documentada solo en texto.
+- Los contactos `COM`/`NO`/`NC` de los dos módulos de relé se dejan sin conectar en el
+  diagrama: ahí es donde entran la bombilla de 110 V y el ventilador, que son la parte de
+  alta tensión/carga que mantuvimos fuera del área de 5 V por seguridad. El diagrama sólo
+  cubre el lado de control (`IN`/`VCC`/`GND`) que realmente conecta al microcontrolador.

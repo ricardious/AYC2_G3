@@ -145,14 +145,17 @@ esas pantallas ya está descrito en [`client/README.md`](client/README.md).
 
 La tabla de pines, polaridades y protecciones está en
 [`firmware/CIRCUITO.md`](firmware/CIRCUITO.md), con las fotos de cableado real incluidas
-arriba.
+arriba. El diagrama de conexiones en herramienta oficial vive en
+[`firmware/wokwi/diagram.json`](firmware/wokwi/diagram.json) (Wokwi) — se importa en un
+proyecto Arduino Uno nuevo en [wokwi.com](https://wokwi.com/projects/new/arduino-uno) o con
+la extensión de Wokwi para VS Code. Las simplificaciones deliberadas (DHT11 representado con
+la huella del DHT22, buzzer sin el transistor de protección, contactos de los relés sin la
+carga de 110 V/ventilador) están explicadas en
+[`firmware/CIRCUITO.md → Diagrama de conexiones en Wokwi`](firmware/CIRCUITO.md#diagrama-de-conexiones-en-wokwi).
 
-**Pendiente / riesgo de rúbrica**: `CIRCUITO.md` deja el diagrama gráfico solo como texto
-Graphviz y aclara que las imágenes generadas *"se conservan fuera del repositorio"*. El
-enunciado exige el diagrama hecho en **Fritzing, Proteus, KiCad, TinkerCad o Wokwi** y
-subido al repositorio (sección 3.6 y rúbrica 7.7); lo que no esté en el repo no se califica
-(sección 4). Hay que producir ese diagrama en una de esas herramientas y commitear la
-imagen/proyecto antes de la entrega.
+**Pendiente**: alguien del equipo debe abrir `diagram.json` en Wokwi para confirmar
+visualmente que carga sin errores antes de la entrega — se armó por especificación de pines,
+sin poder ejecutar el simulador desde aquí.
 
 ## Manual de Usuario
 
@@ -195,8 +198,9 @@ frontend.
 - Firmware: implementación completa en FreeRTOS + interrupciones, validado por pruebas de
   host; pendiente la validación final sobre el hardware armado (ver
   [`firmware/RUBRIC_CHECKLIST.md`](firmware/RUBRIC_CHECKLIST.md)).
-- Encapsulado: armado y fotografiado (ver fotos arriba); falta el diagrama de conexiones en
-  una herramienta oficial y las fotos/video del prototipo operando.
+- Encapsulado: armado y fotografiado (ver fotos arriba); diagrama de conexiones en Wokwi
+  agregado (pendiente de validar abriéndolo en el editor); falta el video/fotos del
+  prototipo operando.
 - Backend y frontend: implementados según [`server/README.md`](server/README.md) y
   [`client/README.md`](client/README.md); falta integrarlos con el Arduino físico y tomar
   los mockups/capturas para esta documentación.
