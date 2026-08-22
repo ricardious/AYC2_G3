@@ -4,8 +4,21 @@ import secrets
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class InitialTechnician(BaseModel):
+    username: str = Field(min_length=3, max_length=50, pattern=r"^[A-Za-z0-9_.-]+$")
+    full_name: str = Field(min_length=3, max_length=120)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class InitialIncubator(BaseModel):
+    code: str = Field(min_length=2, max_length=40, pattern=r"^[A-Za-z0-9_-]+$")
+    name: str = Field(min_length=2, max_length=100)
+    capacity: int = Field(ge=1, le=1000)
+    serial_number: str | None = Field(default=None, max_length=100)
 
 
 class Settings(BaseSettings):
@@ -25,6 +38,8 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 480
     timezone: str = "America/Guatemala"
+    initial_technicians: list[InitialTechnician] = Field(default_factory=list)
+    initial_incubators: list[InitialIncubator] = Field(default_factory=list)
 
     serial_enabled: bool = False
     serial_port: str | None = None
