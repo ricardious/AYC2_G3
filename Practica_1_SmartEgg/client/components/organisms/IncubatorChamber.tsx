@@ -84,7 +84,7 @@ export function IncubatorChamber() {
           </g>
         </svg>
 
-        <div className="absolute inset-x-0 bottom-[78px] flex origin-[50%_90%] items-end justify-center gap-[26px] transition-transform duration-[1200ms] ease-[cubic-bezier(.4,0,.2,1)] [transform:rotate(var(--tilt))]">
+        <div className="absolute inset-x-0 bottom-[66px] grid origin-[50%_90%] grid-cols-2 place-items-center gap-x-16 gap-y-2 px-[132px] transition-transform duration-[1200ms] ease-[cubic-bezier(.4,0,.2,1)] [transform:rotate(var(--tilt))]">
           {eggs.map((egg) => (
             <ChamberEgg
               key={egg.id}
