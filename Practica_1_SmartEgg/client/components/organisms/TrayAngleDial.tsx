@@ -26,7 +26,7 @@ export function TrayAngleDial() {
     >
       <div
         aria-hidden="true"
-        className="absolute top-0 left-[26px] h-[150px] w-[480px] transform-3d [transform:perspective(700px)_rotateX(66deg)]"
+        className="absolute top-0 left-[26px] h-[150px] w-[480px] transform-3d overflow-hidden rounded-[50%] [transform:perspective(700px)_rotateX(66deg)]"
       >
         <span className="platform-face absolute inset-0 rounded-[50%] border border-frame" />
         <span className="absolute inset-[44px_74px] rounded-[50%] border border-dashed border-[rgba(150,180,195,.18)]" />
