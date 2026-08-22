@@ -153,9 +153,10 @@ la huella del DHT22, buzzer sin el transistor de protección, contactos de los r
 carga de 110 V/ventilador) están explicadas en
 [`firmware/CIRCUITO.md → Diagrama de conexiones en Wokwi`](firmware/CIRCUITO.md#diagrama-de-conexiones-en-wokwi).
 
-**Pendiente**: alguien del equipo debe abrir `diagram.json` en Wokwi para confirmar
-visualmente que carga sin errores antes de la entrega — se armó por especificación de pines,
-sin poder ejecutar el simulador desde aquí.
+Validado abriendo `diagram.json` en Wokwi: carga sin errores y todos los componentes quedan
+conectados como se documenta arriba.
+
+<img src="docs/imgs/wokwi-diagrama-conexiones.png" width="70%" alt="Diagrama de conexiones SmartEgg renderizado en Wokwi" />
 
 ## Manual de Usuario
 
@@ -199,8 +200,7 @@ frontend.
   host; pendiente la validación final sobre el hardware armado (ver
   [`firmware/RUBRIC_CHECKLIST.md`](firmware/RUBRIC_CHECKLIST.md)).
 - Encapsulado: armado y fotografiado (ver fotos arriba); diagrama de conexiones en Wokwi
-  agregado (pendiente de validar abriéndolo en el editor); falta el video/fotos del
-  prototipo operando.
+  agregado y validado; falta el video/fotos del prototipo operando.
 - Backend y frontend: implementados según [`server/README.md`](server/README.md) y
   [`client/README.md`](client/README.md); falta integrarlos con el Arduino físico y tomar
   los mockups/capturas para esta documentación.

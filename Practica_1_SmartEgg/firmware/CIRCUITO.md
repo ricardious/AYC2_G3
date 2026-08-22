@@ -154,3 +154,8 @@ diagrama y qué seguir tomando de la tabla de conexiones de arriba:
   diagrama: ahí es donde entran la bombilla de 110 V y el ventilador, que son la parte de
   alta tensión/carga que mantuvimos fuera del área de 5 V por seguridad. El diagrama sólo
   cubre el lado de control (`IN`/`VCC`/`GND`) que realmente conecta al microcontrolador.
+
+Lo abrimos en wokwi.com y cargó sin errores, con todos los componentes conectados según lo
+descrito arriba:
+
+![Diagrama de conexiones SmartEgg en Wokwi](../docs/imgs/wokwi-diagrama-conexiones.png)
