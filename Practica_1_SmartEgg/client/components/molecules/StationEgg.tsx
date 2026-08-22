@@ -27,9 +27,9 @@ export function StationEgg({
       onFocus={() => onHoverChange(true)}
       onBlur={() => onHoverChange(false)}
       style={style}
-      className="group block w-[176px] text-center"
+      className="group block w-[150px] text-center"
     >
-      <span className="relative flex h-[170px] items-end justify-center">
+      <span className="relative flex h-[126px] items-end justify-center">
         <span
           aria-hidden="true"
           className={cx(
@@ -46,7 +46,7 @@ export function StationEgg({
         />
       </span>
 
-      <span className="mt-[18px] block font-mono text-[9px] leading-[2.1] tracking-[0.18em] text-neutral">
+      <span className="mt-2 block font-mono text-[8px] leading-[1.7] tracking-[0.16em] text-neutral">
         <span className="block font-display text-sm tracking-[0.14em] text-foreground-bright">
           {egg.label}
         </span>
