@@ -94,6 +94,8 @@ Variables principales:
 | `SMARTEGG_JWT_SECRET` | Firma de tokens | aleatorio por proceso |
 | `SMARTEGG_CORS_ORIGINS` | Orígenes JSON autorizados | `["http://localhost:3000"]` |
 | `SMARTEGG_TIMEZONE` | Día/hora del reporte | `America/Guatemala` |
+| `SMARTEGG_INITIAL_TECHNICIANS` | Usuarios iniciales en JSON | `[]` |
+| `SMARTEGG_INITIAL_INCUBATORS` | Incubadoras iniciales en JSON | `[]` |
 | `SMARTEGG_SERIAL_ENABLED` | Activa el lector UART | `false` |
 | `SMARTEGG_SERIAL_PORT` | Puerto, p. ej. `/dev/ttyACM0` | vacío |
 | `SMARTEGG_SERIAL_BAUDRATE` | Velocidad UART | `115200` |
@@ -121,7 +123,26 @@ uv run fastapi run --host 0.0.0.0
 
 ### Inicialización segura
 
-El primer técnico se crea una única vez:
+Para crear automáticamente uno o varios técnicos al arrancar, configure la lista en
+`server/.env`:
+
+```env
+SMARTEGG_INITIAL_TECHNICIANS=[{"username":"ricardo","full_name":"Ricardo","password":"una-clave-segura"}]
+```
+
+Cada nombre de usuario se crea solamente si todavía no existe. Los reinicios no cambian
+su contraseña ni duplican la cuenta. No suba el archivo `.env` al repositorio.
+
+La incubadora física también puede quedar lista sin llamadas manuales a Swagger:
+
+```env
+SMARTEGG_INITIAL_INCUBATORS=[{"code":"NODE-01","name":"Incubadora principal","capacity":4,"serial_number":"ARDUINO-UNO-R3"}]
+```
+
+Al crearla se generan su configuración predeterminada y los estados de calefacción,
+ventilador, servo y buzzer. Los reinicios no duplican ni reemplazan el nodo existente.
+
+Como alternativa, el primer técnico puede crearse manualmente una única vez:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/auth/bootstrap \
