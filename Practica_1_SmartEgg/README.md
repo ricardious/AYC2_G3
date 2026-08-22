@@ -143,12 +143,30 @@ de la bandeja; la primera imagen también muestra la calefacción activa.
 **Pendiente**: agregar el mockup o boceto previo a la construcción solicitado por la
 rúbrica 7.3.
 
-## Mockups de la Aplicación Web/Móvil
+## Capturas de la Aplicación Web/Móvil
 
-**Pendiente.** Falta agregar capturas de pantalla o mockup de las pantallas del frontend
-(`client/`) — panel de sensores/actuadores, ficha de identificación del huevo, historial y
-reportes — tanto en disposición de escritorio ("plano") como móvil ("pila"). El diseño de
-esas pantallas ya está descrito en [`client/README.md`](client/README.md).
+Capturas de la aplicación ejecutándose localmente y conectada al backend. El Centro de
+Control consolida telemetría, alarma, actuadores, sensores, ocupación y ángulo de bandeja
+en una sola vista.
+
+<img src="docs/imgs/frontend-control-core.png" width="90%" alt="Centro de Control de SmartEgg con telemetría, incubadora, actuadores, sensores e historial en vivo" />
+
+La estación de incubación representa las cuatro posiciones físicas reportadas por el
+Arduino. Las pantallas de historial y reportes presentan la información persistida por el
+backend y permiten generar el PDF del ciclo.
+
+<p float="left">
+  <img src="docs/imgs/frontend-incubacion.png" width="45%" alt="Pantalla de incubación con cuatro huevos detectados por los sensores de ocupación" />
+  <img src="docs/imgs/frontend-historial.png" width="45%" alt="Pantalla de historial con gráficas de temperatura y humedad" />
+</p>
+
+<p float="left">
+  <img src="docs/imgs/frontend-reportes.png" width="45%" alt="Pantalla de reportes con vista previa del informe de incubación" />
+  <img src="docs/imgs/frontend-configuracion.png" width="45%" alt="Pantalla de configuración de setpoints y datos del nodo SmartEgg" />
+</p>
+
+La implementación y el comportamiento adaptable de estas vistas se documentan en
+[`client/README.md`](client/README.md).
 
 ## Diagramado de Conexiones (esquemático electrónico)
 
@@ -194,8 +212,8 @@ conectados como se documenta arriba.
    visualizar sensores/actuadores en vivo, registrar huevos y descargar el reporte PDF
    diario desde la sección de reportes.
 
-**Pendiente**: agregar capturas de pantalla paso a paso una vez estén los mockups del
-frontend.
+Las capturas de las cinco pantallas principales se incluyen en la sección
+[Capturas de la Aplicación Web/Móvil](#capturas-de-la-aplicación-webmóvil).
 
 ## Evidencia de commits (GitHub)
 
@@ -210,6 +228,6 @@ frontend.
   [`firmware/RUBRIC_CHECKLIST.md`](firmware/RUBRIC_CHECKLIST.md)).
 - Encapsulado: armado y fotografiado tanto apagado como en operación; diagrama de
   conexiones en Wokwi agregado y validado.
-- Backend y frontend: implementados según [`server/README.md`](server/README.md) y
-  [`client/README.md`](client/README.md); falta integrarlos con el Arduino físico y tomar
-  los mockups/capturas para esta documentación.
+- Backend y frontend: implementados e integrados con la telemetría del nodo físico según
+  [`server/README.md`](server/README.md) y [`client/README.md`](client/README.md); las
+  capturas de las pantallas principales se incluyen arriba.
