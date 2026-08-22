@@ -11,13 +11,13 @@ export function SpecimenStation() {
   const emptySlot = eggs.find((egg) => egg.empty);
 
   return (
-    <div className="relative h-[430px] w-[1120px]">
+    <div className="relative h-[470px] w-[1120px]">
       <div
         aria-hidden="true"
-        className="bench-surface absolute inset-x-0 top-[70px] h-[300px] border border-[rgba(150,180,195,.18)] [transform:perspective(1400px)_rotateX(16deg)]"
+        className="bench-surface absolute inset-x-0 top-10 h-[390px] border border-[rgba(150,180,195,.18)] [transform:perspective(1400px)_rotateX(16deg)]"
       />
 
-      <div className="absolute inset-x-0 top-24 flex justify-center gap-16">
+      <div className="absolute inset-x-0 top-5 grid grid-cols-2 place-items-center gap-x-20 gap-y-3 px-[330px]">
         {eggs.map((egg) => (
           <StationEgg
             key={egg.id}
@@ -31,7 +31,7 @@ export function SpecimenStation() {
         ))}
       </div>
 
-      <div className="absolute inset-x-0 top-[398px] flex justify-center">
+      <div className="absolute inset-x-0 top-[442px] flex justify-center">
         <GhostButton
           tone="dashed"
           disabled={!emptySlot}
