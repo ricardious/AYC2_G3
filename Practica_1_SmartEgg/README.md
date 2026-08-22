@@ -129,10 +129,19 @@ Mecanismo de rotación de la bandeja, impreso en 3D y acoplado al servomotor:
   <img src="docs/imgs/prototipo-encapsulado-frontal.jpg" width="45%" alt="Vista frontal del encapsulado cerrado con ventana y LCD" />
 </p>
 
-**Pendiente**: mockup/boceto del prototipo antes de construirlo (rúbrica 7.3) y
-fotografías/video del prototipo ya **operando** (LCD mostrando lecturas en vivo, alarma
-activa, servo rotando) — la rúbrica 7.9/9 las pide por separado de las fotos estáticas de
-arriba.
+### Prototipo en operación
+
+Validación del sistema completo con el LCD mostrando temperatura, humedad, ocupación y
+ángulo en tiempo real. Las dos posiciones extremas confirman el recorrido de rotación
+de la bandeja; la primera imagen también muestra la calefacción activa.
+
+<p float="left">
+  <img src="docs/imgs/prototipo-operando-menos-45.png" width="45%" alt="Prototipo SmartEgg operando a menos 45 grados con calefacción activa y telemetría en el LCD" />
+  <img src="docs/imgs/prototipo-operando-mas-45.png" width="45%" alt="Prototipo SmartEgg operando a más 45 grados con huevos en la bandeja y telemetría en el LCD" />
+</p>
+
+**Pendiente**: agregar el mockup o boceto previo a la construcción solicitado por la
+rúbrica 7.3.
 
 ## Mockups de la Aplicación Web/Móvil
 
@@ -196,11 +205,11 @@ frontend.
 
 ## Estado del proyecto
 
-- Firmware: implementación completa en FreeRTOS + interrupciones, validado por pruebas de
-  host; pendiente la validación final sobre el hardware armado (ver
+- Firmware: implementación completa en FreeRTOS + interrupciones, validada con pruebas de
+  host y sobre el hardware armado (ver
   [`firmware/RUBRIC_CHECKLIST.md`](firmware/RUBRIC_CHECKLIST.md)).
-- Encapsulado: armado y fotografiado (ver fotos arriba); diagrama de conexiones en Wokwi
-  agregado y validado; falta el video/fotos del prototipo operando.
+- Encapsulado: armado y fotografiado tanto apagado como en operación; diagrama de
+  conexiones en Wokwi agregado y validado.
 - Backend y frontend: implementados según [`server/README.md`](server/README.md) y
   [`client/README.md`](client/README.md); falta integrarlos con el Arduino físico y tomar
   los mockups/capturas para esta documentación.
