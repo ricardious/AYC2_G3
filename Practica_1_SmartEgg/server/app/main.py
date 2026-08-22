@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import api_router
 from .config import Settings, get_settings
 from .database import Base, build_session_factory, create_engine
+from .services.bootstrap import ensure_initial_incubators, ensure_initial_technicians
 from .services.broadcast import ConnectionManager
 from .services.serial_bridge import SerialBridge
 from .services.telemetry import ingest_telemetry
@@ -66,6 +67,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI):
         nonlocal main_loop
         Base.metadata.create_all(engine)
+        ensure_initial_technicians(
+            session_factory, configured.initial_technicians
+        )
+        ensure_initial_incubators(
+            session_factory, configured.initial_incubators
+        )
         main_loop = asyncio.get_running_loop()
         serial_bridge.start()
         yield
@@ -91,6 +98,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Content-Disposition"],
     )
     app.include_router(api_router, prefix=configured.api_prefix)
 
