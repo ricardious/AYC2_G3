@@ -8,16 +8,15 @@ import {
   humidityFillHeight,
 } from "@/lib/smartegg/geometry";
 import type { CSSVars } from "@/lib/smartegg/types";
-import { useSmartEgg, useTelemetry } from "@/lib/state/hooks";
+import { useTelemetry } from "@/lib/state/hooks";
 
 /** Columna graduada de humedad; marca la ventana óptima de 50–65 %. */
 export function HumidityColumn() {
-  const { critical } = useSmartEgg();
   const { latest } = useTelemetry();
 
-  const humidity = readHumidity(latest, critical);
+  const humidity = readHumidity(latest);
   const style: CSSVars = {
-    "--fill": `${humidityFillHeight(humidity)}px`,
+    "--fill": `${humidityFillHeight(humidity ?? 0)}px`,
     "--optimal-top": `${HUMIDITY_OPTIMAL_TOP}px`,
     "--optimal-height": `${HUMIDITY_OPTIMAL_HEIGHT}px`,
   };
@@ -51,7 +50,7 @@ export function HumidityColumn() {
         <SectionKicker tone="cyan">HUMEDAD</SectionKicker>
         <div className="mt-1.5 flex items-baseline gap-1.5">
           <div className="text-[38px] leading-none font-light text-primary-soft">
-            {humidity}
+            {humidity ?? "—"}
           </div>
           <div className="font-mono text-[11px] text-primary">%</div>
         </div>
