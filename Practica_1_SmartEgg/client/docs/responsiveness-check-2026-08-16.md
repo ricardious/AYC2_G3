@@ -98,13 +98,12 @@ con `offsetWidth`. Lo primero es más barato.
 
 | Elemento              | Tamaño a 375px | Tamaño a 1024px |
 | --------------------- | -------------- | --------------- |
-| `SIMULAR ALERTA`      | 115 × **28**   | 69 × **17**     |
 | Pestañas de navegación| 162 × **43**   | 79 × **20**     |
 | Fichas de espécimen   | **43** × 63    | **42** × 61     |
 
 En pila hay 17 elementos interactivos por debajo de 44 px en alguna dimensión. Las
-pestañas se quedan a 1 px del mínimo —trivial—, pero el botón de alarma (28 px de alto)
-y las fichas de huevo (43 px de ancho) sí están por debajo de forma apreciable.
+pestañas se quedan a 1 px del mínimo —trivial— y las fichas de huevo (43 px de ancho)
+están por debajo de forma apreciable.
 
 **Sugerencia**: `py-3.5` → `py-4` en `NavItem` horizontal, y un `min-h-11` en
 `GhostButton` cuando la disposición es de pila.
@@ -155,9 +154,6 @@ suprimir el rótulo de la placa en pila, como ya se hace con las guías de la ur
 - **Escalado de medios**: ningún SVG o imagen desborda su contenedor.
 - **Apilado de contenido**: los 9 bloques del Centro de control caen en columna única en el
   orden en que la pantalla los declara; ninguno se solapa.
-- **Visibilidad de la llamada a la acción**: `SIMULAR ALERTA` queda sobre el pliegue en los
-  ocho anchos (y = 42–361 px).
-
 ## Recomendaciones por esfuerzo
 
 ### Arreglos rápidos (una constante o una clase)
