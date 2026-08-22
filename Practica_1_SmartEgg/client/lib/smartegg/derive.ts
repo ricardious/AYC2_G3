@@ -96,11 +96,6 @@ export function readTrayAngle(
   };
 }
 
-/** @deprecated Usar `readTrayAngle` con el valor real del actuador. */
-export function trayAngle(critical: boolean): TrayAngleReading {
-  return readTrayAngle(critical ? 0 : 45);
-}
-
 export function nodeStatus(critical: boolean): { word: string; color: string } {
   return critical
     ? { word: "CRÍTICO", color: DANGER }

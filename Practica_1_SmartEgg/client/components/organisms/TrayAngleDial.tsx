@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionKicker } from "@/components/atoms/SectionKicker";
-import { trayAngle } from "@/lib/smartegg/derive";
+import { readTrayAngle } from "@/lib/smartegg/derive";
 import { RADIAL_TICKS_PATH } from "@/lib/smartegg/geometry";
 import type { CSSVars } from "@/lib/smartegg/types";
 import { useSmartEgg } from "@/lib/state/hooks";
@@ -14,8 +14,14 @@ import { useSmartEgg } from "@/lib/state/hooks";
  * resto fuera, y cualquier recorte lo cortaba en recto.
  */
 export function TrayAngleDial() {
-  const { critical } = useSmartEgg();
-  const angle = trayAngle(critical);
+  const { dashboard } = useSmartEgg();
+  const servo = dashboard?.actuators.find(
+    (actuator) => actuator.kind === "servo",
+  );
+  const angle = readTrayAngle(
+    servo?.value,
+    dashboard?.config.rotation_angle_degrees,
+  );
   const style: CSSVars = { "--angle-pct": `${angle.pct}%` };
 
   return (
@@ -55,9 +61,9 @@ export function TrayAngleDial() {
             />
           </div>
           <div className="mt-[7px] flex justify-between font-mono text-[8px] tracking-[0.14em] text-foreground-fainter">
-            <span>-45°</span>
+            <span>-{angle.limit}°</span>
             <span>0°</span>
-            <span>+45°</span>
+            <span>+{angle.limit}°</span>
           </div>
         </div>
       </div>
