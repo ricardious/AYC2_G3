@@ -75,6 +75,14 @@ export function seriesPath(
   height: number,
   pad = 4,
 ): string {
+  if (points.length === 0) return "";
+  if (points.length === 1) {
+    const y =
+      height -
+      pad -
+      ((points[0][key] - min) / (max - min)) * (height - pad * 2);
+    return `M0 ${Math.max(0, Math.min(height, y)).toFixed(1)} L${width} ${Math.max(0, Math.min(height, y)).toFixed(1)}`;
+  }
   return points
     .map((point, i) => {
       const x = (i / (points.length - 1)) * width;
