@@ -7,7 +7,6 @@ import {
   WARNING,
 } from "./theme";
 import type {
-  EggRecord,
   Particle,
   ScreenId,
   TimelineMark,
@@ -32,41 +31,6 @@ export const STAGE_MAX_SCALE = 1;
  * vuelve a ser banda exterior.
  */
 export const STAGE_MAX_STRETCH = 1.3;
-
-export const EGGS: readonly EggRecord[] = [
-  {
-    code: "H-001",
-    lote: "A",
-    pos: "01",
-    dia: 5,
-    estado: "INCUBANDO",
-    empty: false,
-  },
-  {
-    code: "H-002",
-    lote: "A",
-    pos: "02",
-    dia: 5,
-    estado: "INCUBANDO",
-    empty: false,
-  },
-  {
-    code: "H-003",
-    lote: "A",
-    pos: "03",
-    dia: 5,
-    estado: "INCUBANDO",
-    empty: false,
-  },
-  {
-    code: "POSICIÓN 04",
-    lote: "—",
-    pos: "04",
-    dia: 0,
-    estado: "DISPONIBLE",
-    empty: true,
-  },
-];
 
 export const NAV_ITEMS: readonly { id: ScreenId; label: string }[] = [
   { id: "control", label: "CENTRO DE CONTROL" },
@@ -141,7 +105,7 @@ export const HISTORY_STATS: readonly {
 /** Summary block of the printed report. */
 export const REPORT_FIELDS: readonly { label: string; value: string }[] = [
   { label: "LOTE", value: "A" },
-  { label: "HUEVOS ACTIVOS", value: "3" },
+  { label: "HUEVOS ACTIVOS", value: "0" },
   { label: "TEMPERATURA PROMEDIO", value: "37.6 °C" },
   { label: "HUMEDAD PROMEDIO", value: "58 %" },
   { label: "ROTACIONES REGISTRADAS", value: "48" },
@@ -151,10 +115,7 @@ export const REPORT_FIELDS: readonly { label: string; value: string }[] = [
 export const STATION_META: readonly { label: string; value: string; color: string }[] =
   [
     { label: "ESTACIÓN", value: "ANÁLISIS 01", color: FOREGROUND_MUTED },
-    { label: "OCUPACIÓN", value: "3 / 4", color: SUCCESS },
+    { label: "OCUPACIÓN", value: "0 / 4", color: SUCCESS },
     { label: "DÍA DE CICLO", value: "05 / 21", color: FOREGROUND_MUTED },
     { label: "ECLOSIÓN EST.", value: "27 AGO 2026", color: FOREGROUND_MUTED },
   ];
-
-/** Abbreviated label for the unassigned tray position. */
-export const EMPTY_SLOT_LABEL = "POS 04";

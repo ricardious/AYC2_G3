@@ -28,22 +28,12 @@ export type ComponentId =
 export type Selection =
   | { type: "component"; id: ComponentId }
   | { type: "egg"; id: string }
-  | { type: "slot" }
+  | { type: "slot"; id: string }
   | null;
 
-/** A physical egg (or an empty tray position) registered in the node. */
-export interface EggRecord {
-  code: string;
-  lote: string;
-  pos: string;
-  dia: number;
-  estado: string;
-  empty: boolean;
-}
-
-/** Presentation model derived from an {@link EggRecord} plus UI state. */
+/** Presentación de una de las cuatro posiciones físicas de la bandeja. */
 export interface EggView {
-  /** Stable identity — matches `EggRecord.code`. */
+  /** Identidad estable de la posición, aunque cambie su ocupación. */
   id: string;
   /** Display label (long slot names are abbreviated). */
   label: string;

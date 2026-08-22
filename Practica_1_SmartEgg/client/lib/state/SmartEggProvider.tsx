@@ -429,7 +429,9 @@ export function SmartEggProvider({
       pickEgg: (egg) =>
         dispatch({
           type: "select",
-          selection: egg.empty ? { type: "slot" } : { type: "egg", id: egg.id },
+          selection: egg.empty
+            ? { type: "slot", id: egg.id }
+            : { type: "egg", id: egg.id },
         }),
       hoverEgg: (egg) => dispatch({ type: "hover", egg }),
       clearSelection: () => dispatch({ type: "clearSelection" }),

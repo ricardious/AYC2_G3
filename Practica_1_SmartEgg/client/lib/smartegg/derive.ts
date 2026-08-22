@@ -1,4 +1,3 @@
-import { EGGS, EMPTY_SLOT_LABEL } from "./catalog";
 import type { Actuator, Alarm, Sensor } from "@/lib/api/types";
 import {
   DANGER,
@@ -128,21 +127,38 @@ export function buildHeaderStats(
 
 /* ---------------------------------------------------------------- huevos */
 
+export const EGG_SLOT_COUNT = 4;
+
+/** Convierte cualquier lectura Serial en una ocupación segura para la UI. */
+export function normalizeOccupiedSlots(value: number | null | undefined): number {
+  if (value == null || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(EGG_SLOT_COUNT, Math.trunc(value)));
+}
+
 export function buildEggViews(
   hoveredEgg: string | null,
   selection: Selection,
+  occupiedSlots: number,
 ): EggView[] {
-  return EGGS.map((egg) => {
-    const hovered = hoveredEgg === egg.code;
-    const selected = selection?.type === "egg" && selection.id === egg.code;
+  const occupied = normalizeOccupiedSlots(occupiedSlots);
+
+  return Array.from({ length: EGG_SLOT_COUNT }, (_, index) => {
+    const position = index + 1;
+    const positionLabel = String(position).padStart(2, "0");
+    const id = `slot-${position}`;
+    const empty = position > occupied;
+    const hovered = hoveredEgg === id;
+    const selected =
+      (selection?.type === "egg" || selection?.type === "slot") &&
+      selection.id === id;
 
     return {
-      id: egg.code,
-      label: egg.empty ? EMPTY_SLOT_LABEL : egg.code,
-      line2: egg.empty ? "SIN ASIGNAR" : `DÍA ${egg.dia}`,
-      line3: egg.estado,
-      stateColor: egg.empty ? FOREGROUND_FAINT : SUCCESS,
-      empty: egg.empty,
+      id,
+      label: empty ? `POS ${positionLabel}` : `HUEVO ${positionLabel}`,
+      line2: empty ? "SIN DETECCIÓN" : "SENSOR ACTIVO",
+      line3: empty ? "DISPONIBLE" : "OCUPADO",
+      stateColor: empty ? FOREGROUND_FAINT : SUCCESS,
+      empty,
       hot: hovered || selected,
       hovered,
     };
@@ -323,7 +339,10 @@ interface ComponentSpec {
 
 export function buildComponentCatalog(
   critical: boolean,
+  occupiedSlots = 0,
 ): Record<ComponentId, ComponentSpec> {
+  const occupied = normalizeOccupiedSlots(occupiedSlots);
+  const available = EGG_SLOT_COUNT - occupied;
   return {
     ventilador: {
       kicker: "ACTUADOR",
@@ -419,8 +438,8 @@ export function buildComponentCatalog(
       accent: SUCCESS,
       rows: [
         ["ESTADO", "ONLINE", SUCCESS],
-        ["OCUPADOS", "3 / 4", PRIMARY],
-        ["LIBRE", "POSICIÓN 04", NEUTRAL],
+        ["OCUPADOS", `${occupied} / ${EGG_SLOT_COUNT}`, PRIMARY],
+        ["DISPONIBLES", String(available), NEUTRAL],
       ],
     },
     bandeja: {
@@ -429,8 +448,8 @@ export function buildComponentCatalog(
       accent: PRIMARY,
       rows: [
         ["ÁNGULO", "+45°", PRIMARY],
-        ["ESPACIOS", "4", NEUTRAL],
-        ["CARGA", "3 ESPECÍMENES", NEUTRAL],
+        ["ESPACIOS", String(EGG_SLOT_COUNT), NEUTRAL],
+        ["CARGA", `${occupied} HUEVOS`, NEUTRAL],
         ["MATERIAL", "POLÍMERO TÉCNICO", NEUTRAL],
       ],
     },
@@ -447,11 +466,12 @@ function toRows(
 export function buildSelectionDetail(
   selection: Selection,
   critical: boolean,
+  occupiedSlots = 0,
 ): DetailPanel | null {
   if (!selection) return null;
 
   if (selection.type === "component") {
-    const spec = buildComponentCatalog(critical)[selection.id];
+    const spec = buildComponentCatalog(critical, occupiedSlots)[selection.id];
     return {
       kicker: spec.kicker,
       title: spec.title,
@@ -460,32 +480,29 @@ export function buildSelectionDetail(
     };
   }
 
-  if (selection.type === "egg") {
-    const egg = EGGS.find((candidate) => candidate.code === selection.id);
-    if (!egg) return null;
+  const position = Number(selection.id.replace("slot-", ""));
+  if (!Number.isInteger(position) || position < 1 || position > EGG_SLOT_COUNT) {
+    return null;
+  }
+  const positionLabel = String(position).padStart(2, "0");
+  const occupied = position <= normalizeOccupiedSlots(occupiedSlots);
 
+  if (occupied) {
     return {
-      kicker: "ESPÉCIMEN",
-      title: egg.code,
+      kicker: "DETECCIÓN FÍSICA",
+      title: `HUEVO ${positionLabel}`,
       accent: PRIMARY,
       rows: toRows([
-        ["LOTE", egg.lote, FOREGROUND],
-        ["INGRESO", "11 AGO 2026", FOREGROUND],
-        ["POSICIÓN", egg.pos, FOREGROUND],
-        ["INCUBACIÓN", `DÍA ${egg.dia}`, PRIMARY],
-        ["ESTADO", egg.estado, SUCCESS],
-        [
-          "TEMP. LOCAL",
-          `${critical ? "40.1" : "37.6"} °C`,
-          critical ? DANGER : WARNING,
-        ],
+        ["POSICIÓN", positionLabel, FOREGROUND],
+        ["SENSOR", "ACTIVO", SUCCESS],
+        ["ESTADO", "OCUPADO", SUCCESS],
       ]),
     };
   }
 
   return {
     kicker: "ESPACIO",
-    title: "POSICIÓN 04",
+    title: `POSICIÓN ${positionLabel}`,
     accent: NEUTRAL,
     rows: toRows([
       ["ESTADO", "DISPONIBLE", NEUTRAL],

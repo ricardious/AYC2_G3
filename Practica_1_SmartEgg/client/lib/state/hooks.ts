@@ -2,7 +2,10 @@
 
 import { useContext, useMemo } from "react";
 
-import { buildEggViews } from "@/lib/smartegg/derive";
+import {
+  buildEggViews,
+  normalizeOccupiedSlots,
+} from "@/lib/smartegg/derive";
 import type { EggView } from "@/lib/smartegg/types";
 
 import {
@@ -34,9 +37,18 @@ export function useTelemetry(): TelemetryContextValue {
 
 /** Egg presentation models, shared by every screen that renders specimens. */
 export function useEggViews(): EggView[] {
-  const { hoveredEgg, selection } = useSmartEgg();
-  return useMemo(
-    () => buildEggViews(hoveredEgg, selection),
-    [hoveredEgg, selection],
+  const { hoveredEgg, selection, dashboard } = useSmartEgg();
+  const occupiedSlots = normalizeOccupiedSlots(
+    dashboard?.latest?.occupied_slots,
   );
+  return useMemo(
+    () => buildEggViews(hoveredEgg, selection, occupiedSlots),
+    [hoveredEgg, occupiedSlots, selection],
+  );
+}
+
+/** Cantidad física reportada por `SLOTS` en la telemetría del Arduino. */
+export function useOccupiedSlots(): number {
+  const { dashboard } = useSmartEgg();
+  return normalizeOccupiedSlots(dashboard?.latest?.occupied_slots);
 }
