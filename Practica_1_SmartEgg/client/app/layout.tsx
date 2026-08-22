@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   title: "SmartEgg · Control Core",
   description:
     "Consola de control de la incubadora inteligente SmartEgg — Nodo 01 · Lote A.",
+  icons: { icon: "/smartegg-mark.svg" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
