@@ -1,16 +1,36 @@
 "use client";
 
 import { SectionKicker } from "@/components/atoms/SectionKicker";
-import { NODE_INFO } from "@/lib/smartegg/catalog";
-import { FOREGROUND_MUTED } from "@/lib/smartegg/theme";
+import { FOREGROUND_MUTED, SUCCESS, WARNING } from "@/lib/smartegg/theme";
 import type { CSSVars } from "@/lib/smartegg/types";
 import { useSmartEgg } from "@/lib/state/hooks";
 
 export function NodePanel() {
-  const { config } = useSmartEgg();
+  const { config, incubator, connection, dashboard } = useSmartEgg();
 
   const rows = [
-    ...NODE_INFO,
+    {
+      label: "IDENTIFICADOR",
+      value: incubator?.code ?? "—",
+      color: FOREGROUND_MUTED,
+    },
+    {
+      label: "ESTADO",
+      value: connection === "live" ? "EN VIVO" : "REST",
+      color: connection === "live" ? SUCCESS : WARNING,
+    },
+    {
+      label: "CAPACIDAD",
+      value: dashboard
+        ? `${dashboard.occupancy.occupied}/${dashboard.occupancy.capacity}`
+        : "—",
+      color: FOREGROUND_MUTED,
+    },
+    {
+      label: "SERIE",
+      value: incubator?.serial_number ?? "SIN ASIGNAR",
+      color: FOREGROUND_MUTED,
+    },
     { label: "TÉCNICO", value: config.technician, color: FOREGROUND_MUTED },
   ];
 
