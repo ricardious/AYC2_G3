@@ -6,8 +6,8 @@ import { buildActuators } from "@/lib/smartegg/derive";
 import { useSmartEgg } from "@/lib/state/hooks";
 
 export function ActuatorPanel() {
-  const { critical, actions } = useSmartEgg();
-  const actuators = buildActuators(critical);
+  const { critical, dashboard, actions } = useSmartEgg();
+  const actuators = buildActuators(critical, dashboard?.actuators);
 
   return (
     <section aria-label="Actuadores" className="w-full">
