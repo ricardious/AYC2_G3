@@ -15,6 +15,7 @@ dist/
 
 # Local databases
 *.db
+*.db-*
 *.sqlite
 *.sqlite3
 

@@ -1,0 +1,61 @@
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--color-background);
+  }
+
+  body {
+    color: var(--color-foreground);
+    font-family: var(--font-display);
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-primary-link);
+  }
+
+  /* El diseño original no llevaba reset y su geometría depende de tres valores
+     por defecto que el preflight de Tailwind cambia: `content-box`,
+     `line-height: normal` y los SVG en línea. La consola vuelve a ellos.
+
+     En `base` para que las utilidades sigan teniendo prioridad. */
+
+  .console,
+  .console *,
+  .console *::before,
+  .console *::after {
+    box-sizing: content-box;
+  }
+
+  .console {
+    line-height: normal;
+  }
+
+  .console svg {
+    display: inline;
+    vertical-align: baseline;
+  }
+
+  .console button {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    text-align: inherit;
+    cursor: pointer;
+  }
+
+  .console :focus-visible {
+    outline: 1px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+}
