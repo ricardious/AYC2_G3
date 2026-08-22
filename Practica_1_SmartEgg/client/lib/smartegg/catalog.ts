@@ -10,7 +10,6 @@ import type {
   EggRecord,
   Particle,
   ScreenId,
-  SetpointView,
   TimelineMark,
 } from "./types";
 
@@ -85,37 +84,6 @@ export const SCREEN_TITLES: Record<ScreenId, readonly [string, string]> = {
   reportes: ["DOCUMENTACIÓN DE CICLO", "REPORTES"],
   config: ["PARÁMETROS DEL NODO", "CONFIGURACIÓN"],
 };
-
-export const SETPOINTS: readonly SetpointView[] = [
-  {
-    label: "TEMPERATURA OBJETIVO",
-    value: "37.5 °C",
-    pct: 62,
-    color: WARNING,
-    hint: "TOLERANCIA ±0.5 °C",
-  },
-  {
-    label: "HUMEDAD OBJETIVO",
-    value: "58 %",
-    pct: 58,
-    color: PRIMARY,
-    hint: "TOLERANCIA ±7 %",
-  },
-  {
-    label: "INTERVALO DE ROTACIÓN",
-    value: "2 H",
-    pct: 40,
-    color: PRIMARY,
-    hint: "ÁNGULO ±45°",
-  },
-  {
-    label: "UMBRAL DE ALARMA",
-    value: "39.0 °C",
-    pct: 80,
-    color: DANGER,
-    hint: "BUZZER + CORTE DE CALEFACCIÓN",
-  },
-];
 
 const TIMELINE_LABELS = [
   "10:00",

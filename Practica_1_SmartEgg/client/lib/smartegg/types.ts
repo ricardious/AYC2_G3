@@ -123,14 +123,6 @@ export interface EventView {
   color: string;
 }
 
-export interface SetpointView {
-  label: string;
-  value: string;
-  pct: number;
-  color: string;
-  hint: string;
-}
-
 export interface TimelineMark {
   pct: number;
   height: number;
