@@ -1,5 +1,6 @@
 "use client";
 
+import { SmartEggLogo } from "@/components/atoms/SmartEggLogo";
 import { NavItem } from "@/components/molecules/NavItem";
 import { NAV_ITEMS } from "@/lib/smartegg/catalog";
 import { nodeStatus } from "@/lib/smartegg/derive";
@@ -26,20 +27,11 @@ export function SideNav() {
       {/* En el riel la fila se desvanece con `contents`, para que el estado sea
           hijo directo de la columna y `mt-auto` pueda bajarlo al pie. */}
       <div className="flex items-center justify-between gap-4 px-5 pt-6 pb-4 console:contents">
-        <div className="flex items-center gap-3 console:block console:pl-[22px]">
-          <div
-            aria-hidden="true"
-            className="egg-shape h-[15px] w-[11px] shrink-0 bg-[linear-gradient(160deg,#eaf3f5,#8fa2a8)] shadow-[0_0_12px_rgba(95,227,232,.5)]"
-          />
-          <div>
-            <div className="text-[13px] font-semibold tracking-[0.22em] console:mt-3.5 console:text-xs">
-              SMART<span className="text-primary console:block">EGG</span>
-            </div>
-            <div className="mt-1 font-mono text-[8px] tracking-[0.16em] text-foreground-faint console:mt-2">
-              IOT · v2.4
-            </div>
-          </div>
-        </div>
+        <SmartEggLogo
+          subtitle="IOT · CONTROL CORE"
+          className="console:block console:pl-[22px]"
+          markClassName="console:h-[42px] console:w-[38px]"
+        />
 
         <div
           style={statusStyle}

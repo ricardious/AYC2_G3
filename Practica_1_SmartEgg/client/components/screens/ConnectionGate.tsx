@@ -3,7 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 
 import { BackdropLayers } from "@/components/atoms/BackdropLayers";
-import { EggShape } from "@/components/atoms/EggShape";
+import { SmartEggMark } from "@/components/atoms/SmartEggLogo";
 import { StatusDot } from "@/components/atoms/StatusDot";
 import { apiOrigin } from "@/lib/api/client";
 import { useSmartEgg } from "@/lib/state/hooks";
@@ -18,7 +18,7 @@ function EggEmblem() {
       <div className="absolute inset-0 animate-sweep rounded-full border border-dashed border-primary/30" />
       <div className="absolute inset-[10px] rounded-full border border-primary/10" />
       <div className="absolute inset-5 animate-breathe rounded-full bg-primary/15 blur-lg" />
-      <EggShape variant="chip" hot />
+      <SmartEggMark className="relative z-10 h-14 w-12 drop-shadow-[0_0_12px_rgba(95,227,232,.28)]" />
     </div>
   );
 }
