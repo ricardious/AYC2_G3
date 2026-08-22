@@ -11,6 +11,51 @@ pnpm build
 pnpm lint
 ```
 
+## Conexión con el backend
+
+La consola ya no genera telemetría simulada. Al iniciar solicita las credenciales del
+técnico, carga el estado y las últimas 240 lecturas por REST y abre un WebSocket para las
+nuevas lecturas. Si el WebSocket se interrumpe, consulta `/state` cada 2 segundos y trata
+de reconectarlo; mientras está conectado conserva una sincronización REST cada 10
+segundos para actuadores, sensores y alarmas.
+
+Copie la configuración opcional:
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Uso |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Origen de FastAPI, por ejemplo `http://localhost:8000` |
+| `NEXT_PUBLIC_INCUBATOR_ID` | Incubadora preferida; si se omite se usa la primera |
+
+Si `NEXT_PUBLIC_API_URL` no está definida, el navegador usa automáticamente su propio
+hostname con el puerto `8000`. Así, al visitar `http://192.168.1.20:3000` desde un móvil,
+la API se busca en `http://192.168.1.20:8000` y no en el `localhost` del teléfono.
+
+Arranque ambos procesos en terminales separadas:
+
+```bash
+cd ../server
+uv run fastapi dev --host 0.0.0.0
+
+cd ../client
+pnpm dev --hostname 0.0.0.0
+```
+
+El origen exacto del frontend debe estar autorizado en `SMARTEGG_CORS_ORIGINS` dentro
+de `server/.env`. Antes del primer acceso también deben existir el técnico y al menos una
+incubadora; ambos pueden crearse desde `http://localhost:8000/docs`. El código de la
+incubadora debe coincidir con el enviado por el firmware (`NODE-01` por defecto).
+
+Flujo utilizado:
+
+```text
+Arduino --Serial USB--> FastAPI --REST inicial/respaldo--> Next.js
+                              `--WebSocket en vivo-------> Next.js
+```
+
 ## Arquitectura
 
 ### Atomic Design
