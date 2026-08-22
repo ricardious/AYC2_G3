@@ -1,4 +1,5 @@
 import { EGGS, EMPTY_SLOT_LABEL } from "./catalog";
+import type { Actuator, Alarm, Sensor } from "@/lib/api/types";
 import {
   DANGER,
   DANGER_SOFT,
@@ -43,20 +44,24 @@ export interface TemperatureReading {
 }
 
 export function readTemperature(
-  latest: SeriesPoint,
+  latest: SeriesPoint | null,
   critical: boolean,
 ): TemperatureReading {
-  const value = critical ? 40.2 : Math.round(latest.t * 10) / 10;
+  const value = latest ? Math.round(latest.t * 10) / 10 : 35;
   return {
     value,
-    label: value.toFixed(1),
+    label: latest ? value.toFixed(1) : "—",
     color: critical ? DANGER : WARNING,
-    deviation: `${value > 38 ? "+" : ""}${(value - 37.5).toFixed(1)} °C`,
+    deviation: latest
+      ? `${value > 38 ? "+" : ""}${(value - 37.5).toFixed(1)} °C`
+      : "SIN DATOS",
   };
 }
 
-export function readHumidity(latest: SeriesPoint, critical: boolean): number {
-  return critical ? 54 : Math.round(latest.h);
+export function readHumidity(
+  latest: SeriesPoint | null,
+): number | null {
+  return latest ? Math.round(latest.h) : null;
 }
 
 /** Inclinación de la bandeja; se nivela mientras la alarma está activa. */
@@ -80,13 +85,25 @@ export function buildHeaderStats(
   critical: boolean,
   clock: string,
   technician: string,
+  connection: "connecting" | "live" | "polling" | "offline" = "offline",
 ): HeaderStat[] {
+  const connectionLabels = {
+    connecting: "CONECTANDO",
+    live: "EN VIVO",
+    polling: "REST",
+    offline: "OFFLINE",
+  } as const;
   return [
     {
       label: "CONEXIÓN",
-      value: "ONLINE",
+      value: connectionLabels[connection],
       color: FOREGROUND_MUTED,
-      dot: SUCCESS,
+      dot:
+        connection === "offline"
+          ? DANGER
+          : connection === "live"
+            ? SUCCESS
+            : WARNING,
     },
     {
       label: "ÚLTIMA ACTUALIZACIÓN",
@@ -134,39 +151,53 @@ export function buildEggViews(
 
 /* ------------------------------------------------------------ actuadores */
 
-export function buildActuators(critical: boolean): ActuatorView[] {
+export function buildActuators(
+  critical: boolean,
+  states: Actuator[] = [],
+): ActuatorView[] {
+  const state = (kind: Actuator["kind"]) =>
+    states.find((item) => item.kind === kind);
+  const fan = state("fan");
+  const heater = state("heater");
+  const servo = state("servo");
+  const buzzer = state("buzzer");
   return [
     {
       id: "ventilador",
       name: "Ventilador",
-      state: "ACTIVO",
-      metric: critical ? "100 %" : "60 %",
-      color: PRIMARY,
-      pulse: "fan",
+      state: fan?.enabled ? "ACTIVO" : "INACTIVO",
+      metric: fan?.value == null ? (fan?.enabled ? "ON" : "—") : `${fan.value} %`,
+      color: fan?.enabled ? PRIMARY : FOREGROUND_FAINTER,
+      pulse: fan?.enabled ? "fan" : "none",
     },
     {
       id: "calefaccion",
       name: "Calefacción",
-      state: critical ? "APAGADA" : "ACTIVA",
-      metric: critical ? "0 %" : "42 %",
-      color: critical ? DANGER : WARNING,
-      pulse: "heater",
+      state: heater?.enabled ? "ACTIVA" : "APAGADA",
+      metric:
+        heater?.value == null
+          ? heater?.enabled
+            ? "ON"
+            : "—"
+          : `${heater.value} %`,
+      color: heater?.enabled ? WARNING : FOREGROUND_FAINTER,
+      pulse: heater?.enabled ? "heater" : "none",
     },
     {
       id: "servo",
       name: "Rotación",
-      state: "ACTIVA",
-      metric: critical ? "0°" : "+45°",
-      color: PRIMARY,
-      pulse: "servo",
+      state: servo?.enabled ? "ACTIVA" : "INACTIVA",
+      metric: servo?.value == null ? "—" : `${servo.value > 0 ? "+" : ""}${servo.value}°`,
+      color: servo?.enabled ? PRIMARY : FOREGROUND_FAINTER,
+      pulse: servo?.enabled ? "servo" : "none",
     },
     {
       id: "buzzer",
       name: "Buzzer",
-      state: critical ? "ACTIVO" : "INACTIVO",
-      metric: critical ? "85 dB" : "—",
-      color: critical ? DANGER : FOREGROUND_FAINTER,
-      pulse: critical ? "alarm" : "none",
+      state: buzzer?.enabled ? "ACTIVO" : "INACTIVO",
+      metric: buzzer?.enabled ? "ALARMA" : "—",
+      color: buzzer?.enabled || critical ? DANGER : FOREGROUND_FAINTER,
+      pulse: buzzer?.enabled ? "alarm" : "none",
     },
   ];
 }
@@ -188,6 +219,37 @@ export const SENSORS: readonly SensorView[] = [
     delay: 1,
   },
 ];
+
+export function buildSensors(sensors: Sensor[]): SensorView[] {
+  if (sensors.length === 0) return SENSORS.map((sensor) => ({ ...sensor, state: "SIN DATOS", color: FOREGROUND_FAINTER }));
+  const environmental = sensors.filter((sensor) =>
+    ["temperature", "humidity"].includes(sensor.kind),
+  );
+  const door = sensors.find((sensor) => sensor.kind === "limit_switch");
+  const slots = sensors.find((sensor) => sensor.kind === "pressure");
+  const view = (
+    id: ComponentId,
+    name: string,
+    active: boolean,
+    delay: number,
+  ): SensorView => ({
+    id,
+    name,
+    state: active ? "ONLINE" : "INACTIVO",
+    color: active ? SUCCESS : DANGER,
+    delay,
+  });
+  return [
+    view(
+      "dht",
+      "DHT11",
+      environmental.length >= 2 && environmental.every((sensor) => sensor.is_active),
+      0,
+    ),
+    view("limit", "Final de carrera", Boolean(door?.is_active), 0.5),
+    view("slots", "Sensor de espacios", Boolean(slots?.is_active), 1),
+  ];
+}
 
 /** Rótulos unidos al diagrama de la cámara por una línea guía. */
 export function buildHotspots(critical: boolean): HotspotView[] {
@@ -233,22 +295,21 @@ export function buildHotspots(critical: boolean): HotspotView[] {
 
 /* ---------------------------------------------------------------- eventos */
 
-export function buildEvents(critical: boolean): EventView[] {
-  const rows: readonly [string, string, string, string][] = critical
-    ? [
-        ["10:42:18", "ALERTA", "40.2 °C · fuera de rango seguro", DANGER],
-        ["10:42:16", "CALEFACCIÓN", "Desactivada por seguridad", DANGER],
-        ["10:42:14", "VENTILACIÓN", "Ventilador a 100 %", PRIMARY],
-        ["10:42:02", "TEMPERATURA", "39.4 °C · en ascenso", WARNING],
-      ]
-    : [
-        ["10:42:10", "ROTACIÓN", "Bandeja posicionada en +45°", PRIMARY],
-        ["10:41:52", "VENTILACIÓN", "Ventilador activado", PRIMARY],
-        ["10:41:40", "TEMPERATURA", "37.6 °C · estable", WARNING],
-        ["10:41:32", "HUMEDAD", "58 % · normal", PRIMARY],
-      ];
-
-  return rows.map(([time, kind, text, color]) => ({ time, kind, text, color }));
+export function buildEvents(alarms: Alarm[] = []): EventView[] {
+  if (alarms.length > 0) {
+    return alarms.slice(0, 4).map((alarm) => ({
+      time: new Intl.DateTimeFormat("es-GT", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(new Date(alarm.occurred_at)),
+      kind: alarm.severity === "critical" ? "ALERTA" : "AVISO",
+      text: alarm.message,
+      color: alarm.severity === "critical" ? DANGER : WARNING,
+    }));
+  }
+  return [];
 }
 
 /* ------------------------------------------------- fichas de componentes */
