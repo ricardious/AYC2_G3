@@ -7,8 +7,8 @@ import { useSmartEgg } from "@/lib/state/hooks";
 
 /** Bitácora de eventos del nodo en vivo. */
 export function EventFeed() {
-  const { critical } = useSmartEgg();
-  const events = buildEvents(critical);
+  const { dashboard } = useSmartEgg();
+  const events = buildEvents(dashboard?.active_alarms);
 
   return (
     <section aria-label="Eventos en vivo" className="w-full">
@@ -17,6 +17,11 @@ export function EventFeed() {
         {events.map((event) => (
           <EventRow key={`${event.time}-${event.kind}`} {...event} />
         ))}
+        {events.length === 0 ? (
+          <li className="font-mono text-[8px] tracking-[0.15em] text-foreground-fainter">
+            SIN ALARMAS ACTIVAS
+          </li>
+        ) : null}
       </ul>
     </section>
   );
