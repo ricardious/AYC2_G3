@@ -68,8 +68,37 @@ export function trayTilt(critical: boolean): number {
   return critical ? 0 : 6;
 }
 
-export function trayAngle(critical: boolean): { label: string; pct: number } {
-  return critical ? { label: "0°", pct: 50 } : { label: "+45°", pct: 100 };
+export interface TrayAngleReading {
+  label: string;
+  pct: number;
+  limit: number;
+}
+
+/** Proyecta el ángulo firmado del servo sobre la escala de la bandeja. */
+export function readTrayAngle(
+  angleDegrees: number | null | undefined,
+  configuredLimit = 45,
+): TrayAngleReading {
+  const limit = Number.isFinite(configuredLimit)
+    ? Math.max(1, Math.abs(Math.round(configuredLimit)))
+    : 45;
+
+  if (angleDegrees == null || !Number.isFinite(angleDegrees)) {
+    return { label: "—", pct: 50, limit };
+  }
+
+  const roundedAngle = Math.round(angleDegrees);
+  const positionAngle = Math.max(-limit, Math.min(limit, angleDegrees));
+  return {
+    label: `${roundedAngle > 0 ? "+" : ""}${roundedAngle}°`,
+    pct: ((positionAngle + limit) / (limit * 2)) * 100,
+    limit,
+  };
+}
+
+/** @deprecated Usar `readTrayAngle` con el valor real del actuador. */
+export function trayAngle(critical: boolean): TrayAngleReading {
+  return readTrayAngle(critical ? 0 : 45);
 }
 
 export function nodeStatus(critical: boolean): { word: string; color: string } {
