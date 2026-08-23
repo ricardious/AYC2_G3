@@ -10,9 +10,15 @@ import { useOccupiedSlots, useSmartEgg } from "@/lib/state/hooks";
  * un espacio libre. Panel derecho en el plano, hoja inferior fija en la pila.
  */
 export function SelectionPanel() {
-  const { selection, critical, actions } = useSmartEgg();
+  const { selection, critical, eggs, lots, actions } = useSmartEgg();
   const occupiedSlots = useOccupiedSlots();
-  const detail = buildSelectionDetail(selection, critical, occupiedSlots);
+  const detail = buildSelectionDetail(
+    selection,
+    critical,
+    occupiedSlots,
+    eggs,
+    lots,
+  );
 
   if (!detail) return null;
 
