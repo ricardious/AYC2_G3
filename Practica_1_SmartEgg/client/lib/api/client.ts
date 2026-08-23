@@ -1,9 +1,13 @@
 import type {
   AuthToken,
   DashboardState,
+  Egg,
+  EggCreate,
   Incubator,
   IncubatorConfig,
   IncubatorConfigUpdate,
+  Lot,
+  LotCreate,
   Technician,
   TelemetryReading,
 } from "./types";
@@ -102,6 +106,30 @@ export const api = {
 
   incubators: (token: string) =>
     request<Incubator[]>("/incubators", {}, token),
+
+  lots: (token: string, status = "active") =>
+    request<Lot[]>(`/lots?status=${encodeURIComponent(status)}`, {}, token),
+
+  createLot: (payload: LotCreate, token: string) =>
+    request<Lot>(
+      "/lots",
+      { method: "POST", body: JSON.stringify(payload) },
+      token,
+    ),
+
+  eggs: (incubatorId: number, token: string, status = "incubating") =>
+    request<Egg[]>(
+      `/eggs?incubator_id=${incubatorId}&status=${encodeURIComponent(status)}`,
+      {},
+      token,
+    ),
+
+  registerEgg: (payload: EggCreate, token: string) =>
+    request<Egg>(
+      "/eggs",
+      { method: "POST", body: JSON.stringify(payload) },
+      token,
+    ),
 
   state: (incubatorId: number, token: string) =>
     request<DashboardState>(`/incubators/${incubatorId}/state`, {}, token),
