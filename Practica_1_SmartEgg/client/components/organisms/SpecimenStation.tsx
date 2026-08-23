@@ -8,7 +8,8 @@ import { useEggViews, useSmartEgg } from "@/lib/state/hooks";
 export function SpecimenStation() {
   const { critical, actions } = useSmartEgg();
   const eggs = useEggViews();
-  const emptySlot = eggs.find((egg) => egg.empty);
+  const pendingEgg = eggs.find((egg) => !egg.empty && !egg.registered);
+  const occupiedEggs = eggs.filter((egg) => !egg.empty);
 
   return (
     <div className="relative h-[470px] w-[1120px]">
@@ -34,10 +35,19 @@ export function SpecimenStation() {
       <div className="absolute inset-x-0 top-[442px] flex justify-center">
         <GhostButton
           tone="dashed"
-          disabled={!emptySlot}
-          onClick={() => emptySlot && actions.pickEgg(emptySlot)}
+          disabled={!pendingEgg}
+          onClick={() =>
+            pendingEgg &&
+            actions.openEggRegistration(
+              Number(pendingEgg.id.replace("slot-", "")),
+            )
+          }
         >
-          + REGISTRAR HUEVO
+          {pendingEgg
+            ? "+ REGISTRAR HUEVO"
+            : occupiedEggs.length > 0
+              ? "FICHAS COMPLETAS"
+              : "SIN HUEVOS DETECTADOS"}
         </GhostButton>
       </div>
     </div>

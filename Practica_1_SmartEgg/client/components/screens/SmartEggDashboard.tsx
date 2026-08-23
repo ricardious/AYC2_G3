@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import { ConsoleStage } from "@/components/templates/ConsoleStage";
+import { EggRegistrationDialog } from "@/components/organisms/EggRegistrationDialog";
 import { DEFAULT_CONFIG } from "@/lib/smartegg/config";
 import type { SmartEggConfig } from "@/lib/smartegg/types";
 import { SmartEggProvider } from "@/lib/state/SmartEggProvider";
@@ -35,6 +36,21 @@ function ActiveScreen() {
   }
 }
 
+function DashboardContent() {
+  const { registrationSlot } = useSmartEgg();
+
+  return (
+    <ConnectionGate>
+      <ConsoleStage>
+        <ActiveScreen />
+      </ConsoleStage>
+      {registrationSlot !== null ? (
+        <EggRegistrationDialog key={registrationSlot} slot={registrationSlot} />
+      ) : null}
+    </ConnectionGate>
+  );
+}
+
 /**
  * SmartEgg control console — the single entry point of the interface.
  *
@@ -59,11 +75,7 @@ export function SmartEggDashboard({
 
   return (
     <SmartEggProvider config={config}>
-      <ConnectionGate>
-        <ConsoleStage>
-          <ActiveScreen />
-        </ConsoleStage>
-      </ConnectionGate>
+      <DashboardContent />
     </SmartEggProvider>
   );
 }
