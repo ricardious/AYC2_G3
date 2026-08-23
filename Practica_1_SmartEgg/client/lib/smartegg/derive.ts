@@ -1,4 +1,4 @@
-import type { Actuator, Alarm, Sensor } from "@/lib/api/types";
+import type { Actuator, Alarm, Egg, Lot, Sensor } from "@/lib/api/types";
 import {
   DANGER,
   DANGER_SOFT,
@@ -163,6 +163,8 @@ export function buildEggViews(
   hoveredEgg: string | null,
   selection: Selection,
   occupiedSlots: number,
+  registeredEggs: Egg[] = [],
+  lots: Lot[] = [],
 ): EggView[] {
   const occupied = normalizeOccupiedSlots(occupiedSlots);
 
@@ -171,6 +173,10 @@ export function buildEggViews(
     const positionLabel = String(position).padStart(2, "0");
     const id = `slot-${position}`;
     const empty = position > occupied;
+    const registration = registeredEggs.find(
+      (egg) => egg.slot_number === position && egg.status === "incubating",
+    );
+    const lot = lots.find((candidate) => candidate.id === registration?.lot_id);
     const hovered = hoveredEgg === id;
     const selected =
       (selection?.type === "egg" || selection?.type === "slot") &&
@@ -178,11 +184,22 @@ export function buildEggViews(
 
     return {
       id,
-      label: empty ? `POS ${positionLabel}` : `HUEVO ${positionLabel}`,
-      line2: empty ? "SIN DETECCIÓN" : "SENSOR ACTIVO",
-      line3: empty ? "DISPONIBLE" : "OCUPADO",
-      stateColor: empty ? FOREGROUND_FAINT : SUCCESS,
+      label: empty
+        ? `POS ${positionLabel}`
+        : registration?.code ?? `HUEVO ${positionLabel}`,
+      line2: empty
+        ? "SIN DETECCIÓN"
+        : registration
+          ? `LOTE ${lot?.code ?? registration.lot_id}`
+          : "SIN IDENTIFICAR",
+      line3: empty
+        ? "DISPONIBLE"
+        : registration
+          ? "INCUBANDO"
+          : "REGISTRAR FICHA",
+      stateColor: empty ? FOREGROUND_FAINT : registration ? SUCCESS : WARNING,
       empty,
+      registered: Boolean(registration),
       hot: hovered || selected,
       hovered,
     };
@@ -491,6 +508,8 @@ export function buildSelectionDetail(
   selection: Selection,
   critical: boolean,
   occupiedSlots = 0,
+  registeredEggs: Egg[] = [],
+  lots: Lot[] = [],
 ): DetailPanel | null {
   if (!selection) return null;
 
@@ -510,16 +529,42 @@ export function buildSelectionDetail(
   }
   const positionLabel = String(position).padStart(2, "0");
   const occupied = position <= normalizeOccupiedSlots(occupiedSlots);
+  const registration = registeredEggs.find(
+    (egg) => egg.slot_number === position && egg.status === "incubating",
+  );
+  const lot = lots.find((candidate) => candidate.id === registration?.lot_id);
+
+  if (occupied && registration) {
+    return {
+      kicker: "FICHA DE IDENTIFICACIÓN",
+      title: registration.code,
+      accent: PRIMARY,
+      rows: toRows([
+        ["LOTE", lot?.code ?? String(registration.lot_id), FOREGROUND],
+        ["POSICIÓN", positionLabel, FOREGROUND],
+        [
+          "INGRESO",
+          new Intl.DateTimeFormat("es-GT", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }).format(new Date(registration.registered_at)),
+          FOREGROUND,
+        ],
+        ["ESTADO", "INCUBANDO", SUCCESS],
+        ["SENSOR", "DETECTADO", SUCCESS],
+      ]),
+    };
+  }
 
   if (occupied) {
     return {
       kicker: "DETECCIÓN FÍSICA",
       title: `HUEVO ${positionLabel}`,
-      accent: PRIMARY,
+      accent: WARNING,
       rows: toRows([
         ["POSICIÓN", positionLabel, FOREGROUND],
-        ["SENSOR", "ACTIVO", SUCCESS],
-        ["ESTADO", "OCUPADO", SUCCESS],
+        ["SENSOR", "DETECTADO", SUCCESS],
+        ["FICHA", "SIN REGISTRAR", WARNING],
       ]),
     };
   }
