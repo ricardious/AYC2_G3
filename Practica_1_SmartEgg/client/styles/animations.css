@@ -77,3 +77,33 @@
     opacity: 0;
   }
 }
+
+/* El espécimen nunca está del todo quieto: la bandeja vibra, el aire circula.
+   El recorrido es de menos de 2 px y 1 grado — a más, deja de leerse como un
+   objeto pesado. */
+@keyframes se-egg-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.9deg);
+  }
+  50% {
+    transform: translateY(-1.5px) rotate(0.9deg);
+  }
+}
+
+/* Alarma térmica: el mismo balanceo, más rápido y más amplio. */
+@keyframes se-egg-alarm {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2.2deg);
+  }
+  25% {
+    transform: translateY(-1px) rotate(2.4deg);
+  }
+  50% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  75% {
+    transform: translateY(-1px) rotate(2deg);
+  }
+}
