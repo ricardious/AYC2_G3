@@ -38,19 +38,19 @@ export function TemperatureGauge() {
         <path
           d={GAUGE_OUTLINE_PATH}
           fill="none"
-          stroke="rgba(140,160,175,.14)"
+          stroke="var(--gauge-outline)"
           strokeWidth="1"
         />
         <path
           d={GAUGE_TRACK_PATH}
           fill="none"
-          stroke="rgba(140,160,175,.09)"
+          stroke="var(--gauge-track)"
           strokeWidth="14"
         />
         <path
           d={GAUGE_OPTIMAL_PATH}
           fill="none"
-          stroke="rgba(111,226,160,.3)"
+          stroke="var(--gauge-optimal)"
           strokeWidth="14"
         />
         <path
@@ -63,7 +63,7 @@ export function TemperatureGauge() {
         <path
           d={GAUGE_TICKS_PATH}
           fill="none"
-          stroke="rgba(160,180,195,.35)"
+          stroke="var(--gauge-ticks)"
           strokeWidth="1"
         />
         <circle
