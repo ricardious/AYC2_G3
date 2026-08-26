@@ -28,7 +28,7 @@ export function EggChip({
       onBlur={() => onHoverChange(false)}
       style={style}
       className={cx(
-        "block w-[88px] border-t pt-3 transition-colors hover:border-t-primary",
+        "block w-full border-t pt-3 transition-colors hover:border-t-primary console:w-[88px]",
         egg.hot ? "border-t-primary" : "border-t-divider-chip",
       )}
     >
