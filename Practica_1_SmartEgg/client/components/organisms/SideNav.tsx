@@ -44,8 +44,10 @@ export function SideNav() {
         </div>
       </div>
 
-      {/* La tira se desplaza en vez de partirse en dos filas. */}
-      <div className="flex gap-1 overflow-x-auto px-5 [scrollbar-width:none] console:mt-[54px] console:flex-col console:gap-0.5 console:overflow-visible console:px-0 [&::-webkit-scrollbar]:hidden">
+      {/* En pila la tira se parte en filas: cinco secciones no caben en el
+          ancho de un teléfono y desplazarlas dejaba las dos últimas fuera de
+          alcance, sin nada que indicara que seguían ahí. */}
+      <div className="flex flex-wrap gap-x-1 gap-y-0.5 px-5 console:mt-[54px] console:flex-col console:flex-nowrap console:gap-0.5 console:px-0">
         {NAV_ITEMS.map((item) => (
           <NavItem
             key={item.id}
