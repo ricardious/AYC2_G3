@@ -21,7 +21,7 @@ export function ReportSheet() {
   const occupiedSlots = useOccupiedSlots();
 
   return (
-    <article className="report-surface h-[660px] w-[520px] border border-frame-soft px-12 py-14 text-foreground-bright backdrop-blur-[3px] [transform:perspective(1600px)_rotateY(-14deg)_rotateX(4deg)_rotateZ(-1.5deg)]">
+    <article className="report-surface box-border w-full border border-frame-soft px-6 py-8 text-foreground-bright backdrop-blur-[3px] console:h-[660px] console:w-[520px] console:px-12 console:py-14 console:[transform:perspective(1600px)_rotateY(-14deg)_rotateX(4deg)_rotateZ(-1.5deg)]">
       <div className="font-mono text-[8px] tracking-[0.3em] text-primary">
         SMART EGG · SISTEMA IOT
       </div>
@@ -53,7 +53,8 @@ export function ReportSheet() {
       <svg
         viewBox="0 0 424 90"
         aria-hidden="true"
-        className="mt-[30px] h-[90px] w-[424px]"
+        className="mt-[30px] h-[90px] w-full console:w-[424px]"
+        preserveAspectRatio="none"
       >
         <path
           d={sparkline}

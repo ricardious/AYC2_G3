@@ -157,7 +157,10 @@ export function SetpointPanel() {
   const busy = saveState === "saving";
 
   return (
-    <section aria-label="Calibración de setpoints" className="w-[420px]">
+    <section
+      aria-label="Calibración de setpoints"
+      className="w-full max-w-[420px] console:w-[420px]"
+    >
       <div className="flex items-end justify-between">
         <SectionKicker>CALIBRACIÓN DE SETPOINTS</SectionKicker>
         <span className="font-mono text-[7px] tracking-[0.15em] text-foreground-fainter">
