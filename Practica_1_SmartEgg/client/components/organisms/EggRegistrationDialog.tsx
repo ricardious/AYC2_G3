@@ -154,7 +154,7 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
   return (
     <div
       role="presentation"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/78 px-4 py-8 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--scrim)] px-4 py-8 backdrop-blur-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !pending) {
           actions.closeEggRegistration();
@@ -165,7 +165,7 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="egg-registration-title"
-        className="relative max-h-full w-full max-w-[680px] overflow-y-auto border border-primary/30 bg-panel px-6 py-7 shadow-[0_30px_100px_rgba(0,0,0,.75)] console:px-9 console:py-8"
+        className="relative max-h-full w-full max-w-[680px] overflow-y-auto border border-primary/30 bg-panel px-6 py-7 shadow-[var(--panel-shadow)] console:px-9 console:py-8"
       >
         <span
           aria-hidden="true"
