@@ -5,6 +5,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { BackdropLayers } from "@/components/atoms/BackdropLayers";
 import { SmartEggMark } from "@/components/atoms/SmartEggLogo";
 import { StatusDot } from "@/components/atoms/StatusDot";
+import { ThemeSwitcher } from "@/components/molecules/ThemeSwitcher";
 import { apiOrigin } from "@/lib/api/client";
 import { useSmartEgg } from "@/lib/state/hooks";
 
@@ -18,7 +19,7 @@ function EggEmblem() {
       <div className="absolute inset-0 animate-sweep rounded-full border border-dashed border-primary/30" />
       <div className="absolute inset-[10px] rounded-full border border-primary/10" />
       <div className="absolute inset-5 animate-breathe rounded-full bg-primary/15 blur-lg" />
-      <SmartEggMark className="relative z-10 h-14 w-12 drop-shadow-[0_0_12px_rgba(95,227,232,.28)]" />
+      <SmartEggMark className="relative z-10 h-14 w-12 drop-shadow-[0_0_12px_var(--accent-mark)]" />
     </div>
   );
 }
@@ -53,10 +54,13 @@ function GateKicker({ children }: { children: ReactNode }) {
 
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-5 py-10 text-foreground">
+    <main className="console-backdrop relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-5 py-10 text-foreground">
       <BackdropLayers />
+      <div className="absolute z-20" style={{ top: 20, right: 20 }}>
+        <ThemeSwitcher />
+      </div>
       <div className="relative z-10 w-full max-w-[440px]">
-        <section className="relative border border-frame bg-panel/90 px-7 py-9 shadow-[0_30px_100px_rgba(0,0,0,.6)] backdrop-blur-md sm:px-10">
+        <section className="relative border border-frame bg-panel/90 px-7 py-9 [box-shadow:var(--panel-shadow)] backdrop-blur-md sm:px-10">
           <CornerBrackets />
           <span
             aria-hidden="true"
@@ -86,7 +90,7 @@ const fieldLabelClass =
   "font-mono text-[9px] tracking-[0.24em] text-foreground-faint transition-colors group-focus-within:text-primary";
 
 const fieldInputClass =
-  "w-full border border-frame-soft bg-background/60 py-3 pr-4 pl-9 font-mono text-[13px] tracking-[0.06em] text-foreground outline-none transition focus:border-primary/70 focus:bg-background/90 focus:shadow-[0_0_0_1px_rgba(95,227,232,.22),0_0_28px_rgba(95,227,232,.07)]";
+  "w-full border border-frame-soft bg-background/60 py-3 pr-4 pl-9 font-mono text-[13px] tracking-[0.06em] text-foreground outline-none transition focus:border-primary/70 focus:bg-background/90 focus:shadow-[0_0_0_1px_var(--accent-mark),0_0_28px_var(--accent-halo)]";
 
 function FieldGlyph() {
   return (
@@ -194,7 +198,7 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
           <button
             type="submit"
             disabled={loginPending}
-            className="group relative w-full overflow-hidden border border-primary/60 bg-primary/15 px-5 py-3.5 font-mono text-[10px] tracking-[0.3em] text-primary-soft transition hover:border-primary hover:bg-primary/25 hover:text-foreground-bright hover:shadow-[0_0_32px_rgba(95,227,232,.22)] disabled:cursor-wait disabled:opacity-60"
+            className="group relative w-full overflow-hidden border border-primary/60 bg-primary/15 px-5 py-3.5 font-mono text-[10px] tracking-[0.3em] text-primary-soft transition hover:border-primary hover:bg-primary/25 hover:text-foreground-bright hover:shadow-[0_0_32px_var(--accent-halo)] disabled:cursor-wait disabled:opacity-60"
           >
             <span
               aria-hidden="true"
