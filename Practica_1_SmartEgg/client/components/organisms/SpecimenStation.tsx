@@ -15,7 +15,7 @@ export function SpecimenStation() {
     <div className="relative h-[470px] w-[1120px]">
       <div
         aria-hidden="true"
-        className="bench-surface absolute inset-x-0 top-10 h-[390px] border border-[rgba(150,180,195,.18)] [transform:perspective(1400px)_rotateX(16deg)]"
+        className="bench-surface absolute inset-x-0 top-10 h-[390px] border border-frame-soft [transform:perspective(1400px)_rotateX(16deg)]"
       />
 
       <div className="absolute inset-x-0 top-5 grid grid-cols-2 place-items-center gap-x-20 gap-y-3 px-[330px]">
