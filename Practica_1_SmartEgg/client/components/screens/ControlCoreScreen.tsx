@@ -28,44 +28,44 @@ export function ControlCoreScreen() {
   return (
     <>
       {critical ? (
-        <StageBlock top={96} x={566} anchor="center" wide>
+        <StageBlock top={96} x={566} anchor="center" wide fluid>
           <CriticalAlertBanner />
         </StageBlock>
       ) : null}
 
-      <StageBlock top={158} x={176}>
+      <StageBlock top={158} x={176} fluid>
         <TemperatureGauge />
       </StageBlock>
 
-      <StageBlock top={472} x={186}>
+      <StageBlock top={472} x={186} fluid>
         <HumidityColumn />
       </StageBlock>
 
-      <StageBlock top={132} x={566} anchor="center" wide>
+      <StageBlock top={132} x={566} anchor="center" wide fit={548}>
         <IncubatorChamber />
       </StageBlock>
 
-      <StageBlock top={552} x={574} anchor="center" wide>
+      <StageBlock top={552} x={574} anchor="center" wide fluid>
         <TrayAngleDial />
       </StageBlock>
 
-      <StageBlock top={158} x={1226} anchor="right" fillRight>
+      <StageBlock top={158} x={1226} anchor="right" fillRight fluid>
         <ActuatorPanel />
       </StageBlock>
 
-      <StageBlock top={452} x={1226} anchor="right" fillRight>
+      <StageBlock top={452} x={1226} anchor="right" fillRight fluid>
         <SensorPanel />
       </StageBlock>
 
-      <StageBlock top={806} x={176} wide>
+      <StageBlock top={806} x={176} wide fluid>
         <SpecimenStrip />
       </StageBlock>
 
-      <StageBlock top={806} x={626} anchor="center" wide>
+      <StageBlock top={806} x={626} anchor="center" wide fluid>
         <TelemetryChart />
       </StageBlock>
 
-      <StageBlock top={806} x={1226} anchor="right" fillRight>
+      <StageBlock top={806} x={1226} anchor="right" fillRight fluid>
         <EventFeed />
       </StageBlock>
     </>
