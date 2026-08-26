@@ -2,6 +2,7 @@
 
 import { SmartEggLogo } from "@/components/atoms/SmartEggLogo";
 import { NavItem } from "@/components/molecules/NavItem";
+import { ThemeSwitcher } from "@/components/molecules/ThemeSwitcher";
 import { NAV_ITEMS } from "@/lib/smartegg/catalog";
 import { nodeStatus } from "@/lib/smartegg/derive";
 import type { CSSVars } from "@/lib/smartegg/types";
@@ -35,7 +36,7 @@ export function SideNav() {
 
         <div
           style={statusStyle}
-          className="flex shrink-0 items-center gap-3 font-mono text-[9px] tracking-[0.14em] text-foreground-fainter console:order-last console:mt-auto console:flex-col console:items-start console:gap-0 console:pb-[30px] console:pl-[22px] console:text-[8px] console:leading-[1.9]"
+          className="flex shrink-0 items-center gap-3 font-mono text-[9px] tracking-[0.14em] text-foreground-fainter console:order-last console:flex-col console:items-start console:gap-0 console:pb-[30px] console:pl-[22px] console:text-[8px] console:leading-[1.9]"
         >
           <span className="hidden sm:block">NODO 01</span>
           <span className="hidden sm:block">LOTE A</span>
@@ -53,6 +54,10 @@ export function SideNav() {
             onSelect={() => actions.navigate(item.id)}
           />
         ))}
+      </div>
+
+      <div className="px-5 py-3 console:mt-auto console:px-[22px] console:pt-0 console:pb-3">
+        <ThemeSwitcher />
       </div>
     </nav>
   );
