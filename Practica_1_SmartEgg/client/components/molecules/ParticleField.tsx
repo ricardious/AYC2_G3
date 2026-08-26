@@ -16,7 +16,7 @@ export function ParticleField() {
         return (
           <span
             key={index}
-            className="pointer-events-none absolute size-0.5 rounded-full bg-[rgba(160,220,230,.75)]"
+            className="pointer-events-none absolute size-0.5 rounded-full bg-[var(--particle-color)]"
             style={style}
           />
         );
