@@ -33,7 +33,7 @@ export function ReportSidebar() {
   };
 
   return (
-    <div className="w-[340px]">
+    <div className="w-full max-w-[340px] console:w-[340px]">
       <SectionKicker>DOCUMENTO GENERADO</SectionKicker>
       <p className="mt-4 max-w-[300px] text-[15px] leading-[1.7] text-pretty text-foreground-muted">
         Resumen del ciclo activo con telemetría consolidada, eventos de rotación
