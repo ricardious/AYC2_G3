@@ -153,6 +153,11 @@ export function buildHeaderStats(
 
 export const EGG_SLOT_COUNT = 4;
 
+/** La posición de bandeja que codifica un `EggView.id` (`slot-3` → 3). */
+export function slotIndex(id: string): number {
+  return Number(id.replace("slot-", "")) || 0;
+}
+
 /** Convierte cualquier lectura Serial en una ocupación segura para la UI. */
 export function normalizeOccupiedSlots(value: number | null | undefined): number {
   if (value == null || !Number.isFinite(value)) return 0;
