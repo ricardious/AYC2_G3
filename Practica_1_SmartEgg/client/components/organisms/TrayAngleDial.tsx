@@ -35,14 +35,14 @@ export function TrayAngleDial() {
         className="absolute top-0 left-[26px] h-[150px] w-[480px] transform-3d overflow-hidden rounded-[50%] [transform:perspective(700px)_rotateX(66deg)]"
       >
         <span className="platform-face absolute inset-0 rounded-[50%] border border-frame" />
-        <span className="absolute inset-[44px_74px] rounded-[50%] border border-dashed border-[rgba(150,180,195,.18)]" />
+        <span className="absolute inset-[44px_74px] rounded-[50%] border border-dashed border-frame-soft" />
         <span className="absolute inset-[78px_130px] rounded-[50%] border border-warning/24" />
         <span className="platform-sweep animate-sweep absolute inset-0 rounded-[50%] opacity-55" />
         <svg viewBox="0 0 480 150" className="absolute inset-0 h-[150px] w-[480px]">
           <path
             d={RADIAL_TICKS_PATH}
             fill="none"
-            stroke="rgba(160,190,205,.3)"
+            stroke="var(--gauge-ticks)"
             strokeWidth="1"
           />
         </svg>
@@ -50,7 +50,7 @@ export function TrayAngleDial() {
 
       <div className="absolute inset-x-0 top-[112px] text-center">
         <SectionKicker spacing="wide">ÁNGULO DE BANDEJA</SectionKicker>
-        <div className="mt-0.5 text-[52px] leading-[1.1] font-light tracking-[-0.02em] text-foreground-bright [text-shadow:0_0_30px_rgba(95,227,232,.35)]">
+        <div className="mt-0.5 text-[52px] leading-[1.1] font-light tracking-[-0.02em] text-foreground-bright [text-shadow:0_0_30px_var(--accent-mark)]">
           {angle.label}
         </div>
         <div className="mx-auto mt-2 w-[340px]">

@@ -26,18 +26,18 @@ export function HistoryCharts() {
         aria-hidden="true"
         className="mt-2.5 h-[180px] w-full"
       >
-        <rect x="0" y="60" width="1440" height="52" fill="rgba(240,164,74,.07)" />
+        <rect x="0" y="60" width="1440" height="52" fill="var(--heat-band)" />
         <path
           d={HISTORY_GRID_PATH}
           fill="none"
-          stroke="rgba(120,150,165,.10)"
+          stroke="var(--chart-grid)"
           strokeWidth="1"
         />
         <path
           d={temperaturePath}
           fill="none"
           strokeWidth="1.2"
-          className="stroke-warning drop-shadow-[0_0_6px_rgba(240,164,74,.45)]"
+          className="stroke-warning drop-shadow-[0_0_6px_var(--heat-trace-glow)]"
         />
       </svg>
 
@@ -50,11 +50,11 @@ export function HistoryCharts() {
         aria-hidden="true"
         className="mt-2.5 h-[150px] w-full"
       >
-        <rect x="0" y="52" width="1440" height="46" fill="rgba(95,227,232,.06)" />
+        <rect x="0" y="52" width="1440" height="46" fill="var(--accent-band)" />
         <path
           d={HISTORY_GRID_PATH}
           fill="none"
-          stroke="rgba(120,150,165,.10)"
+          stroke="var(--chart-grid)"
           strokeWidth="1"
         />
         <path
@@ -90,7 +90,7 @@ export function HistoryCharts() {
         })}
         <span
           aria-hidden="true"
-          className="absolute top-[-8px] left-[82%] h-7 w-px bg-foreground-bright shadow-[0_0_12px_#fff]"
+          className="absolute top-[-8px] left-[82%] h-7 w-px bg-foreground-bright shadow-[0_0_12px_var(--playhead-glow)]"
         />
       </div>
     </div>

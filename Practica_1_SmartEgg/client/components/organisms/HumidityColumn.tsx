@@ -30,7 +30,7 @@ export function HumidityColumn() {
       <div className="humidity-tube relative h-[212px] w-[34px] border border-primary/22">
         <span
           aria-hidden="true"
-          className="absolute inset-x-0 top-[var(--optimal-top)] h-[var(--optimal-height)] border-y border-dashed border-[rgba(111,226,160,.4)] bg-[rgba(111,226,160,.13)]"
+          className="absolute inset-x-0 top-[var(--optimal-top)] h-[var(--optimal-height)] border-y border-dashed border-[var(--optimal-band-line)] bg-[var(--optimal-band-fill)]"
         />
         <span
           aria-hidden="true"
