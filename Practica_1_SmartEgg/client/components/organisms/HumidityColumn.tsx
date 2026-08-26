@@ -24,7 +24,7 @@ export function HumidityColumn() {
   return (
     <section
       aria-label="Humedad"
-      className="flex items-end gap-5"
+      className="flex items-center justify-center gap-5 console:items-end console:justify-start"
       style={style}
     >
       <div className="humidity-tube relative h-[212px] w-[34px] border border-primary/22">
