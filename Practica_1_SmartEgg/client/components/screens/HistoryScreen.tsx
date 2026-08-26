@@ -11,10 +11,10 @@ import { StageBlock } from "@/components/templates/StageBlock";
 export function HistoryScreen() {
   return (
     <>
-      <StageBlock top={170} x={176} fillRight wide>
+      <StageBlock top={170} x={176} fillRight wide fluid>
         <HistoryOverview />
       </StageBlock>
-      <StageBlock top={300} x={176} fillRight wide>
+      <StageBlock top={300} x={176} fillRight wide fluid>
         <HistoryCharts />
       </StageBlock>
     </>

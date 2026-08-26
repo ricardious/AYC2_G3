@@ -11,10 +11,10 @@ import { StageBlock } from "@/components/templates/StageBlock";
 export function ReportsScreen() {
   return (
     <>
-      <StageBlock top={190} x={420} anchor="center" wide>
+      <StageBlock top={190} x={420} anchor="center" wide fluid>
         <ReportSheet />
       </StageBlock>
-      <StageBlock top={300} x={1090} anchor="center">
+      <StageBlock top={300} x={1090} anchor="center" fluid>
         <ReportSidebar />
       </StageBlock>
     </>

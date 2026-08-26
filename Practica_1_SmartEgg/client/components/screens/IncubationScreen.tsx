@@ -9,7 +9,7 @@ export function IncubationScreen() {
       <StageBlock top={200} x={176}>
         <StationSummary />
       </StageBlock>
-      <StageBlock top={190} x={260} anchor="center" wide>
+      <StageBlock top={190} x={260} anchor="center" wide fluid>
         <SpecimenStation />
       </StageBlock>
     </>
