@@ -17,7 +17,7 @@ export function NavItem({ label, active, onSelect }: NavItemProps) {
       aria-current={active ? "page" : undefined}
       onClick={onSelect}
       className={cx(
-        "relative flex shrink-0 items-center gap-[9px] font-mono tracking-[0.14em] transition-colors hover:text-[#e6f4f6]",
+        "relative flex shrink-0 items-center gap-[9px] font-mono tracking-[0.14em] transition-colors hover:text-foreground-bright",
         // En el riel sí se parte: «CENTRO DE CONTROL» no cabe en 132 px.
         "whitespace-nowrap console:whitespace-normal",
         // py-4 deja los 44 px del mínimo táctil.
@@ -28,7 +28,7 @@ export function NavItem({ label, active, onSelect }: NavItemProps) {
           : "border-b-transparent text-foreground-idle console:border-l-transparent",
       )}
     >
-      <StatusDot size={3} color={active ? PRIMARY : "rgba(120,150,165,.4)"} />
+      <StatusDot size={3} color={active ? PRIMARY : "var(--color-dot-idle)"} />
       <span>{label}</span>
     </button>
   );
