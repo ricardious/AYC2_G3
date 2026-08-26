@@ -5,7 +5,13 @@ interface SmartEggMarkProps {
   title?: string;
 }
 
-/** Símbolo de marca: silueta de huevo atravesada por un circuito de control. */
+/**
+ * Símbolo de marca: la silueta del espécimen con sus estratos de telemetría.
+ *
+ * Las cuatro líneas ganan peso hacia abajo, como la columna de humedad de la
+ * consola: el símbolo es una lectura, no un adorno. La cáscara es un ovoide
+ * —ancho abajo, estrecho y romo arriba— y no la gota puntiaguda de antes.
+ */
 export function SmartEggMark({
   className,
   title = "SmartEgg",
@@ -19,21 +25,22 @@ export function SmartEggMark({
       className={cx("h-10 w-9 shrink-0", className)}
     >
       <path
-        d="M32 3C23.5 14.7 10 30.5 10 47.1C10 60 19.6 69 32 69s22-9 22-21.9C54 30.5 40.5 14.7 32 3Z"
+        d="M32 5C44 5 54 26 54 44C54 57 44 67 32 67C20 67 10 57 10 44C10 26 20 5 32 5Z"
         className="fill-background/75 stroke-foreground-bright"
         strokeWidth="2"
       />
-      <path
-        d="M32 19v29m0-18H21m11 8h11"
+      {/* Cada estrato va medido para morir dentro de la cáscara a su altura:
+          por eso los anchos no son regulares y no hace falta recortarlos. */}
+      <g
         className="stroke-primary"
-        strokeWidth="1.5"
+        strokeWidth="2.2"
         strokeLinecap="round"
-      />
-      <circle cx="32" cy="18" r="2.6" className="fill-primary" />
-      <circle cx="20" cy="30" r="2.2" className="fill-background stroke-primary" strokeWidth="1.4" />
-      <circle cx="44" cy="38" r="2.2" className="fill-background stroke-primary" strokeWidth="1.4" />
-      <circle cx="32" cy="50" r="4" className="fill-primary" />
-      <circle cx="32" cy="50" r="7.5" className="stroke-primary/25" />
+      >
+        <path d="M23 29h18" opacity=".28" />
+        <path d="M17.5 38h29" opacity=".5" />
+        <path d="M14 47h36" opacity=".78" />
+        <path d="M16.5 56h31" />
+      </g>
     </svg>
   );
 }
