@@ -162,14 +162,19 @@ firmware/
 │   └── Tasks.*               # tareas FreeRTOS y estado compartido
 ├── PROTOCOL.md              # Contrato UART/USB con el backend
 ├── RUBRIC_CHECKLIST.md      # Nuestro repaso contra la rúbrica
+├── wokwi/
+│   └── diagram.json         # Diagrama de conexiones del lado de 5 V
 └── tests/
     ├── control_logic_test.cpp
     └── run_host_tests.sh
 ```
 
-Los diagramas (`CIRCUITO.dot`, `CIRCUITO.png`, `CIRCUITO.svg`, `CIRCUITO_REALISTA.*` y
-los circuitos del buzzer y del ventilador) los guardamos fuera del repositorio, junto con
-los scripts de Schemdraw que los generan.
+El cableado queda en dos figuras que se complementan: el diagrama de Wokwi
+(`docs/imgs/wokwi-diagrama-conexiones.png`) cubre todo el lado de control de 5 V, y el
+esquema de potencia (`docs/imgs/etapa-potencia.png`) cubre lo que Wokwi no tiene en su
+catálogo: el 2N2222 del buzzer, los diodos 1N4007 y las cargas de los relés (bombilla de
+110 V y ventilador). Los dibujos antiguos (`CIRCUITO.dot`, `CIRCUITO.png`, `CIRCUITO.svg`,
+`CIRCUITO_REALISTA.*`) siguen fuera del repositorio.
 
 ## Dependencias
 

@@ -140,22 +140,62 @@ TinkerCad/Wokwi), agregamos [`wokwi/diagram.json`](wokwi/diagram.json): un diagr
 Uno nuevo en [wokwi.com](https://wokwi.com/projects/new/arduino-uno) (pestaña `diagram.json`)
 o con la extensión de Wokwi para VS Code.
 
+Así está organizado el dibujo, para que se lea de un vistazo:
+
+- **Arriba** las entradas digitales: los cuatro finales de carrera de los espacios
+  (D12→D9, de izquierda a derecha), el final de puerta (D3) y la palanca ON/OFF (D2). El
+  cable negro que los enlaza es la **barra común de GND** que baja a `GND` del Uno; cada
+  contacto sólo cierra su pin contra esa barra, que es justo lo que espera `INPUT_PULLUP`.
+- **Arriba a la derecha** el sensor con su resistencia de 10 kΩ puenteando `VCC`–`DATA`,
+  para que se vea que el pull-up va en la línea de datos y no en otro lado.
+- **A la derecha** los actuadores en el orden de sus pines (D8 servo, D7 buzzer, D6 relé
+  del ventilador, D5 relé de calefacción). Los cables naranja son señales de salida.
+- **Abajo** el LCD I2C y el **riel común de 5 V y GND**: sale del Uno, pasa por el LCD y
+  recorre los módulos en cadena, igual que la línea de alimentación de una protoboard.
+
 Simplificaciones deliberadas frente al montaje real, para que quede claro qué mirar en el
 diagrama y qué seguir tomando de la tabla de conexiones de arriba:
 
 - El DHT11 se representa con la huella del `wokwi-dht22` (mismo pinout VCC/SDA/GND), porque
   Wokwi no tiene un componente DHT11 oficial. No la usamos para simular lecturas, solo para
   dibujar el cableado.
-- El buzzer se dibuja conectado directo a D7 y 5 V. El montaje real lo maneja con un
-  transistor 2N2222 (ver "Alimentación y protección" arriba); el catálogo básico de Wokwi no
-  trae un transistor discreto fácil de cablear en el diagrama, así que esa etapa de
-  protección queda documentada solo en texto.
+- El buzzer se dibuja conectado entre D7 y GND, respetando la polaridad de un buzzer activo
+  (D7 en el positivo). El transistor 2N2222, sus dos resistencias y el diodo 1N4007 **no
+  están en el catálogo de Wokwi** (no hay transistores ni diodos discretos), así que esa
+  etapa va aparte, en el esquema de potencia de abajo.
+- El riel de 5 V del diagrama nace del pin `5V` del Uno. En el montaje real el servo, el
+  módulo de relés y el buzzer se alimentan de la fuente externa de 5 V con GND común, nunca
+  del regulador del Arduino.
 - Los contactos `COM`/`NO`/`NC` de los dos módulos de relé se dejan sin conectar en el
-  diagrama: ahí es donde entran la bombilla de 110 V y el ventilador, que son la parte de
-  alta tensión/carga que mantuvimos fuera del área de 5 V por seguridad. El diagrama sólo
-  cubre el lado de control (`IN`/`VCC`/`GND`) que realmente conecta al microcontrolador.
+  diagrama: Wokwi tampoco tiene una bombilla ni un motor con los que dibujar esa carga, y es
+  la parte de alta tensión que mantuvimos fuera del área de 5 V por seguridad. El diagrama
+  sólo cubre el lado de control (`IN`/`VCC`/`GND`) que conecta al microcontrolador; la carga
+  va en el esquema de potencia.
 
 Lo abrimos en wokwi.com y cargó sin errores, con todos los componentes conectados según lo
 descrito arriba:
 
 ![Diagrama de conexiones SmartEgg en Wokwi](../docs/imgs/wokwi-diagrama-conexiones.png)
+
+## Esquema de la etapa de potencia
+
+Esto es lo que el diagrama de Wokwi no puede dibujar: el transistor que maneja el buzzer,
+los diodos de rueda libre y las dos cargas que cuelgan de los contactos del relé. Lo
+generamos con Schemdraw a partir de los mismos valores de la sección "Alimentación y
+protección".
+
+![Etapa de potencia: buzzer con 2N2222, ventilador y bombilla](../docs/imgs/etapa-potencia.png)
+
+- **A · Buzzer (D7).** D7 entra por una resistencia de 1 kΩ a la base del 2N2222 y una de
+  10 kΩ mantiene la base a GND mientras el pin está en alta impedancia (por ejemplo durante
+  el arranque). El emisor va a GND y el colector al negativo del buzzer; el positivo va a
+  +5 V. El 1N4007 queda en paralelo con el buzzer, **con el cátodo hacia +5 V**, para
+  descargar el pico inductivo cuando el transistor corta.
+- **B · CH2 → ventilador de 5 V.** El +5 V de la fuente entra por `COM2` y sale por `NO2`
+  hacia el cable rojo del ventilador; el negro vuelve al GND de la fuente, que es común con
+  el del Arduino. El segundo 1N4007 va en paralelo con el motor, otra vez con el cátodo
+  hacia +5 V.
+- **C · CH1 → bombilla de 110 V.** Fase con fusible hacia `COM1`, `NO1` a un terminal del
+  portalámparas y neutro al otro. Esta sección va completa dentro de la caja aislante
+  cerrada, con alivio de tensión y sin pasar por protoboard ni cables Dupont, y la montó y
+  revisó una persona calificada antes de energizarla.
