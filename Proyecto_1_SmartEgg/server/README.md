@@ -1,7 +1,7 @@
 # SmartEgg API
 
 Backend FastAPI para la Práctica 1 **SmartEgg: Incubadora Inteligente IoT**. Recibe la
-telemetría ambiental del Arduino por UART/USB, conserva el ciclo de incubación en SQLite,
+telemetría ambiental del Arduino por UART/USB, conserva el ciclo de incubación en PostgreSQL,
 expone la información al frontend por REST y WebSocket, y genera el informe PDF requerido.
 
 ## Cobertura del enunciado
@@ -31,7 +31,7 @@ flowchart LR
     Serial --> Domain[Servicio de telemetría]
     Web[Frontend web/móvil] <-->|REST + WebSocket| API[FastAPI]
     API --> Domain
-    Domain --> DB[(SQLite)]
+    Domain --> DB[(PostgreSQL)]
     API --> PDF[Generador PDF]
     Domain --> WS[Difusión WebSocket]
 ```
@@ -49,6 +49,7 @@ server/
 │   └── main.py           # Fábrica de aplicación y ciclo de vida
 ├── scripts/              # Simulador opcional
 ├── tests/                # Pruebas funcionales y del protocolo Serial
+├── migrations/           # Versionado del esquema con Alembic
 ├── main.py               # Entrada ASGI
 ├── .env.example
 ├── pyproject.toml
@@ -59,13 +60,14 @@ server/
 
 | Entidad | Responsabilidad |
 |---|---|
-| `Technician` | Cuenta autenticada incluida en reportes |
+| `Technician` | Operador autenticado, con edad y género |
 | `Incubator` / `IncubatorConfig` | Nodo, capacidad y umbrales configurables |
 | `Lot` / `Egg` | Lotes y ficha individual con posición física |
 | `Sensor` / `TelemetryReading` | Estado del sensor e historial ambiental |
 | `ActuatorState` | Estado/modo de calefacción, ventilador, servo y buzzer |
 | `Alarm` | Eventos críticos, resolución y reconocimiento |
 | `RotationEvent` | Historial de giros manuales/automáticos |
+| `DoorEvent` | Aperturas, cierres y movimientos de huevos por operador |
 
 ## Instalación y configuración
 
@@ -75,6 +77,7 @@ Requiere Python 3.12+ y [`uv`](https://docs.astral.sh/uv/).
 cd Practica_1_SmartEgg/server
 uv sync
 cp .env.example .env
+uv run alembic upgrade head
 ```
 
 Genere un secreto propio; nunca suba `.env`:
@@ -90,7 +93,8 @@ Variables principales:
 
 | Variable | Uso | Predeterminado |
 |---|---|---|
-| `SMARTEGG_DATABASE_URL` | URL SQLAlchemy | `sqlite:///../db/smartegg.db` |
+| `SMARTEGG_DATABASE_URL` | URL SQLAlchemy de PostgreSQL | `postgresql+psycopg://...` |
+| `SMARTEGG_AUTO_CREATE_SCHEMA` | Solo pruebas; en operación se usa Alembic | `false` |
 | `SMARTEGG_JWT_SECRET` | Firma de tokens | aleatorio por proceso |
 | `SMARTEGG_CORS_ORIGINS` | Orígenes JSON autorizados | `["http://localhost:3000"]` |
 | `SMARTEGG_TIMEZONE` | Día/hora del reporte | `America/Guatemala` |
@@ -127,7 +131,7 @@ Para crear automáticamente uno o varios técnicos al arrancar, configure la lis
 `server/.env`:
 
 ```env
-SMARTEGG_INITIAL_TECHNICIANS=[{"username":"ricardo","full_name":"Ricardo","password":"una-clave-segura"}]
+SMARTEGG_INITIAL_TECHNICIANS=[{"username":"ricardo","full_name":"Ricardo","age":25,"gender":"masculino","password":"una-clave-segura"}]
 ```
 
 Cada nombre de usuario se crea solamente si todavía no existe. Los reinicios no cambian
@@ -147,7 +151,7 @@ Como alternativa, el primer técnico puede crearse manualmente una única vez:
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/auth/bootstrap \
   -H 'Content-Type: application/json' \
-  -d '{"username":"tecnico1","full_name":"Nombre del técnico","password":"clave-segura"}'
+  -d '{"username":"tecnico1","full_name":"Nombre del técnico","age":25,"gender":"no especificado","password":"clave-segura"}'
 ```
 
 Luego use `POST /api/v1/auth/login` y envíe el token como
@@ -172,6 +176,7 @@ el estado de salud, requieren JWT.
 | Actuadores | `GET .../actuators`, `POST .../actuators/{kind}/commands` |
 | Rotación | `POST/GET /incubators/{id}/rotations` |
 | Alarmas | `GET .../alarms`, `POST .../alarms/{alarm_id}/acknowledge` |
+| Puerta | `POST/GET .../door-events`, `PATCH .../door-events/{event_id}/close` |
 | Reporte | `GET /reports/incubators/{id}/daily.pdf?day=AAAA-MM-DD` |
 | Tiempo real | `WS /ws/incubators/{id}?token=<JWT>` |
 | Serial | `GET /serial/status` |

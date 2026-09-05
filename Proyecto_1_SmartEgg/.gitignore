@@ -34,8 +34,6 @@ dist/
 htmlcov/
 
 # Databases and runtime data
-db/*
-!db/.gitignore
 *.db
 *.db-*
 *.sqlite
