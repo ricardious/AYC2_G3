@@ -12,7 +12,7 @@ Proyecto_1_SmartEgg/
 ├── db/           # Modelo relacional y consultas de PostgreSQL
 ├── firmware/     # Referencia al firmware reutilizado de la Práctica 1
 ├── docs/         # Documentación y enunciado
-├── grafana/      # Configuración de visualización
+├── grafana/      # Dashboards y configuración de Grafana
 ├── mqtt/         # Mosquitto, ACL y contrato de topics MQTT
 └── docker-compose.yml
 ```
@@ -38,6 +38,16 @@ docker compose up -d broker
 
 Mosquitto escucha en `1883` para MQTT TCP y en `9001` para MQTT sobre WebSocket.
 Consulte `mqtt/README.md` antes de desplegarlo fuera de una red local.
+
+### Grafana
+
+```bash
+docker compose up -d grafana
+```
+
+Grafana estará disponible en `http://localhost:3001`. Al iniciar cargamos los
+datasources de PostgreSQL y MQTT junto con los dashboards del proyecto. Los detalles
+están en `grafana/README.md`.
 
 ### Servidor
 
