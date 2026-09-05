@@ -12,6 +12,7 @@ from .config import Settings, get_settings
 from .database import Base, build_session_factory, create_engine
 from .services.bootstrap import ensure_initial_incubators, ensure_initial_technicians
 from .services.broadcast import ConnectionManager
+from .services.mqtt import MqttPublisher, build_mqtt_snapshot
 from .services.serial_bridge import SerialBridge
 from .services.telemetry import ingest_telemetry
 
@@ -29,6 +30,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         with session_factory() as db:
             try:
                 reading = ingest_telemetry(db, payload)
+                mqtt_publisher.publish_snapshot(
+                    build_mqtt_snapshot(db, reading, payload.incubator_code)
+                )
             except Exception:
                 logger.exception("Rejected serial telemetry")
                 return
@@ -54,6 +58,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 main_loop,
             )
 
+    mqtt_publisher = MqttPublisher(configured)
     serial_bridge = SerialBridge(
         enabled=configured.serial_enabled,
         port=configured.serial_port,
@@ -72,9 +77,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ensure_initial_technicians(session_factory, configured.initial_technicians)
         ensure_initial_incubators(session_factory, configured.initial_incubators)
         main_loop = asyncio.get_running_loop()
+        mqtt_publisher.start()
         serial_bridge.start()
         yield
         serial_bridge.stop()
+        mqtt_publisher.stop()
         engine.dispose()
 
     app = FastAPI(
@@ -89,6 +96,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.engine = engine
     app.state.session_factory = session_factory
     app.state.broadcast = broadcast
+    app.state.mqtt = mqtt_publisher
     app.state.serial_bridge = serial_bridge
     app.add_middleware(
         CORSMiddleware,
