@@ -15,6 +15,7 @@ import { IncubationScreen } from "./IncubationScreen";
 import { ReportsScreen } from "./ReportsScreen";
 import { SettingsScreen } from "./SettingsScreen";
 import { ConnectionGate } from "./ConnectionGate";
+import { ObservatoryScreen } from "./ObservatoryScreen";
 
 export type SmartEggDashboardProps = Partial<SmartEggConfig>;
 
@@ -22,6 +23,8 @@ function ActiveScreen() {
   const { screen } = useSmartEgg();
 
   switch (screen) {
+    case "observatorio":
+      return <ObservatoryScreen />;
     case "incubacion":
       return <IncubationScreen />;
     case "historial":

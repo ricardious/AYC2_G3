@@ -141,7 +141,7 @@ export const SmartEggContext = createContext<SmartEggContextValue | null>(null);
 export const TelemetryContext = createContext<TelemetryContextValue | null>(null);
 
 function point(reading: TelemetryReading): SeriesPoint {
-  return { t: reading.temperature_c, h: reading.humidity_pct };
+  return { t: reading.temperature_c, h: reading.humidity_pct, recordedAt: reading.recorded_at };
 }
 
 function clockFor(recordedAt: string | null): string {
@@ -224,7 +224,7 @@ export function SmartEggProvider({
     setSeries((current) => {
       const nextPoint = point(reading);
       const last = current[current.length - 1];
-      if (last?.t === nextPoint.t && last?.h === nextPoint.h) return current;
+      if (last?.recordedAt === nextPoint.recordedAt) return current;
       return [...current, nextPoint].slice(-SERIES_LIMIT);
     });
   }, []);
