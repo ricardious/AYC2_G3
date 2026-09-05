@@ -1,4 +1,54 @@
 services:
+  mqtt-password-init:
+    image: eclipse-mosquitto:2
+    restart: "no"
+    network_mode: none
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        umask 077
+        mosquitto_passwd -b -c /mosquitto/secrets/passwords \
+          "$$MQTT_USERNAME" "$$MQTT_PASSWORD"
+        chown 1883:1883 /mosquitto/secrets/passwords
+    environment:
+      MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+    volumes:
+      - mosquitto_secrets:/mosquitto/secrets
+
+  broker:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    depends_on:
+      mqtt-password-init:
+        condition: service_completed_successfully
+    environment:
+      MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_WS_PORT:-9001}:9001"
+    volumes:
+      - ./mqtt/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mqtt/config/acl:/mosquitto/config/acl:ro
+      - ./mqtt/certs:/mosquitto/certs:ro
+      - mosquitto_secrets:/mosquitto/secrets:ro
+      - mosquitto_data:/mosquitto/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mosquitto_sub -h 127.0.0.1 -p 1883
+          -u "$$MQTT_USERNAME" -P "$$MQTT_PASSWORD"
+          -t '$$SYS/broker/version' -C 1 -W 3
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - smartegg
+
   database:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -20,6 +70,8 @@ services:
 
 volumes:
   postgres_data:
+  mosquitto_data:
+  mosquitto_secrets:
 
 networks:
   smartegg:
