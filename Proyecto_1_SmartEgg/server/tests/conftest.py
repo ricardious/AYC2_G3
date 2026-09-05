@@ -13,6 +13,7 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
         database_url=f"sqlite:///{tmp_path / 'test.db'}",
         jwt_secret="test-only-secret-that-is-long-enough-for-tests",
         serial_enabled=False,
+        auto_create_schema=True,
     )
     with TestClient(create_app(settings)) as test_client:
         yield test_client

@@ -45,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                             "humidity_pct": reading.humidity_pct,
                             "door_open": reading.door_open,
                             "occupied_slots": reading.occupied_slots,
+                            "available_slots": reading.available_slots,
                             "source": reading.source,
                             "recorded_at": reading.recorded_at.isoformat(),
                         },
@@ -66,13 +67,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         nonlocal main_loop
-        Base.metadata.create_all(engine)
-        ensure_initial_technicians(
-            session_factory, configured.initial_technicians
-        )
-        ensure_initial_incubators(
-            session_factory, configured.initial_incubators
-        )
+        if configured.auto_create_schema:
+            Base.metadata.create_all(engine)
+        ensure_initial_technicians(session_factory, configured.initial_technicians)
+        ensure_initial_incubators(session_factory, configured.initial_incubators)
         main_loop = asyncio.get_running_loop()
         serial_bridge.start()
         yield
