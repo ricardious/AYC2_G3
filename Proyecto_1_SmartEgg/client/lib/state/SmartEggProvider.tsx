@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import mqtt from "mqtt";
 
 import { ApiError, api, websocketUrl } from "@/lib/api/client";
 import type {
@@ -25,6 +26,12 @@ import type {
   TelemetryReading,
   WebSocketMessage,
 } from "@/lib/api/types";
+import {
+  parseMqttMessage,
+  type MqttActuatorState,
+  type MqttCriticalAlarm,
+} from "@/lib/mqtt/messages";
+import { mqttWebSocketUrl } from "@/lib/mqtt/url";
 import type {
   ComponentId,
   EggView,
@@ -115,6 +122,9 @@ export interface SmartEggContextValue extends ConsoleState {
   lots: Lot[];
   eggs: Egg[];
   connection: ConnectionStatus;
+  mqttConnected: boolean;
+  nodeOnline: boolean | null;
+  criticalAlarm: MqttCriticalAlarm | null;
   error: string | null;
   loginPending: boolean;
   actions: SmartEggActions;
@@ -150,6 +160,31 @@ function errorMessage(error: unknown): string {
   return "No fue posible conectar con el backend";
 }
 
+function updateActuators(
+  current: DashboardState,
+  next: MqttActuatorState,
+): DashboardState {
+  return {
+    ...current,
+    actuators: current.actuators.map((actuator) => {
+      if (actuator.kind === "servo") {
+        return {
+          ...actuator,
+          enabled: next.servo_angle !== null,
+          value: next.servo_angle,
+          updated_at: next.recorded_at,
+        };
+      }
+      const enabled = next[actuator.kind];
+      return {
+        ...actuator,
+        enabled,
+        updated_at: next.recorded_at,
+      };
+    }),
+  };
+}
+
 export function SmartEggProvider({
   config,
   children,
@@ -168,9 +203,14 @@ export function SmartEggProvider({
   const [series, setSeries] = useState<SeriesPoint[]>([]);
   const [connection, setConnection] =
     useState<ConnectionStatus>("connecting");
+  const [mqttConnected, setMqttConnected] = useState(false);
+  const [nodeOnline, setNodeOnline] = useState<boolean | null>(null);
+  const [criticalAlarm, setCriticalAlarm] =
+    useState<MqttCriticalAlarm | null>(null);
   const connectionRef = useRef<ConnectionStatus>("connecting");
   const [error, setError] = useState<string | null>(null);
   const [loginPending, setLoginPending] = useState(false);
+  const mqttNodeCode = incubator?.code;
 
   const updateConnection = useCallback((next: ConnectionStatus) => {
     connectionRef.current = next;
@@ -356,6 +396,70 @@ export function SmartEggProvider({
   }, [applyReading, incubator, token, updateConnection]);
 
   useEffect(() => {
+    if (!token || !mqttNodeCode) return;
+
+    const mqttClient = mqtt.connect(mqttWebSocketUrl(), {
+      clientId: `smartegg-web-${mqttNodeCode}-${Math.random().toString(16).slice(2, 10)}`,
+      username: process.env.NEXT_PUBLIC_MQTT_USERNAME,
+      password: process.env.NEXT_PUBLIC_MQTT_PASSWORD,
+      clean: true,
+      connectTimeout: 10_000,
+      reconnectPeriod: 2_000,
+      protocolVersion: 4,
+    });
+    const prefix = `smartegg/${mqttNodeCode}`;
+
+    mqttClient.on("connect", () => {
+      mqttClient.subscribe(
+        {
+          [`${prefix}/alarmas/critica`]: { qos: 1 },
+          [`${prefix}/status`]: { qos: 1 },
+          [`${prefix}/actuadores/estado`]: { qos: 1 },
+        },
+        (reason) => setMqttConnected(!reason),
+      );
+    });
+    mqttClient.on("message", (topic, payload) => {
+      const message = parseMqttMessage(topic, payload, mqttNodeCode);
+      if (!message) return;
+
+      if (message.type === "status") {
+        setNodeOnline(message.online);
+        setIncubator((current) =>
+          current ? { ...current, is_online: message.online } : current,
+        );
+      } else if (message.type === "alarm") {
+        setCriticalAlarm(message.alarm);
+        if (message.alarm === null) {
+          setDashboard((current) =>
+            current
+              ? {
+                  ...current,
+                  active_alarms: current.active_alarms.filter(
+                    (alarm) => alarm.severity !== "critical",
+                  ),
+                }
+              : current,
+          );
+        }
+      } else {
+        setDashboard((current) =>
+          current ? updateActuators(current, message.actuators) : current,
+        );
+      }
+    });
+    mqttClient.on("reconnect", () => setMqttConnected(false));
+    mqttClient.on("offline", () => setMqttConnected(false));
+    mqttClient.on("close", () => setMqttConnected(false));
+    mqttClient.on("error", () => setMqttConnected(false));
+
+    return () => {
+      setMqttConnected(false);
+      void mqttClient.endAsync(true);
+    };
+  }, [mqttNodeCode, token]);
+
+  useEffect(() => {
     if (!token || !incubator) return;
     let disposed = false;
     let timer: number | null = null;
@@ -411,6 +515,9 @@ export function SmartEggProvider({
     setLots([]);
     setEggs([]);
     setSeries([]);
+    setMqttConnected(false);
+    setNodeOnline(null);
+    setCriticalAlarm(null);
     setError(null);
     dispatch({ type: "closeRegistration" });
     updateConnection("offline");
@@ -543,7 +650,11 @@ export function SmartEggProvider({
     [config, technician],
   );
   const critical =
-    config.criticalMode || Boolean(dashboard?.active_alarms.length);
+    config.criticalMode ||
+    criticalAlarm !== null ||
+    Boolean(
+      dashboard?.active_alarms.some((alarm) => alarm.severity === "critical"),
+    );
 
   const consoleValue = useMemo<SmartEggContextValue>(
     () => ({
@@ -557,6 +668,9 @@ export function SmartEggProvider({
       lots,
       eggs,
       connection,
+      mqttConnected,
+      nodeOnline,
+      criticalAlarm,
       error,
       loginPending,
       actions,
@@ -572,6 +686,9 @@ export function SmartEggProvider({
       lots,
       eggs,
       connection,
+      mqttConnected,
+      nodeOnline,
+      criticalAlarm,
       error,
       loginPending,
       actions,
