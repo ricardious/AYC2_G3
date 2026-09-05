@@ -1,7 +1,9 @@
-# Topics MQTT de SmartEgg
+# Topics que usamos
 
-Todos los payloads usan JSON UTF-8. `{id}` representa el código único de la incubadora,
-por ejemplo `NODE-01`.
+Para ordenar los mensajes usamos el prefijo `smartegg/{id}`. El valor `{id}` es el
+código de la incubadora, por ejemplo `NODE-01`. Todos nuestros mensajes usan JSON.
+
+Definimos los topics de la siguiente forma:
 
 | Topic | Publicador | Suscriptores | QoS | Retained |
 |---|---|---|---:|:---:|
@@ -12,9 +14,11 @@ por ejemplo `NODE-01`.
 | `smartegg/{id}/alarmas/critica` | Backend | Frontend | 1 | Sí |
 | `smartegg/{id}/status` | Backend/LWT | Frontend, Grafana | 1 | Sí |
 
-## Payloads
+## Formato de los mensajes
 
 ### Temperatura
+
+Publicamos la última temperatura medida:
 
 ```json
 {"value":37.6,"unit":"celsius","recorded_at":"2026-09-04T18:30:00Z"}
@@ -22,11 +26,15 @@ por ejemplo `NODE-01`.
 
 ### Humedad
 
+Publicamos la última humedad medida:
+
 ```json
 {"value":58.2,"unit":"percent","recorded_at":"2026-09-04T18:30:00Z"}
 ```
 
 ### Telemetría consolidada
+
+También enviamos una lectura completa para tener todos los valores en un solo mensaje:
 
 ```json
 {
@@ -41,6 +49,8 @@ por ejemplo `NODE-01`.
 
 ### Estado de actuadores
 
+En este topic enviamos el estado actual de los actuadores:
+
 ```json
 {
   "heater": false,
@@ -53,6 +63,8 @@ por ejemplo `NODE-01`.
 
 ### Alarma crítica
 
+Cuando detectamos una condición crítica publicamos:
+
 ```json
 {
   "kind": "temperature_high",
@@ -63,16 +75,19 @@ por ejemplo `NODE-01`.
 }
 ```
 
-Cuando no existe una alarma crítica activa, el backend publica un payload vacío retenido
-para limpiar el último estado del topic.
+Cuando la alarma deja de estar activa publicamos un mensaje vacío retenido. Con esto
+evitamos que el frontend siga mostrando una alarma anterior.
 
 ### Disponibilidad y LWT
+
+Al iniciar la conexión publicamos el nodo como disponible:
 
 ```json
 {"status":"online","recorded_at":"2026-09-04T18:30:00Z"}
 ```
 
-Al conectarse, el backend configura como LWT el mensaje retenido siguiente con QoS 1:
+También configuramos este mensaje como LWT con QoS 1. Mosquitto lo publica si el backend
+se desconecta de forma inesperada:
 
 ```json
 {"status":"offline","reason":"unexpected_disconnect"}
