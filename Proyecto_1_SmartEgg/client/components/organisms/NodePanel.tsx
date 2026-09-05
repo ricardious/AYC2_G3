@@ -1,12 +1,24 @@
 "use client";
 
 import { SectionKicker } from "@/components/atoms/SectionKicker";
-import { FOREGROUND_MUTED, SUCCESS, WARNING } from "@/lib/smartegg/theme";
+import {
+  DANGER,
+  FOREGROUND_MUTED,
+  SUCCESS,
+  WARNING,
+} from "@/lib/smartegg/theme";
 import type { CSSVars } from "@/lib/smartegg/types";
 import { useSmartEgg } from "@/lib/state/hooks";
 
 export function NodePanel() {
-  const { config, incubator, connection, dashboard } = useSmartEgg();
+  const {
+    config,
+    incubator,
+    connection,
+    dashboard,
+    mqttConnected,
+    nodeOnline,
+  } = useSmartEgg();
 
   const rows = [
     {
@@ -15,9 +27,20 @@ export function NodePanel() {
       color: FOREGROUND_MUTED,
     },
     {
-      label: "ESTADO",
+      label: "BACKEND",
       value: connection === "live" ? "EN VIVO" : "REST",
       color: connection === "live" ? SUCCESS : WARNING,
+    },
+    {
+      label: "MQTT",
+      value: mqttConnected ? "CONECTADO" : "DESCONECTADO",
+      color: mqttConnected ? SUCCESS : DANGER,
+    },
+    {
+      label: "NODO",
+      value:
+        nodeOnline === null ? "SIN DATOS" : nodeOnline ? "ONLINE" : "OFFLINE",
+      color: nodeOnline === null ? WARNING : nodeOnline ? SUCCESS : DANGER,
     },
     {
       label: "CAPACIDAD",
