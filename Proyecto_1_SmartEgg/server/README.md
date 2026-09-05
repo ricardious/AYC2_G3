@@ -137,6 +137,18 @@ pierde la conexión inesperadamente. La lista completa está en `../mqtt/TOPICS.
 
 ## Ejecución
 
+Con Docker, desde la raíz de `Proyecto_1_SmartEgg`:
+
+```bash
+docker compose up -d --build backend
+```
+
+El contenedor espera a PostgreSQL y Mosquitto, aplica las migraciones de Alembic y luego
+inicia FastAPI. Para usar el puerto Serial del host ejecutamos el Compose con
+`docker-compose.serial.yml`, como se indica en el README general.
+
+Sin Docker, desde esta carpeta:
+
 Red local (laptop, teléfono y tablet en la misma red):
 
 ```bash

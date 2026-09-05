@@ -23,6 +23,28 @@ en `db/schema.dbml` y las consultas de Grafana en `db/grafana_queries.sql`.
 
 ## Ejecución local
 
+### Plataforma completa
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+Con este comando levantamos PostgreSQL, Mosquitto, el backend y Grafana. El backend
+aplica las migraciones antes de iniciar y queda disponible en `http://localhost:8000`.
+Podemos verificar todos los servicios con:
+
+```bash
+docker compose ps
+curl http://localhost:8000/health
+```
+
+Para conectar el Arduino por `/dev/ttyACM0` usamos el archivo adicional:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.serial.yml up -d --build
+```
+
 ### Base de datos
 
 ```bash
@@ -51,7 +73,7 @@ están en `grafana/README.md`.
 
 ### Servidor
 
-Requiere Python 3.12 o superior y `uv`.
+Para ejecutar el servidor sin Docker requiere Python 3.12 o superior y `uv`.
 
 ```bash
 cd server
