@@ -56,10 +56,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-smartegg}
       POSTGRES_USER: ${POSTGRES_USER:-smartegg}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in .env}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:-grafana_reader}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?Define GRAFANA_DB_PASSWORD in .env}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -68,10 +71,41 @@ services:
     networks:
       - smartegg
 
+  grafana:
+    image: grafana/grafana:13.2.0
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Define GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_PLUGINS_PREINSTALL: grafana-mqtt-datasource@1.3.6
+      GRAFANA_POSTGRES_HOST: database
+      GRAFANA_POSTGRES_PORT: 5432
+      GRAFANA_POSTGRES_DATABASE: ${POSTGRES_DB:-smartegg}
+      GRAFANA_POSTGRES_USER: ${GRAFANA_DB_USER:-grafana_reader}
+      GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_DB_PASSWORD:?Define GRAFANA_DB_PASSWORD in .env}
+      GRAFANA_MQTT_URI: ${GRAFANA_MQTT_URI:-tcp://broker:1883}
+      GRAFANA_MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
+      GRAFANA_MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - smartegg
+
 volumes:
   postgres_data:
   mosquitto_data:
   mosquitto_secrets:
+  grafana_data:
 
 networks:
   smartegg:
