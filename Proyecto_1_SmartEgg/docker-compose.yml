@@ -76,6 +76,51 @@ services:
     networks:
       - smartegg
 
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: smartegg-backend:local
+    restart: unless-stopped
+    init: true
+    depends_on:
+      database:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    environment:
+      SMARTEGG_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-smartegg}:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in .env}@database:5432/${POSTGRES_DB:-smartegg}
+      SMARTEGG_AUTO_CREATE_SCHEMA: "false"
+      SMARTEGG_JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET in .env}
+      SMARTEGG_CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000"]}
+      SMARTEGG_TIMEZONE: ${TIMEZONE:-America/Guatemala}
+      SMARTEGG_INITIAL_TECHNICIANS: ${INITIAL_TECHNICIANS:-[]}
+      SMARTEGG_INITIAL_INCUBATORS: ${INITIAL_INCUBATORS:-[]}
+      SMARTEGG_SERIAL_ENABLED: "false"
+      SMARTEGG_DEFAULT_INCUBATOR_CODE: ${DEFAULT_INCUBATOR_CODE:-NODE-01}
+      SMARTEGG_MQTT_ENABLED: "true"
+      SMARTEGG_MQTT_HOST: broker
+      SMARTEGG_MQTT_PORT: 1883
+      SMARTEGG_MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
+      SMARTEGG_MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+      SMARTEGG_MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-smartegg-backend}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - smartegg
+
   grafana:
     image: grafana/grafana:13.2.0
     restart: unless-stopped
