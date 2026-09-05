@@ -1,0 +1,115 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "max": 42, "min": 30, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "green", "value": 36 }, { "color": "yellow", "value": 38 }, { "color": "red", "value": 39 }] }, "unit": "celsius" },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "minVizHeight": 75, "minVizWidth": 75, "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true, "sizing": "auto" },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/sensores/temperatura" }],
+      "title": "Temperatura actual",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "max": 100, "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 45 }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 80 }] }, "unit": "percent" },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": { "minVizHeight": 75, "minVizWidth": 75, "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true, "sizing": "auto" },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/sensores/humedad" }],
+      "title": "Humedad actual",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [{ "options": { "online": { "color": "green", "index": 0, "text": "En línea" }, "offline": { "color": "red", "index": 1, "text": "Desconectado" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^status$/", "values": false }, "textMode": "value_and_name", "wideLayout": true },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/status" }],
+      "title": "Estado del nodo",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^(heater|fan|servo_angle|buzzer)$/", "values": false }, "textMode": "auto", "wideLayout": true },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/actuadores/estado" }],
+      "title": "Actuadores",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "opacity", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 4, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "temperature_c" }, "properties": [{ "id": "unit", "value": "celsius" }, { "id": "displayName", "value": "Temperatura" }] },
+          { "matcher": { "id": "byName", "options": "humidity_pct" }, "properties": [{ "id": "unit", "value": "percent" }, { "id": "displayName", "value": "Humedad" }] },
+          { "matcher": { "id": "byRegexp", "options": "/^(door_open|occupied_slots|available_slots|recorded_at)$/" }, "properties": [{ "id": "custom.hideFrom", "value": { "legend": true, "tooltip": true, "viz": true } }] }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 7 },
+      "id": 5,
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/telemetria" }],
+      "title": "Telemetría en vivo",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 7 },
+      "id": 6,
+      "options": { "cellHeight": "sm", "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/alarmas/critica" }],
+      "title": "Alarma crítica",
+      "type": "table"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": ["smartegg", "mqtt", "tiempo-real"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": true, "text": "NODE-01", "value": "NODE-01" },
+        "hide": 0,
+        "label": "Nodo",
+        "name": "node_code",
+        "options": [{ "selected": true, "text": "NODE-01", "value": "NODE-01" }],
+        "query": "NODE-01",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SmartEgg - Tiempo real",
+  "uid": "smartegg-realtime",
+  "version": 1,
+  "weekStart": ""
+}

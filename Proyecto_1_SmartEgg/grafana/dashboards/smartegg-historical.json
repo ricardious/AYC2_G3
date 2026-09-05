@@ -1,0 +1,234 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": false,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 38.5 }] },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto", "wideLayout": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT AVG(temperature_c) AS \"Temperatura promedio\" FROM telemetry_readings WHERE incubator_id = ${incubator_id} AND $__timeFilter(recorded_at);",
+          "refId": "A"
+        }
+      ],
+      "title": "Temperatura promedio",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 45 }, { "color": "red", "value": 70 }] },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto", "wideLayout": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT AVG(humidity_pct) AS \"Humedad promedio\" FROM telemetry_readings WHERE incubator_id = ${incubator_id} AND $__timeFilter(recorded_at);",
+          "refId": "A"
+        }
+      ],
+      "title": "Humedad promedio",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto", "wideLayout": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Alarmas activas\" FROM alarms WHERE incubator_id = ${incubator_id} AND resolved_at IS NULL;",
+          "refId": "A"
+        }
+      ],
+      "title": "Alarmas activas",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto", "wideLayout": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Muestras\" FROM telemetry_readings WHERE incubator_id = ${incubator_id} AND $__timeFilter(recorded_at);",
+          "refId": "A"
+        }
+      ],
+      "title": "Muestras registradas",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 12, "gradientMode": "opacity", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "celsius" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "options": { "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" } },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT recorded_at AS \"time\", temperature_c AS \"Temperatura\" FROM telemetry_readings WHERE incubator_id = ${incubator_id} AND $__timeFilter(recorded_at) ORDER BY recorded_at;",
+          "refId": "A"
+        }
+      ],
+      "title": "Historial de temperatura",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 12, "gradientMode": "opacity", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } }, "mappings": [], "max": 100, "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "percent" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "options": { "legend": { "calcs": ["min", "max", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" } },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT recorded_at AS \"time\", humidity_pct AS \"Humedad\" FROM telemetry_readings WHERE incubator_id = ${incubator_id} AND $__timeFilter(recorded_at) ORDER BY recorded_at;",
+          "refId": "A"
+        }
+      ],
+      "title": "Historial de humedad",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } }, "overrides": [{ "matcher": { "id": "byName", "options": "Duración" }, "properties": [{ "id": "unit", "value": "s" }] }] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 7,
+      "options": { "cellHeight": "sm", "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT occurred_at AS \"Fecha\", kind AS \"Tipo\", severity AS \"Severidad\", message AS \"Mensaje\", EXTRACT(EPOCH FROM (COALESCE(resolved_at, NOW()) - occurred_at)) AS \"Duración\" FROM alarms WHERE incubator_id = ${incubator_id} AND $__timeFilter(occurred_at) ORDER BY occurred_at DESC LIMIT 100;",
+          "refId": "A"
+        }
+      ],
+      "title": "Historial de alarmas",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } }, "overrides": [{ "matcher": { "id": "byName", "options": "Duración" }, "properties": [{ "id": "unit", "value": "s" }] }] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 8,
+      "options": { "cellHeight": "sm", "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT d.opened_at AS \"Fecha\", t.full_name AS \"Operador\", d.event_type AS \"Operación\", d.eggs_added AS \"Ingresados\", d.eggs_removed AS \"Retirados\", EXTRACT(EPOCH FROM (COALESCE(d.closed_at, NOW()) - d.opened_at)) AS \"Duración\" FROM door_events d JOIN technicians t ON t.id = d.operator_id WHERE d.incubator_id = ${incubator_id} AND $__timeFilter(d.opened_at) ORDER BY d.opened_at DESC LIMIT 100;",
+          "refId": "A"
+        }
+      ],
+      "title": "Operaciones de puerta",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": ["smartegg", "postgresql", "historico"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
+        "definition": "SELECT name AS __text, id AS __value FROM incubators ORDER BY name",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Incubadora",
+        "multi": false,
+        "name": "incubator_id",
+        "options": [],
+        "query": "SELECT name AS __text, id AS __value FROM incubators ORDER BY name",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SmartEgg - Histórico",
+  "uid": "smartegg-historical",
+  "version": 1,
+  "weekStart": ""
+}
