@@ -51,6 +51,16 @@ class Settings(BaseSettings):
     serial_reconnect_seconds: float = 3.0
     default_incubator_code: str = "NODE-01"
 
+    mqtt_enabled: bool = False
+    mqtt_host: str = "localhost"
+    mqtt_port: int = Field(default=1883, ge=1, le=65535)
+    mqtt_username: str | None = None
+    mqtt_password: str | None = None
+    mqtt_client_id: str = "smartegg-backend"
+    mqtt_keepalive_seconds: int = Field(default=60, ge=5, le=65535)
+    mqtt_tls_enabled: bool = False
+    mqtt_ca_cert: Path | None = None
+
     report_logo_path: Path | None = None
 
     @field_validator("cors_origins", mode="before")
