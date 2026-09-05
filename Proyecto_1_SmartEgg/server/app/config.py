@@ -11,6 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class InitialTechnician(BaseModel):
     username: str = Field(min_length=3, max_length=50, pattern=r"^[A-Za-z0-9_.-]+$")
     full_name: str = Field(min_length=3, max_length=120)
+    age: int | None = Field(default=None, ge=1, le=120)
+    gender: str | None = Field(default=None, min_length=1, max_length=30)
     password: str = Field(min_length=8, max_length=128)
 
 
@@ -31,7 +33,8 @@ class Settings(BaseSettings):
     app_name: str = "SmartEgg API"
     environment: str = "development"
     api_prefix: str = "/api/v1"
-    database_url: str = "sqlite:///../db/smartegg.db"
+    database_url: str = "postgresql+psycopg://smartegg:smartegg@localhost:5432/smartegg"
+    auto_create_schema: bool = False
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
     jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(48))
