@@ -8,8 +8,13 @@ services:
       - |
         set -eu
         umask 077
-        mosquitto_passwd -b -c /mosquitto/secrets/passwords \
-          "$$MQTT_USERNAME" "$$MQTT_PASSWORD"
+        if [ -f /mosquitto/secrets/passwords ]; then
+          mosquitto_passwd -b /mosquitto/secrets/passwords \
+            "$$MQTT_USERNAME" "$$MQTT_PASSWORD"
+        else
+          mosquitto_passwd -b -c /mosquitto/secrets/passwords \
+            "$$MQTT_USERNAME" "$$MQTT_PASSWORD"
+        fi
         chown 1883:1883 /mosquitto/secrets/passwords
     environment:
       MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
@@ -39,9 +44,9 @@ services:
       test:
         - CMD-SHELL
         - >-
-          mosquitto_sub -h 127.0.0.1 -p 1883
+          mosquitto_pub -h 127.0.0.1 -p 1883
           -u "$$MQTT_USERNAME" -P "$$MQTT_PASSWORD"
-          -t '$$SYS/broker/version' -C 1 -W 3
+          -t 'smartegg/healthcheck' -m '{"status":"ok"}' -q 1
       interval: 10s
       timeout: 5s
       retries: 5
