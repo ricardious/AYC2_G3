@@ -10,6 +10,7 @@ import type { CSSProperties } from "react";
 
 export type ScreenId =
   | "control"
+  | "observatorio"
   | "incubacion"
   | "historial"
   | "reportes"
@@ -51,6 +52,7 @@ export interface EggView {
 
 /** One sample of the incubator telemetry stream. */
 export interface SeriesPoint {
+  recordedAt?: string;
   /** Temperature in °C. */
   t: number;
   /** Relative humidity in %. */

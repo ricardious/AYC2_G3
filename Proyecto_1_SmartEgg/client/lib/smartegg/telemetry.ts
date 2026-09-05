@@ -68,7 +68,7 @@ export function formatClock(tick: number): string {
 /** Projects a series onto an SVG polyline path. */
 export function seriesPath(
   points: SeriesPoint[],
-  key: keyof SeriesPoint,
+  key: "t" | "h",
   min: number,
   max: number,
   width: number,

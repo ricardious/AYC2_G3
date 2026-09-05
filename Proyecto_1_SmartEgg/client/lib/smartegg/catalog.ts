@@ -34,6 +34,7 @@ export const STAGE_MAX_STRETCH = 1.3;
 
 export const NAV_ITEMS: readonly { id: ScreenId; label: string }[] = [
   { id: "control", label: "CENTRO DE CONTROL" },
+  { id: "observatorio", label: "OBSERVATORIO" },
   { id: "incubacion", label: "INCUBACIÓN" },
   { id: "historial", label: "HISTORIAL" },
   { id: "reportes", label: "REPORTES" },
@@ -43,6 +44,7 @@ export const NAV_ITEMS: readonly { id: ScreenId; label: string }[] = [
 /** `[kicker, title]` shown in the screen header. */
 export const SCREEN_TITLES: Record<ScreenId, readonly [string, string]> = {
   control: ["NODO 01 · LOTE A", "SMART EGG CONTROL CORE"],
+  observatorio: ["EXPLORACIÓN EN VIVO", "OBSERVATORIO SMART EGG"],
   incubacion: ["ESTACIÓN DE ESPECÍMENES", "INCUBACIÓN"],
   historial: ["LABORATORIO DE TELEMETRÍA", "HISTORIAL"],
   reportes: ["DOCUMENTACIÓN DE CICLO", "REPORTES"],
