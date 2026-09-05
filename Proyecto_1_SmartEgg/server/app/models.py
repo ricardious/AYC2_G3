@@ -4,10 +4,12 @@ from datetime import UTC, date, datetime
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -24,10 +26,17 @@ def utcnow() -> datetime:
 
 class Technician(Base):
     __tablename__ = "technicians"
+    __table_args__ = (
+        CheckConstraint(
+            "age IS NULL OR age BETWEEN 1 AND 120", name="ck_technician_age"
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String(120))
+    age: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    gender: Mapped[str | None] = mapped_column(String(30), nullable=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -37,6 +46,7 @@ class Technician(Base):
 
 class Incubator(Base):
     __tablename__ = "incubators"
+    __table_args__ = (CheckConstraint("capacity > 0", name="ck_incubator_capacity"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(String(40), unique=True, index=True)
@@ -58,6 +68,29 @@ class Incubator(Base):
 
 class IncubatorConfig(Base):
     __tablename__ = "incubator_configs"
+    __table_args__ = (
+        CheckConstraint(
+            "temperature_min_c < temperature_max_c",
+            name="ck_incubator_config_temperature_range",
+        ),
+        CheckConstraint(
+            "humidity_min_pct >= 0 AND humidity_max_pct <= 100 "
+            "AND humidity_min_pct < humidity_max_pct",
+            name="ck_incubator_config_humidity_range",
+        ),
+        CheckConstraint(
+            "critical_temperature_c > temperature_max_c",
+            name="ck_incubator_config_critical_temperature",
+        ),
+        CheckConstraint(
+            "rotation_interval_seconds > 0",
+            name="ck_incubator_config_rotation_interval",
+        ),
+        CheckConstraint(
+            "rotation_angle_degrees BETWEEN 1 AND 90",
+            name="ck_incubator_config_rotation_angle",
+        ),
+    )
 
     incubator_id: Mapped[int] = mapped_column(
         ForeignKey("incubators.id", ondelete="CASCADE"), primary_key=True
@@ -78,6 +111,15 @@ class IncubatorConfig(Base):
 
 class Lot(Base):
     __tablename__ = "lots"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('active', 'completed', 'cancelled')", name="ck_lot_status"
+        ),
+        CheckConstraint(
+            "expected_hatch_on IS NULL OR expected_hatch_on >= started_on",
+            name="ck_lot_hatch_date",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(String(50), unique=True, index=True)
@@ -96,6 +138,16 @@ class Lot(Base):
 
 class Egg(Base):
     __tablename__ = "eggs"
+    __table_args__ = (
+        CheckConstraint("slot_number > 0", name="ck_egg_slot"),
+        CheckConstraint(
+            "status IN ('incubating', 'hatched', 'removed', 'discarded')",
+            name="ck_egg_status",
+        ),
+        CheckConstraint(
+            "ended_at IS NULL OR ended_at >= registered_at", name="ck_egg_chronology"
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(String(50), unique=True, index=True)
@@ -108,6 +160,9 @@ class Egg(Base):
     slot_number: Mapped[int] = mapped_column(Integer)
     registered_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
+    )
+    ended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
     status: Mapped[str] = mapped_column(String(30), default="incubating", index=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -138,6 +193,18 @@ class Sensor(Base):
 
 class TelemetryReading(Base):
     __tablename__ = "telemetry_readings"
+    __table_args__ = (
+        CheckConstraint("humidity_pct BETWEEN 0 AND 100", name="ck_telemetry_humidity"),
+        CheckConstraint(
+            "temperature_c BETWEEN -40 AND 125", name="ck_telemetry_temperature"
+        ),
+        CheckConstraint("occupied_slots >= 0", name="ck_telemetry_occupied_slots"),
+        CheckConstraint("available_slots >= 0", name="ck_telemetry_available_slots"),
+        CheckConstraint(
+            "source IN ('api', 'serial', 'simulator')", name="ck_telemetry_source"
+        ),
+        Index("ix_telemetry_incubator_recorded", "incubator_id", "recorded_at"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     incubator_id: Mapped[int] = mapped_column(
@@ -146,7 +213,8 @@ class TelemetryReading(Base):
     temperature_c: Mapped[float] = mapped_column(Float)
     humidity_pct: Mapped[float] = mapped_column(Float)
     door_open: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
-    occupied_slots: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    occupied_slots: Mapped[int] = mapped_column(Integer)
+    available_slots: Mapped[int] = mapped_column(Integer)
     source: Mapped[str] = mapped_column(String(20), default="api")
     raw_payload: Mapped[str | None] = mapped_column(Text, nullable=True)
     recorded_at: Mapped[datetime] = mapped_column(
@@ -154,10 +222,61 @@ class TelemetryReading(Base):
     )
 
 
+class DoorEvent(Base):
+    __tablename__ = "door_events"
+    __table_args__ = (
+        CheckConstraint(
+            "event_type IN ('egg_entry', 'egg_removal', 'inspection', 'maintenance')",
+            name="ck_door_event_type",
+        ),
+        CheckConstraint("eggs_added >= 0", name="ck_door_event_eggs_added"),
+        CheckConstraint("eggs_removed >= 0", name="ck_door_event_eggs_removed"),
+        CheckConstraint(
+            "closed_at IS NULL OR closed_at >= opened_at",
+            name="ck_door_event_chronology",
+        ),
+        CheckConstraint(
+            "(event_type = 'egg_entry' AND eggs_added > 0 AND eggs_removed = 0) OR "
+            "(event_type = 'egg_removal' AND eggs_removed > 0 AND eggs_added = 0) OR "
+            "(event_type IN ('inspection', 'maintenance') "
+            "AND eggs_added = 0 AND eggs_removed = 0)",
+            name="ck_door_event_counts_match_type",
+        ),
+        Index("ix_door_event_incubator_opened", "incubator_id", "opened_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    incubator_id: Mapped[int] = mapped_column(
+        ForeignKey("incubators.id", ondelete="CASCADE"), index=True
+    )
+    operator_id: Mapped[int] = mapped_column(
+        ForeignKey("technicians.id", ondelete="RESTRICT"), index=True
+    )
+    event_type: Mapped[str] = mapped_column(String(20))
+    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    eggs_added: Mapped[int] = mapped_column(Integer, default=0)
+    eggs_removed: Mapped[int] = mapped_column(Integer, default=0)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+
+    incubator: Mapped[Incubator] = relationship()
+    operator: Mapped[Technician] = relationship()
+
+
 class ActuatorState(Base):
     __tablename__ = "actuator_states"
     __table_args__ = (
         UniqueConstraint("incubator_id", "kind", name="uq_actuator_incubator_kind"),
+        CheckConstraint(
+            "kind IN ('heater', 'fan', 'servo', 'buzzer')",
+            name="ck_actuator_kind",
+        ),
+        CheckConstraint("mode IN ('automatic', 'manual')", name="ck_actuator_mode"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -175,6 +294,19 @@ class ActuatorState(Base):
 
 class Alarm(Base):
     __tablename__ = "alarms"
+    __table_args__ = (
+        CheckConstraint(
+            "severity IN ('info', 'warning', 'critical')", name="ck_alarm_severity"
+        ),
+        CheckConstraint(
+            "resolved_at IS NULL OR resolved_at >= occurred_at",
+            name="ck_alarm_resolution_chronology",
+        ),
+        CheckConstraint(
+            "acknowledged_at IS NULL OR acknowledged_at >= occurred_at",
+            name="ck_alarm_acknowledgement_chronology",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     incubator_id: Mapped[int] = mapped_column(
@@ -200,6 +332,10 @@ class Alarm(Base):
 
 class RotationEvent(Base):
     __tablename__ = "rotation_events"
+    __table_args__ = (
+        CheckConstraint("angle_degrees BETWEEN 1 AND 90", name="ck_rotation_angle"),
+        CheckConstraint("direction IN ('left', 'right')", name="ck_rotation_direction"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     incubator_id: Mapped[int] = mapped_column(

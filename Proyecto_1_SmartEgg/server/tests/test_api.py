@@ -11,6 +11,8 @@ def test_health_and_authentication(client: TestClient) -> None:
         json={
             "username": "admin",
             "full_name": "Ana Técnica",
+            "age": 31,
+            "gender": "femenino",
             "password": "password123",
         },
     )
@@ -37,6 +39,8 @@ def test_health_and_authentication(client: TestClient) -> None:
         ).json()["full_name"]
         == "Ana Técnica"
     )
+    assert login.json()["technician"]["age"] == 31
+    assert login.json()["technician"]["gender"] == "femenino"
 
 
 def test_lot_egg_capacity_and_slot_reuse(
@@ -145,6 +149,47 @@ def test_telemetry_updates_state_and_alarm(
     ).json()
     assert stats["samples"] == 2
     assert stats["temperature_max_c"] == 39.5
+    assert reading.json()["available_slots"] == 2
+
+
+def test_door_events_are_audited(
+    client: TestClient, auth_headers: dict[str, str], incubator: dict
+) -> None:
+    created = client.post(
+        f"/api/v1/incubators/{incubator['id']}/door-events",
+        headers=auth_headers,
+        json={
+            "event_type": "egg_entry",
+            "eggs_added": 2,
+            "notes": "Ingreso del lote de prueba",
+        },
+    )
+    assert created.status_code == 201, created.text
+    event = created.json()
+    assert event["operator_id"] > 0
+    assert event["closed_at"] is None
+
+    duplicate = client.post(
+        f"/api/v1/incubators/{incubator['id']}/door-events",
+        headers=auth_headers,
+        json={"event_type": "inspection"},
+    )
+    assert duplicate.status_code == 409
+
+    closed = client.patch(
+        f"/api/v1/incubators/{incubator['id']}/door-events/{event['id']}/close",
+        headers=auth_headers,
+        json={},
+    )
+    assert closed.status_code == 200, closed.text
+    assert closed.json()["closed_at"] is not None
+
+    history = client.get(
+        f"/api/v1/incubators/{incubator['id']}/door-events",
+        headers=auth_headers,
+    )
+    assert history.status_code == 200
+    assert history.json()[0]["eggs_added"] == 2
 
 
 def test_report_is_a_pdf(

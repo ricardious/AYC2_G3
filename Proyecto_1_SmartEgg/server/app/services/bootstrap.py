@@ -35,6 +35,8 @@ def ensure_initial_technicians(
                 Technician(
                     username=username,
                     full_name=item.full_name.strip(),
+                    age=item.age,
+                    gender=item.gender.strip() if item.gender else None,
                     password_hash=hash_password(item.password),
                 )
             )

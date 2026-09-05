@@ -168,6 +168,8 @@ def update_egg(payload: EggUpdate, egg_id: int, db: Session = Depends(get_db)) -
         raise HTTPException(status_code=404, detail="Egg not found")
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(egg, key, value)
+    if payload.status is not None:
+        egg.ended_at = None if payload.status == "incubating" else datetime.now(UTC)
     db.commit()
     db.refresh(egg)
     return egg

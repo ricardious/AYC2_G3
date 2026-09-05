@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -17,6 +17,8 @@ class Message(BaseModel):
 class TechnicianCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50, pattern=r"^[A-Za-z0-9_.-]+$")
     full_name: str = Field(min_length=3, max_length=120)
+    age: int | None = Field(default=None, ge=1, le=120)
+    gender: str | None = Field(default=None, min_length=1, max_length=30)
     password: str = Field(min_length=8, max_length=128)
 
 
@@ -24,6 +26,8 @@ class TechnicianRead(ORMModel):
     id: int
     username: str
     full_name: str
+    age: int | None
+    gender: str | None
     is_active: bool
     created_at: datetime
 
@@ -145,6 +149,7 @@ class EggRead(ORMModel):
     incubator_id: int
     slot_number: int
     registered_at: datetime
+    ended_at: datetime | None
     status: str
     notes: str | None
 
@@ -191,7 +196,8 @@ class TelemetryRead(ORMModel):
     temperature_c: float
     humidity_pct: float
     door_open: bool | None
-    occupied_slots: int | None
+    occupied_slots: int
+    available_slots: int
     source: str
     recorded_at: datetime
 
@@ -206,6 +212,57 @@ class TelemetryStats(BaseModel):
     humidity_min_pct: float | None
     humidity_max_pct: float | None
     humidity_avg_pct: float | None
+
+
+class DoorEventCreate(BaseModel):
+    event_type: Literal["egg_entry", "egg_removal", "inspection", "maintenance"]
+    opened_at: datetime | None = None
+    closed_at: datetime | None = None
+    eggs_added: int = Field(default=0, ge=0)
+    eggs_removed: int = Field(default=0, ge=0)
+    notes: str | None = Field(default=None, max_length=1000)
+
+    @model_validator(mode="after")
+    def validate_event(self) -> DoorEventCreate:
+        if self.opened_at and self.closed_at:
+            opened_at = (
+                self.opened_at.replace(tzinfo=UTC)
+                if self.opened_at.tzinfo is None
+                else self.opened_at.astimezone(UTC)
+            )
+            closed_at = (
+                self.closed_at.replace(tzinfo=UTC)
+                if self.closed_at.tzinfo is None
+                else self.closed_at.astimezone(UTC)
+            )
+            if closed_at < opened_at:
+                raise ValueError("closed_at cannot be before opened_at")
+        if self.event_type == "egg_entry":
+            if self.eggs_added < 1 or self.eggs_removed:
+                raise ValueError("egg_entry requires eggs_added and no eggs_removed")
+        elif self.event_type == "egg_removal":
+            if self.eggs_removed < 1 or self.eggs_added:
+                raise ValueError("egg_removal requires eggs_removed and no eggs_added")
+        elif self.eggs_added or self.eggs_removed:
+            raise ValueError("inspection and maintenance cannot change egg counts")
+        return self
+
+
+class DoorEventClose(BaseModel):
+    closed_at: datetime | None = None
+
+
+class DoorEventRead(ORMModel):
+    id: int
+    incubator_id: int
+    operator_id: int
+    event_type: str
+    opened_at: datetime
+    closed_at: datetime | None
+    eggs_added: int
+    eggs_removed: int
+    notes: str | None
+    created_at: datetime
 
 
 class ActuatorRead(ORMModel):

@@ -89,7 +89,8 @@ export interface TelemetryReading {
   temperature_c: number;
   humidity_pct: number;
   door_open: boolean | null;
-  occupied_slots: number | null;
+  occupied_slots: number;
+  available_slots: number;
   source: string;
   recorded_at: string;
 }
