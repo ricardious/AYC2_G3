@@ -1,0 +1,8 @@
+services:
+  backend:
+    environment:
+      SMARTEGG_SERIAL_ENABLED: "true"
+      SMARTEGG_SERIAL_PORT: ${SERIAL_DEVICE:-/dev/ttyACM0}
+      SMARTEGG_SERIAL_BAUDRATE: ${SERIAL_BAUDRATE:-115200}
+    devices:
+      - "${SERIAL_DEVICE:-/dev/ttyACM0}:${SERIAL_DEVICE:-/dev/ttyACM0}"
