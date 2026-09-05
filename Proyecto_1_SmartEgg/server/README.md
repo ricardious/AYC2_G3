@@ -1,8 +1,8 @@
 # SmartEgg API
 
-Backend FastAPI para la Práctica 1 **SmartEgg: Incubadora Inteligente IoT**. Recibe la
+Backend FastAPI para el Proyecto 1 **SmartEgg: Plataforma IoT Distribuida**. Recibe la
 telemetría ambiental del Arduino por UART/USB, conserva el ciclo de incubación en PostgreSQL,
-expone la información al frontend por REST y WebSocket, y genera el informe PDF requerido.
+expone la información al frontend por REST y publica el estado del nodo mediante MQTT.
 
 ## Cobertura del enunciado
 
@@ -14,6 +14,7 @@ expone la información al frontend por REST y WebSocket, y genera el informe PDF
 - Alarmas automáticas por temperatura, humedad y puerta abierta, con resolución y acuse.
 - Rotación manual bidireccional y registro de rotaciones.
 - Puente Serial UART/USB preparado para conectar el Arduino real.
+- Publicación MQTT de telemetría, actuadores, alarmas y disponibilidad del nodo.
 - Actualización en tiempo real mediante WebSocket y consultas históricas/estadísticas.
 - Descarga PDF con identificación, técnico, lotes, extremos diarios y alarmas.
 - OpenAPI, Swagger UI y ReDoc generados por FastAPI.
@@ -33,7 +34,11 @@ flowchart LR
     API --> Domain
     Domain --> DB[(PostgreSQL)]
     API --> PDF[Generador PDF]
-    Domain --> WS[Difusión WebSocket]
+    Domain --> MQTT[Cliente MQTT]
+    MQTT --> Broker[Mosquitto]
+    Broker --> Grafana
+    Broker --> Web
+    Domain --> WS[Difusión WebSocket existente]
 ```
 
 ```text
@@ -104,7 +109,31 @@ Variables principales:
 | `SMARTEGG_SERIAL_PORT` | Puerto, p. ej. `/dev/ttyACM0` | vacío |
 | `SMARTEGG_SERIAL_BAUDRATE` | Velocidad UART | `115200` |
 | `SMARTEGG_DEFAULT_INCUBATOR_CODE` | Nodo usado si UART no envía `NODE` | `NODE-01` |
+| `SMARTEGG_MQTT_ENABLED` | Activa la publicación hacia Mosquitto | `false` |
+| `SMARTEGG_MQTT_HOST` | Host del broker MQTT | `localhost` |
+| `SMARTEGG_MQTT_PORT` | Puerto MQTT TCP/TLS | `1883` |
+| `SMARTEGG_MQTT_USERNAME` | Usuario del broker | vacío |
+| `SMARTEGG_MQTT_PASSWORD` | Contraseña del broker | vacío |
+| `SMARTEGG_MQTT_TLS_ENABLED` | Activa TLS para el broker | `false` |
+| `SMARTEGG_MQTT_CA_CERT` | Ruta del certificado CA | vacío |
 | `SMARTEGG_REPORT_LOGO_PATH` | PNG/JPG para el informe | vacío |
+
+## Publicación MQTT
+
+Activamos el cliente en `server/.env`:
+
+```env
+SMARTEGG_MQTT_ENABLED=true
+SMARTEGG_MQTT_HOST=localhost
+SMARTEGG_MQTT_PORT=1883
+SMARTEGG_MQTT_USERNAME=smartegg
+SMARTEGG_MQTT_PASSWORD=la-misma-clave-del-broker
+```
+
+Después de guardar cada lectura publicamos temperatura, humedad, telemetría consolidada
+y actuadores como mensajes retained. Las alarmas críticas y el estado del nodo usan QoS
+1. El cliente registra un LWT retained para marcar el nodo como desconectado si el backend
+pierde la conexión inesperadamente. La lista completa está en `../mqtt/TOPICS.md`.
 
 ## Ejecución
 
