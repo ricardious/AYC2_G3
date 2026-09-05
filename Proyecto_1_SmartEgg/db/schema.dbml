@@ -1,0 +1,142 @@
+Table technicians {
+  id integer [pk, increment]
+  username varchar(50) [not null, unique]
+  full_name varchar(120) [not null]
+  age integer
+  gender varchar(30)
+  password_hash varchar(255) [not null]
+  is_active boolean [not null]
+  created_at timestamptz [not null]
+}
+
+Table incubators {
+  id integer [pk, increment]
+  code varchar(40) [not null, unique]
+  name varchar(100) [not null]
+  capacity integer [not null]
+  serial_number varchar(100)
+  is_online boolean [not null]
+  last_seen_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table incubator_configs {
+  incubator_id integer [pk, ref: > incubators.id]
+  temperature_min_c float [not null]
+  temperature_max_c float [not null]
+  humidity_min_pct float [not null]
+  humidity_max_pct float [not null]
+  critical_temperature_c float [not null]
+  rotation_interval_seconds integer [not null]
+  rotation_angle_degrees integer [not null]
+  updated_at timestamptz [not null]
+}
+
+Table lots {
+  id integer [pk, increment]
+  code varchar(50) [not null, unique]
+  species varchar(80) [not null]
+  origin varchar(160)
+  started_on date [not null]
+  expected_hatch_on date
+  status varchar(30) [not null]
+  notes text
+  created_at timestamptz [not null]
+}
+
+Table eggs {
+  id integer [pk, increment]
+  code varchar(50) [not null, unique]
+  lot_id integer [not null, ref: > lots.id]
+  incubator_id integer [not null, ref: > incubators.id]
+  slot_number integer [not null]
+  registered_at timestamptz [not null]
+  ended_at timestamptz
+  status varchar(30) [not null]
+  notes text
+}
+
+Table telemetry_readings {
+  id integer [pk, increment]
+  incubator_id integer [not null, ref: > incubators.id]
+  temperature_c float [not null]
+  humidity_pct float [not null]
+  door_open boolean
+  occupied_slots integer [not null]
+  available_slots integer [not null]
+  source varchar(20) [not null]
+  raw_payload text
+  recorded_at timestamptz [not null]
+
+  indexes {
+    (incubator_id, recorded_at)
+  }
+}
+
+Table door_events {
+  id integer [pk, increment]
+  incubator_id integer [not null, ref: > incubators.id]
+  operator_id integer [not null, ref: > technicians.id]
+  event_type varchar(20) [not null, note: 'egg_entry, egg_removal, inspection, maintenance']
+  opened_at timestamptz [not null]
+  closed_at timestamptz
+  eggs_added integer [not null]
+  eggs_removed integer [not null]
+  notes text
+  created_at timestamptz [not null]
+
+  indexes {
+    (incubator_id, opened_at)
+  }
+}
+
+Table sensors {
+  id integer [pk, increment]
+  incubator_id integer [not null, ref: > incubators.id]
+  code varchar(40) [not null]
+  kind varchar(30) [not null]
+  unit varchar(20)
+  is_active boolean [not null]
+  last_value float
+  last_reading_at timestamptz
+
+  indexes {
+    (incubator_id, code) [unique]
+  }
+}
+
+Table actuator_states {
+  id integer [pk, increment]
+  incubator_id integer [not null, ref: > incubators.id]
+  kind varchar(30) [not null]
+  enabled boolean [not null]
+  mode varchar(20) [not null]
+  value float
+  updated_at timestamptz [not null]
+
+  indexes {
+    (incubator_id, kind) [unique]
+  }
+}
+
+Table alarms {
+  id integer [pk, increment]
+  incubator_id integer [not null, ref: > incubators.id]
+  kind varchar(40) [not null]
+  severity varchar(20) [not null]
+  message varchar(255) [not null]
+  value float
+  occurred_at timestamptz [not null]
+  resolved_at timestamptz
+  acknowledged_at timestamptz
+  acknowledged_by_id integer [ref: > technicians.id]
+}
+
+Table rotation_events {
+  id integer [pk, increment]
+  incubator_id integer [not null, ref: > incubators.id]
+  angle_degrees integer [not null]
+  direction varchar(10) [not null]
+  source varchar(20) [not null]
+  performed_at timestamptz [not null]
+}
