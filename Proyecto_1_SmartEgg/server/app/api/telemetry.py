@@ -21,6 +21,7 @@ from ..database import get_db
 from ..models import Incubator, Technician, TelemetryReading
 from ..schemas import SerialStatus, TelemetryCreate, TelemetryRead, TelemetryStats
 from ..security import get_current_technician
+from ..services.mqtt import build_mqtt_snapshot
 from ..services.telemetry import ingest_telemetry
 
 router = APIRouter(tags=["telemetry"])
@@ -53,6 +54,9 @@ async def create_reading(
     payload: TelemetryCreate, request: Request, db: Session = Depends(get_db)
 ) -> TelemetryReading:
     reading = ingest_telemetry(db, payload)
+    request.app.state.mqtt.publish_snapshot(
+        build_mqtt_snapshot(db, reading, payload.incubator_code)
+    )
     await request.app.state.broadcast.broadcast(
         reading.incubator_id,
         {
