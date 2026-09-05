@@ -1,6 +1,6 @@
 # SmartEgg · Cliente
 
-Consola web de la incubadora inteligente **SmartEgg** (Práctica 1 · Arquitectura
+Consola web de la incubadora inteligente **SmartEgg** (Proyecto 1 · Arquitectura
 de Computadoras y Ensambladores 2). Reconstruye el diseño
 `SmartEgg Control Core` como componentes React/Next.js, sin iframes ni HTML
 embebido.
@@ -13,11 +13,13 @@ pnpm lint
 
 ## Conexión con el backend
 
-La consola ya no genera telemetría simulada. Al iniciar solicita las credenciales del
-técnico, carga el estado y las últimas 240 lecturas por REST y abre un WebSocket para las
-nuevas lecturas. Si el WebSocket se interrumpe, consulta `/state` cada 2 segundos y trata
-de reconectarlo; mientras está conectado conserva una sincronización REST cada 10
-segundos para actuadores, sensores, alarmas, lotes y fichas de huevos.
+La consola no genera telemetría simulada. Al iniciar solicita las credenciales del
+técnico y carga el estado y las últimas 240 lecturas por REST. Conservamos el WebSocket
+de FastAPI para la telemetría y nos conectamos directamente a Mosquitto con MQTT.js para
+recibir alarmas, disponibilidad y actuadores sin recargar la página.
+
+Si el WebSocket de FastAPI se interrumpe, consultamos `/state` cada 2 segundos. MQTT.js
+reintenta la conexión al broker cada 2 segundos y restaura las suscripciones.
 
 Copie la configuración opcional:
 
@@ -29,6 +31,9 @@ cp .env.example .env.local
 |---|---|
 | `NEXT_PUBLIC_API_URL` | Origen de FastAPI, por ejemplo `http://localhost:8000` |
 | `NEXT_PUBLIC_INCUBATOR_ID` | Incubadora preferida; si se omite se usa la primera |
+| `NEXT_PUBLIC_MQTT_URL` | Broker por WebSocket, por ejemplo `ws://localhost:9001` |
+| `NEXT_PUBLIC_MQTT_USERNAME` | Usuario autenticado de Mosquitto |
+| `NEXT_PUBLIC_MQTT_PASSWORD` | Contraseña MQTT usada por el navegador |
 
 Si `NEXT_PUBLIC_API_URL` no está definida, el navegador usa automáticamente su propio
 hostname con el puerto `8000`. Así, al visitar `http://192.168.1.20:3000` desde un móvil,
@@ -49,11 +54,24 @@ de `server/.env`. Antes del primer acceso también deben existir el técnico y a
 incubadora; ambos pueden crearse desde `http://localhost:8000/docs`. El código de la
 incubadora debe coincidir con el enviado por el firmware (`NODE-01` por defecto).
 
+Las variables `NEXT_PUBLIC_*` quedan incluidas en el código que recibe el navegador. En
+un despliegue público usamos un usuario MQTT limitado a lectura, TLS y `wss://`; no
+reutilizamos credenciales administrativas.
+
 Flujo utilizado:
 
 ```text
-Arduino --Serial USB--> FastAPI --REST inicial/respaldo--> Next.js
-                              `--WebSocket en vivo-------> Next.js
+Arduino --Serial USB--> FastAPI --REST inicial/respaldo------> Next.js
+                              |--WebSocket de telemetría-----> Next.js
+                              `--MQTT--> Mosquitto --WS------> Next.js
+```
+
+Topics consumidos directamente:
+
+```text
+smartegg/{id}/alarmas/critica
+smartegg/{id}/status
+smartegg/{id}/actuadores/estado
 ```
 
 ## Arquitectura
