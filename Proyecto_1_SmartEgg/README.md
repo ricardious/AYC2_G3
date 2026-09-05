@@ -98,7 +98,19 @@ pnpm dev
 
 El frontend estará disponible en `http://localhost:3000`.
 
-## Firmware
+## Visualización de datos
+
+El frontend incluye un **Observatorio** interactivo con p5.js: vista isométrica
+de la incubadora, capas de temperatura y humedad, estructura desplegable e
+inspección de posiciones. El historial utiliza Chart.js con lecturas reales,
+filtros por cantidad de muestras y una tabla de valores. Ambas vistas conservan
+los temas claro, oscuro y automático.
+
+La elección de librerías, el flujo de datos y el guion del video están en
+[client/README.md](client/README.md#visualización-avanzada). Falta grabar el video
+demostrativo con el nodo físico y agregar su enlace.
+
+## Firmware reutilizado
 
 El firmware no se duplicó en este proyecto. Se reutiliza sin cambios el código de
 `Practica_1_SmartEgg/firmware`.

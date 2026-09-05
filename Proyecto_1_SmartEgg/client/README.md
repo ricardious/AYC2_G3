@@ -273,3 +273,35 @@ en pila; lo que anotan está debajo en los paneles de actuadores y sensores, que
 además son seleccionables. Las motas del fondo tampoco se dibujan.
 
 `prefers-reduced-motion` desactiva el movimiento ambiental.
+
+## Visualización avanzada
+
+En **Observatorio** exploramos la incubadora con una vista isométrica 2D hecha
+con p5.js. Podemos separar la estructura, seleccionar una posición, cambiar
+entre temperatura y humedad y pausar el movimiento. Conservamos los temas claro,
+oscuro y automático de la consola.
+
+La temperatura modifica el color, la humedad determina la cantidad de partículas,
+el ventilador activa su circulación y el ángulo del servo inclina la bandeja.
+Son representaciones ilustrativas del estado, no una simulación física ni un mapa
+térmico. Los valores vienen del estado real del backend y de sus actualizaciones
+WebSocket; MQTT actualiza las alarmas y los actuadores. Sin lecturas mostramos
+un estado de espera; al perder la conexión detenemos el flujo animado.
+
+Elegimos [p5.js](https://p5js.org/reference/) por su dibujo 2D programable y su
+modo de instancia, que permite desmontar la escena al navegar. Tiene una curva
+de aprendizaje accesible para geometría, color y animación sin preparar modelos 3D.
+Respetamos la preferencia de movimiento reducido y limitamos la animación a 30 FPS.
+
+En **Historial** usamos [Chart.js](https://www.chartjs.org/docs/latest/) para
+gráficas de líneas con consulta de valores al pasar el cursor y una tabla
+accesible. Ofrece escalas, adaptación al contenedor y tooltips sin implementarlos
+manualmente. Consultamos las últimas 240 lecturas mediante `fetch` a
+`GET /api/v1/incubators/{id}/telemetry`; el flujo en vivo actualiza esta ventana.
+Podemos ver temperatura o humedad y seleccionar las últimas 30, 120 o 240 muestras.
+Los promedios corresponden a las lecturas disponibles, no a un período fijo de 24 horas.
+
+Para el video de entrega (2–4 minutos), mostrar el Observatorio conectado al nodo,
+un cambio real de temperatura/humedad, la respuesta del ventilador y el servo,
+la exploración de posiciones y las gráficas históricas. El video con hardware
+real queda pendiente de grabar y enlazar aquí.
