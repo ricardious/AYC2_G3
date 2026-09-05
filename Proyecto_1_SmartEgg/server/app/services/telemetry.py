@@ -3,12 +3,13 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..models import (
     ActuatorState,
     Alarm,
+    Egg,
     Incubator,
     RotationEvent,
     Sensor,
@@ -113,12 +114,24 @@ def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
         )
 
     recorded_at = payload.recorded_at or datetime.now(UTC)
+    occupied_slots = payload.occupied_slots
+    if occupied_slots is None:
+        occupied_slots = (
+            db.scalar(
+                select(func.count(Egg.id)).where(
+                    Egg.incubator_id == incubator.id,
+                    Egg.status == "incubating",
+                )
+            )
+            or 0
+        )
     reading = TelemetryReading(
         incubator_id=incubator.id,
         temperature_c=payload.temperature_c,
         humidity_pct=payload.humidity_pct,
         door_open=payload.door_open,
-        occupied_slots=payload.occupied_slots,
+        occupied_slots=occupied_slots,
+        available_slots=incubator.capacity - occupied_slots,
         source=payload.source,
         raw_payload=payload.raw_payload,
         recorded_at=recorded_at,
@@ -149,16 +162,15 @@ def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
             float(payload.door_open),
             recorded_at,
         )
-    if payload.occupied_slots is not None:
-        _upsert_sensor(
-            db,
-            incubator.id,
-            "slots",
-            "pressure",
-            "occupied",
-            float(payload.occupied_slots),
-            recorded_at,
-        )
+    _upsert_sensor(
+        db,
+        incubator.id,
+        "slots",
+        "pressure",
+        "occupied",
+        float(occupied_slots),
+        recorded_at,
+    )
 
     config = incubator.config
     temp_low = payload.temperature_c < config.temperature_min_c

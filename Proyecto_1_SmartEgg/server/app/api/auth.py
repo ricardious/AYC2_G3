@@ -28,6 +28,8 @@ def bootstrap_technician(
     technician = Technician(
         username=payload.username.lower(),
         full_name=payload.full_name.strip(),
+        age=payload.age,
+        gender=payload.gender.strip() if payload.gender else None,
         password_hash=hash_password(payload.password),
     )
     db.add(technician)
@@ -75,6 +77,8 @@ def create_technician(
     technician = Technician(
         username=payload.username.lower(),
         full_name=payload.full_name.strip(),
+        age=payload.age,
+        gender=payload.gender.strip() if payload.gender else None,
         password_hash=hash_password(payload.password),
     )
     db.add(technician)
