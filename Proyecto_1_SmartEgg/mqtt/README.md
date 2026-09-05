@@ -1,31 +1,40 @@
 # Broker MQTT
 
-Mosquitto funciona como broker de tiempo real entre el backend, Grafana y el frontend.
-Requiere autenticación y solo permite acceso a `$SYS/#` y `smartegg/#` mediante la ACL.
+Para el proyecto usamos Eclipse Mosquitto como broker MQTT. Por medio de este broker
+conectamos el backend con el frontend y Grafana para enviar la telemetría y las alarmas
+en tiempo real.
 
-## Uso local
+Dejamos habilitada la autenticación por usuario y contraseña. La ACL permite trabajar
+únicamente con los topics de `smartegg/#` y consultar el estado del broker en `$SYS/#`.
 
-Desde la raíz de `Proyecto_1_SmartEgg`:
+## Levantar Mosquitto
+
+Primero creamos el archivo de variables de entorno:
 
 ```bash
 cp .env.example .env
-# Cambie MQTT_PASSWORD y POSTGRES_PASSWORD antes de continuar.
+```
+
+En ese archivo cambiamos `MQTT_PASSWORD` y `POSTGRES_PASSWORD`. Luego levantamos el
+broker desde la raíz del proyecto:
+
+```bash
 docker compose up -d broker
 docker compose ps
 ```
 
-Puertos predeterminados:
+Usamos los siguientes puertos:
 
-- `1883`: MQTT TCP para backend, Grafana y herramientas de prueba.
-- `9001`: MQTT sobre WebSocket para el frontend.
+- `1883` para la conexión MQTT del backend y Grafana.
+- `9001` para la conexión MQTT sobre WebSocket del frontend.
 
-El contenedor auxiliar `mqtt-password-init` genera el archivo de contraseñas a partir de
-`MQTT_USERNAME` y `MQTT_PASSWORD`. El archivo generado y la persistencia del broker se
-guardan en volúmenes Docker; ninguna contraseña se versiona.
+El servicio `mqtt-password-init` genera el archivo de contraseñas usando las variables
+`MQTT_USERNAME` y `MQTT_PASSWORD`. Este archivo y los datos del broker se guardan en
+volúmenes de Docker, por lo que no subimos credenciales al repositorio.
 
-## Prueba manual
+## Probar la conexión
 
-Con los clientes de Mosquitto instalados:
+Podemos escuchar todos los topics del proyecto con:
 
 ```bash
 mosquitto_sub -h localhost -p 1883 \
@@ -33,7 +42,7 @@ mosquitto_sub -h localhost -p 1883 \
   -t 'smartegg/#' -v
 ```
 
-En otra terminal:
+Desde otra terminal publicamos un mensaje de prueba:
 
 ```bash
 mosquitto_pub -h localhost -p 1883 \
@@ -42,21 +51,14 @@ mosquitto_pub -h localhost -p 1883 \
   -m '{"status":"online"}' -q 1 -r
 ```
 
-La jerarquía, QoS, uso de retained y payloads están definidos en `TOPICS.md`.
+La lista completa de topics, los niveles de QoS y los payloads que usamos están en
+`TOPICS.md`.
 
 ## Despliegue en AWS
 
-La configuración predeterminada sirve para desarrollo y para comunicación privada entre
-contenedores. **No exponga directamente los puertos 1883 o 9001 a Internet.**
+Durante el desarrollo podemos ejecutar Mosquitto localmente. Para la entrega tenemos
+previsto desplegar solamente el broker en AWS y mantener PostgreSQL en el equipo local.
 
-En AWS se puede desplegar el mismo contenedor en EC2, ECS o una plataforma equivalente.
-Para acceso público hay dos alternativas:
-
-1. Terminar TLS en la infraestructura de entrada de AWS y reenviar tráfico privado hacia
-   Mosquitto.
-2. Montar certificados en `/mosquitto/certs` y usar como base
-   `config/mosquitto-tls.conf.example` para MQTT TLS y WebSocket seguro.
-
-Los certificados, contraseñas y archivos `.env` no deben almacenarse en Git. En el
-despliegue final también deben limitarse los puertos mediante reglas de red y conservar
-`/mosquitto/data` en almacenamiento persistente.
+En AWS usaremos TLS y reglas de red para no publicar directamente los puertos inseguros.
+Dejamos `config/mosquitto-tls.conf.example` como base para configurar los certificados.
+Los certificados, contraseñas y archivos `.env` no se incluyen en Git.
