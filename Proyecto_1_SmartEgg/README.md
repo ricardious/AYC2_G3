@@ -13,7 +13,7 @@ Proyecto_1_SmartEgg/
 ├── firmware/     # Referencia al firmware reutilizado de la Práctica 1
 ├── docs/         # Documentación y enunciado
 ├── grafana/      # Configuración de visualización
-├── mqtt/         # Configuración de mensajería IoT
+├── mqtt/         # Mosquitto, ACL y contrato de topics MQTT
 └── docker-compose.yml
 ```
 
@@ -29,6 +29,15 @@ en `db/schema.dbml` y las consultas de Grafana en `db/grafana_queries.sql`.
 cp .env.example .env
 docker compose up -d database
 ```
+
+### Broker MQTT
+
+```bash
+docker compose up -d broker
+```
+
+Mosquitto escucha en `1883` para MQTT TCP y en `9001` para MQTT sobre WebSocket.
+Consulte `mqtt/README.md` antes de desplegarlo fuera de una red local.
 
 ### Servidor
 
