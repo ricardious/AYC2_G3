@@ -3,10 +3,7 @@ import { HistoryOverview } from "@/components/organisms/HistoryOverview";
 import { StageBlock } from "@/components/templates/StageBlock";
 
 /**
- * Laboratorio de telemetría: agregados de 24 h, trazas y línea de tiempo.
- *
- * Las trazas son SVG con `viewBox`, así que los dos bloques se estiran y
- * aprovechan el ancho de más en vez de repartirlo en huecos.
+ * Agregados y gráficas de las últimas lecturas disponibles del nodo.
  */
 export function HistoryScreen() {
   return (

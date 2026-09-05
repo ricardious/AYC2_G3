@@ -1,19 +1,30 @@
+"use client";
 import { DataField } from "@/components/atoms/DataField";
-import { HISTORY_STATS } from "@/lib/smartegg/catalog";
+import { useTelemetry } from "@/lib/state/hooks";
 
-/** Agregados de las últimas 24 horas. */
 export function HistoryOverview() {
+  const { series } = useTelemetry();
+  const average = (key: "t" | "h") =>
+    series.length
+      ? (series.reduce((sum, p) => sum + p[key], 0) / series.length).toFixed(1)
+      : "—";
   return (
     <div className="flex flex-wrap gap-x-12 gap-y-6">
-      {HISTORY_STATS.map((stat) => (
-        <DataField
-          key={stat.label}
-          variant="md"
-          label={stat.label}
-          value={stat.value}
-          valueColor={stat.color}
-        />
-      ))}
+      <DataField
+        variant="md"
+        label="TEMPERATURA MEDIA"
+        value={`${average("t")} °C`}
+      />
+      <DataField
+        variant="md"
+        label="HUMEDAD MEDIA"
+        value={`${average("h")} %`}
+      />
+      <DataField
+        variant="md"
+        label="LECTURAS DISPONIBLES"
+        value={String(series.length)}
+      />
     </div>
   );
 }
