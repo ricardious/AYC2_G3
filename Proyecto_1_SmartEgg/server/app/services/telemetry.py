@@ -93,6 +93,10 @@ def _sync_alarm(
                 occurred_at=recorded_at,
             )
         )
+    elif active and alarm is not None:
+        alarm.severity = severity
+        alarm.message = message
+        alarm.value = value
     elif not active and alarm is not None:
         alarm.resolved_at = recorded_at
 
