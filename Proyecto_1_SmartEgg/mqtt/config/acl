@@ -1,0 +1,3 @@
+# Rules shared by authenticated SmartEgg clients.
+topic read $SYS/#
+topic readwrite smartegg/#
