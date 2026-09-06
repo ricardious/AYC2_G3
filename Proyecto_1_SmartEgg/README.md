@@ -21,6 +21,49 @@ La base de datos PostgreSQL se ejecuta fuera del servidor como un servicio indep
 y conserva sus datos en el volumen Docker `postgres_data`. El modelo documentado está
 en `db/schema.dbml` y las consultas de Grafana en `db/grafana_queries.sql`.
 
+## Arquitectura general
+
+```mermaid
+flowchart LR
+    NODE["Arduino Uno<br/>SmartEgg"]
+    WEB["Frontend<br/>Next.js"]
+
+    subgraph PLATFORM["Plataforma SmartEgg"]
+        API["Backend<br/>FastAPI"]
+        DB[("PostgreSQL")]
+        MQTT["Mosquitto<br/>Broker MQTT"]
+        GRAFANA["Grafana"]
+    end
+
+    NODE -->|"UART/USB · 115200 baud"| API
+    WEB <-->|"REST · HTTP/JSON"| API
+    API -->|"WebSocket · telemetría"| WEB
+    API -->|"SQL · persistencia"| DB
+    API -->|"MQTT/TCP · publicaciones"| MQTT
+    MQTT -->|"MQTT/WebSocket · alarmas y estado"| WEB
+    MQTT -->|"Datasource MQTT · tiempo real"| GRAFANA
+    DB -->|"Datasource PostgreSQL · histórico"| GRAFANA
+```
+
+### Conexiones
+
+| Origen | Destino | Conexión | Datos |
+|---|---|---|---|
+| Arduino | Backend | UART/USB a 115200 baud | Temperatura, humedad, puerta, ocupación y actuadores |
+| Backend | PostgreSQL | SQLAlchemy con PostgreSQL | Telemetría, alarmas, configuración, lotes, huevos y operaciones de puerta |
+| Backend | Mosquitto | MQTT 3.1.1 por TCP | Telemetría, sensores, actuadores, alarmas y disponibilidad |
+| Frontend | Backend | REST por HTTP/JSON | Autenticación, consultas, configuración y registros |
+| Backend | Frontend | WebSocket | Telemetría procesada en vivo |
+| Mosquitto | Frontend | MQTT sobre WebSocket | Alarmas críticas, estado del nodo y actuadores |
+| Mosquitto | Grafana | Datasource MQTT | Paneles de estado en tiempo real |
+| PostgreSQL | Grafana | Datasource PostgreSQL de solo lectura | Tendencias, agregados, alarmas y operaciones de puerta |
+
+El backend es el único componente que recibe directamente la trama serial. Cada
+lectura válida se persiste en PostgreSQL, se publica en Mosquitto y se transmite a
+los clientes WebSocket conectados. El frontend utiliza REST para operaciones bajo
+demanda y MQTT sobre WebSocket para eventos del broker. Grafana mantiene dos fuentes:
+Mosquitto para el estado actual y PostgreSQL para el historial.
+
 ## Ejecución local
 
 ### Plataforma completa
