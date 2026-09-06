@@ -110,6 +110,72 @@ La elección de librerías, el flujo de datos y el guion del video están en
 [client/README.md](client/README.md#visualización-avanzada). Falta grabar el video
 demostrativo con el nodo físico y agregar su enlace.
 
+## HTTP vs. MQTT en SmartEgg
+
+SmartEgg utiliza HTTP para operaciones bajo demanda y MQTT para distribución de
+eventos en tiempo real.
+
+### Comparación
+
+| Criterio | HTTP | MQTT |
+|---|---|---|
+| Modelo | Cliente-servidor, petición/respuesta | Publicación/suscripción mediante un broker |
+| Inicio de la comunicación | El cliente solicita cada recurso u operación | El broker entrega un mensaje cuando se publica en un topic suscrito |
+| Encabezados y tráfico | Incluye método, URI, cabeceras y respuesta HTTP | Usa paquetes de control compactos, un topic y el payload |
+| Entrega | El resultado se expresa con códigos de estado; los reintentos dependen del cliente y de si la operación es segura o idempotente | Ofrece QoS 0 (como máximo una vez), QoS 1 (al menos una vez) y QoS 2 (exactamente una vez) |
+| Desconexiones | El cliente vuelve a realizar la consulta; una conexión persistente evita abrir una conexión para cada petición | Puede conservar sesión y mensajes, reenviar según el QoS y publicar un Last Will ante una desconexión inesperada |
+| Último estado | Puede consultarse nuevamente o almacenarse en caché cuando la semántica lo permite | Un mensaje retained permite entregar el último estado a un nuevo suscriptor |
+| Escalabilidad | Es apropiado para operaciones dirigidas a recursos; cada consumidor inicia sus solicitudes | Un mensaje puede distribuirse a varios consumidores sin que el publicador mantenga una conexión con cada uno |
+| Consumo en IoT | Las consultas frecuentes y sus cabeceras pueden aumentar tráfico, radio activa y energía | Su menor sobrecarga y la entrega por eventos favorecen telemetría frecuente en enlaces limitados |
+| Uso en SmartEgg | Inicio de sesión, configuración, lotes, huevos, reportes e historial | Telemetría, estado del nodo, actuadores y alarmas en tiempo real |
+
+El consumo de cada protocolo depende de la frecuencia, el tamaño del payload, el
+QoS, TLS y la calidad del enlace. MQTT mantiene una conexión, intercambia keep-alive
+y confirma los mensajes con QoS 1 o 2. En SmartEgg, una publicación puede llegar al
+frontend y a Grafana sin que cada consumidor consulte repetidamente al backend.
+
+### Optimizaciones disponibles para HTTP en IoT
+
+Las siguientes técnicas reducen el tráfico o la latencia de HTTP en dispositivos y
+redes restringidas:
+
+- `keep-alive`: reutilización de conexiones TCP y TLS.
+- `Content-Encoding`: compresión del cuerpo de la petición o respuesta.
+- HTTP/2: multiplexación de solicitudes y compresión de campos de cabecera.
+- Caché y solicitudes condicionales: reutilización de respuestas que no cambiaron.
+- *Batching*: agrupación de lecturas en una sola petición a cambio de mayor latencia.
+- CoAP: protocolo web con semántica REST y mensajes pequeños para dispositivos y
+  redes restringidas.
+
+### Implementación en SmartEgg
+
+| Flujo | Protocolo | Configuración |
+|---|---|---|
+| Arduino → backend | UART/USB | Lecturas seriales heredadas de la Práctica 1 |
+| Backend → PostgreSQL | Conexión SQL | Persistencia de telemetría, alarmas y registros |
+| Backend → Mosquitto | MQTT 3.1.1 | Publicación de telemetría y estado |
+| Backend → frontend | HTTP REST | Autenticación, configuración, lotes, huevos, historial y reportes |
+| Backend → frontend | WebSocket | Telemetría en vivo |
+| Mosquitto → frontend | MQTT sobre WebSocket | Alarmas, disponibilidad y actuadores |
+| PostgreSQL → Grafana | SQL | Consultas históricas |
+| Mosquitto → Grafana | MQTT | Paneles en tiempo real |
+
+La telemetría periódica se publica con QoS 0 y retained. Una lectura posterior
+reemplaza el último valor. Los estados, actuadores y alarmas se publican con QoS 1 y
+retained. El topic `smartegg/{id}/status` tiene un Last Will que informa la
+desconexión inesperada del backend.
+
+FastAPI expone el contrato REST mediante OpenAPI en `/docs`. Mosquitto mantiene el
+contrato de mensajes definido en [mqtt/TOPICS.md](mqtt/TOPICS.md).
+
+### Fuentes consultadas
+
+- [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html)
+- [RFC 9111 — HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111.html)
+- [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113.html)
+- [MQTT Version 3.1.1 — OASIS Standard](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html)
+- [RFC 7252 — Constrained Application Protocol](https://www.rfc-editor.org/rfc/rfc7252.html)
+
 ## Firmware reutilizado
 
 El firmware no se duplicó en este proyecto. Se reutiliza sin cambios el código de
