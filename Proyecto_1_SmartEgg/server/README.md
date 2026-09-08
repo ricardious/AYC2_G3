@@ -1,7 +1,7 @@
 # SmartEgg API
 
 Backend FastAPI para el Proyecto 1 **SmartEgg: Plataforma IoT Distribuida**. Recibe la
-telemetría ambiental del Arduino por UART/USB, conserva el ciclo de incubación en PostgreSQL,
+telemetría ambiental de la ESP32 por UART/USB, conserva el ciclo de incubación en PostgreSQL,
 expone la información al frontend por REST y publica el estado del nodo mediante MQTT.
 
 ## Cobertura del enunciado
@@ -13,7 +13,8 @@ expone la información al frontend por REST y publica el estado del nodo mediant
 - Estados y comandos de calefacción, ventilador, servo y buzzer.
 - Alarmas automáticas por temperatura, humedad y puerta abierta, con resolución y acuse.
 - Rotación manual bidireccional y registro de rotaciones.
-- Puente Serial UART/USB preparado para conectar el Arduino real.
+- Puente Serial UART/USB preparado para conectar la ESP32 real.
+- Acceso RFID con sesión por operador, servo de cerradura y cierre automático.
 - Publicación MQTT de telemetría, actuadores, alarmas y disponibilidad del nodo.
 - Actualización en tiempo real mediante WebSocket y consultas históricas/estadísticas.
 - Descarga PDF con identificación, técnico, lotes, extremos diarios y alarmas.
@@ -28,7 +29,8 @@ del microcontrolador.
 
 ```mermaid
 flowchart LR
-    Arduino[Arduino + sensores/actuadores] <-->|JSON o pares clave:valor\nUART/USB| Serial[SerialBridge]
+    ESP32[ESP32 + RC522 + sensores/actuadores] <-->|JSON\nUART/USB| Serial[SerialBridge]
+    ESP32 -->|RFID y puerta · HTTP| API
     Serial --> Domain[Servicio de telemetría]
     Web[Frontend web/móvil] <-->|REST + WebSocket| API[FastAPI]
     API --> Domain
@@ -65,7 +67,8 @@ server/
 
 | Entidad | Responsabilidad |
 |---|---|
-| `Technician` | Operador autenticado, con edad y género |
+| `Technician` | Operador autenticado, rol y UID RFID |
+| `AccessSession` | Sesión RFID ligada a operador, incubadora y puerta |
 | `Incubator` / `IncubatorConfig` | Nodo, capacidad y umbrales configurables |
 | `Lot` / `Egg` | Lotes y ficha individual con posición física |
 | `Sensor` / `TelemetryReading` | Estado del sensor e historial ambiental |
@@ -101,12 +104,16 @@ Variables principales:
 | `SMARTEGG_DATABASE_URL` | URL SQLAlchemy de PostgreSQL | `postgresql+psycopg://...` |
 | `SMARTEGG_AUTO_CREATE_SCHEMA` | Solo pruebas; en operación se usa Alembic | `false` |
 | `SMARTEGG_JWT_SECRET` | Firma de tokens | aleatorio por proceso |
+| `SMARTEGG_DEVICE_API_KEY` | Autenticación HTTP de la ESP32 | vacío |
+| `SMARTEGG_KIOSK_API_KEY` | Emparejamiento del login RFID local | vacío |
+| `SMARTEGG_ACCESS_SERVO_UNLOCK_DEGREES` | Ángulo de desbloqueo | `90` |
+| `SMARTEGG_ACCESS_SERVO_LOCK_DEGREES` | Ángulo de bloqueo | `0` |
 | `SMARTEGG_CORS_ORIGINS` | Orígenes JSON autorizados | `["http://localhost:3000"]` |
 | `SMARTEGG_TIMEZONE` | Día/hora del reporte | `America/Guatemala` |
 | `SMARTEGG_INITIAL_TECHNICIANS` | Usuarios iniciales en JSON | `[]` |
 | `SMARTEGG_INITIAL_INCUBATORS` | Incubadoras iniciales en JSON | `[]` |
 | `SMARTEGG_SERIAL_ENABLED` | Activa el lector UART | `false` |
-| `SMARTEGG_SERIAL_PORT` | Puerto, p. ej. `/dev/ttyACM0` | vacío |
+| `SMARTEGG_SERIAL_PORT` | Puerto, p. ej. `/dev/ttyUSB0` | vacío |
 | `SMARTEGG_SERIAL_BAUDRATE` | Velocidad UART | `115200` |
 | `SMARTEGG_DEFAULT_INCUBATOR_CODE` | Nodo usado si UART no envía `NODE` | `NODE-01` |
 | `SMARTEGG_MQTT_ENABLED` | Activa la publicación hacia Mosquitto | `false` |
@@ -201,12 +208,14 @@ Swagger o los endpoints siguientes.
 
 ## Contrato de API
 
-Todos los endpoints funcionales usan el prefijo `/api/v1`. Salvo `bootstrap`, `login` y
-el estado de salud, requieren JWT.
+Todos los endpoints funcionales usan el prefijo `/api/v1`. Los endpoints del dashboard
+requieren JWT. Los endpoints físicos `/access/rfid/authorize` y
+`/access/sessions/{id}/door` requieren `X-Device-Key`.
 
 | Área | Operaciones principales |
 |---|---|
 | Auth | `POST /auth/bootstrap`, `POST /auth/login`, `GET /auth/me`, `POST /auth/technicians` |
+| Acceso RFID | `POST /access/rfid/authorize`, `POST /access/sessions/{id}/door`, `POST .../{id}/cancel`, `GET .../{id}`, `WS /access/ws/{code}` |
 | Incubadoras | `POST/GET /incubators`, `GET /incubators/{id}/state` |
 | Configuración | `GET/PUT /incubators/{id}/config` |
 | Lotes | `POST/GET /lots`, `GET/PATCH /lots/{id}` |
@@ -226,6 +235,92 @@ El contrato exacto, ejemplos, restricciones y respuestas 422 siempre se mantiene
 `/openapi.json` y Swagger. El endpoint agregado `state` entrega en una petición el nodo,
 configuración, última lectura, ocupación, sensores, actuadores y alarmas activas.
 
+## Acceso físico con ESP32
+
+El ESP32 autentica cada solicitud con `X-Device-Key`. La clave, los ángulos del servo y
+la tarjeta asignada a cada operador se configuran en `.env`:
+
+```dotenv
+SMARTEGG_DEVICE_API_KEY=una-clave-exclusiva-del-esp32
+SMARTEGG_KIOSK_API_KEY=una-clave-exclusiva-de-la-consola
+SMARTEGG_ACCESS_SERVO_UNLOCK_DEGREES=90
+SMARTEGG_ACCESS_SERVO_LOCK_DEGREES=0
+```
+
+El UID se guarda normalizado, en mayúsculas y sin separadores. Se admiten UID de 4, 7 y
+10 bytes. Una lectura válida crea `access_sessions`, emite un JWT ligado a esa sesión y
+devuelve el ángulo de desbloqueo:
+
+```http
+POST /api/v1/access/rfid/authorize
+X-Device-Key: una-clave-exclusiva-del-esp32
+Content-Type: application/json
+
+{"uid":"A1:B2:C3:D4","incubator_code":"NODE-01"}
+```
+
+```json
+{
+  "result": "authorized",
+  "servo_action": "unlock",
+  "servo_angle": 90,
+  "session_id": 12,
+  "access_token": "<JWT>",
+  "token_type": "bearer",
+  "expires_in": 28800,
+  "technician": {
+    "id": 1,
+    "username": "operador1",
+    "full_name": "Operador 1",
+    "age": 25,
+    "gender": "masculino",
+    "role": "operator_1",
+    "rfid_uid": "A1B2C3D4",
+    "is_active": true,
+    "created_at": "2026-09-07T12:00:00Z"
+  }
+}
+```
+
+La pantalla de acceso mantiene abierto
+`WS /api/v1/access/ws/NODE-01?key=<KIOSK_API_KEY>`. Al autorizar la tarjeta, ese canal
+recibe `rfid_authenticated` con el JWT y abre el dashboard del operador sin solicitar
+usuario ni contraseña.
+
+El sensor informa la apertura sin registrar cantidades:
+
+```http
+POST /api/v1/access/sessions/12/door
+X-Device-Key: una-clave-exclusiva-del-esp32
+Content-Type: application/json
+
+{"state":"open"}
+```
+
+El operador registra previamente el tipo de operación y la cantidad desde el dashboard
+mediante `POST /incubators/{id}/door-events`. El registro queda enlazado a su sesión
+RFID. Si no registra una operación, el cierre queda como inspección.
+
+El sensor informa el cierre. También puede incluir la operación como respaldo. Este
+evento bloquea el servo, termina `access_sessions`, completa `door_events` e invalida
+inmediatamente el JWT RFID:
+
+```http
+POST /api/v1/access/sessions/12/door
+X-Device-Key: una-clave-exclusiva-del-esp32
+Content-Type: application/json
+
+{"state":"closed","event_type":"egg_entry","eggs_added":4}
+```
+
+Los cambios también se emiten por WebSocket y por el topic
+`smartegg/{id}/acceso/eventos`. Solamente se permite una sesión física activa por
+incubadora.
+
+Si la puerta no se abre durante 15 segundos, la ESP32 bloquea el servo y ejecuta
+`POST /access/sessions/{id}/cancel`. El evento `access_cancelled` cierra también el
+dashboard que se hubiera abierto.
+
 ## Protocolo Serial UART/USB
 
 Cada mensaje ocupa una línea terminada en `\n`. Se admiten dos representaciones:
@@ -239,7 +334,7 @@ NODE:NODE-01,TEMP:37.6,HUM:58,DOOR:0,SLOTS:3,HEATER:0,FAN:0,SERVO:45,BUZZER:0
 ```
 
 Campos mínimos: temperatura y humedad. Los booleanos aceptan `0/1`, `true/false` u
-`on/off`. El puente reconecta automáticamente si el Arduino se desconecta. Los comandos
+`on/off`. El puente reconecta automáticamente si la ESP32 se desconecta. Los comandos
 hacia el microcontrolador se envían como JSON por línea:
 
 ```json
@@ -248,7 +343,7 @@ hacia el microcontrolador se envían como JSON por línea:
 {"type":"config","temperature_min_c":37.0,"temperature_max_c":38.0}
 ```
 
-El Arduino debe conservar su control ON/OFF y alarmas aun cuando la computadora se
+La ESP32 conserva su control ON/OFF y alarmas aun cuando la computadora se
 desconecte. El backend vuelve a evaluar los umbrales para mantener consistente la vista y
 el historial, pero no reemplaza esa protección local.
 
