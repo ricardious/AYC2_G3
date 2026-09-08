@@ -31,9 +31,16 @@ El trazado sigue tres reglas para que los cables no se crucen:
 2. **El orden vertical de los componentes copia el orden de los pines.** Así los cables
    salen paralelos en lugar de cruzarse. Por eso las posiciones aparecen como 4-2-3-1 de
    arriba abajo: ese es el orden físico de los pines 36, 34, 35 y 32.
-3. **La alimentación va encadenada, no en estrella.** GND y 5 V bajan de un módulo al
-   siguiente y solo el último cierra contra la placa; los cuatro pull-ups comparten un
-   riel de 3.3 V. Eso reemplaza una veintena de cables largos por cuatro.
+3. **Los módulos van girados 180° para que sus pines miren a la placa.** El servo, el
+   relé, el buzzer y el DHT traen los pines en un solo borde; sin girarlos, el cable
+   salía por el lado contrario y volvía cruzando por encima del cuerpo del módulo.
+4. **La alimentación va encadenada, no en estrella.** GND y 5 V bajan de un módulo al
+   siguiente, y el riel cierra contra la placa desde el módulo más cercano al pin, no
+   desde el último de la cadena. Los cuatro pull-ups comparten un riel de 3.3 V.
+
+Los únicos cables largos son los de 3.3 V del RC522 y 5 V del LCD, porque en esta
+placa ambas alimentaciones salen solo por el borde izquierdo; los dos rodean por fuera
+en lugar de atravesar el diagrama.
 
 Quedan dos cruces inevitables en el lado derecho: los pines del LCD (21 y 22) y los de
 los switches (16 y 17) caen dentro del rango que ocupa el RC522 (23 a 4), así que su
