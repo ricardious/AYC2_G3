@@ -12,6 +12,8 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
     settings = Settings(
         database_url=f"sqlite:///{tmp_path / 'test.db'}",
         jwt_secret="test-only-secret-that-is-long-enough-for-tests",
+        device_api_key="esp32-test-key",
+        kiosk_api_key="kiosk-test-key",
         serial_enabled=False,
         auto_create_schema=True,
     )
@@ -26,6 +28,8 @@ def auth_headers(client: TestClient) -> dict[str, str]:
         json={
             "username": "tecnico1",
             "full_name": "Técnico de Prueba",
+            "role": "operator_1",
+            "rfid_uid": "A1:B2:C3:D4",
             "password": "segura123",
         },
     )
