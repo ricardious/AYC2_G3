@@ -57,7 +57,7 @@ para rodear en lugar de atravesar.
 | DHT | DATA 13 | Ver la limitación más abajo |
 | Servo bandeja | 25 | |
 | Servo cerradura | 33 | |
-| Relés calefacción / ventilador | 26 / 27 | Activos en bajo |
+| Relés calefacción / ventilador | 26 / 27 | Activos en bajo (`transistor: pnp`) |
 | Buzzer activo | 14 | |
 | Puerta | 16 | Deslizante: arriba = abierta (HIGH) |
 | Switch general | 17 | Deslizante: abajo = encendido (LOW) |
