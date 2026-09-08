@@ -13,8 +13,8 @@ pnpm lint
 
 ## Conexión con el backend
 
-La consola no genera telemetría simulada. Al iniciar solicita las credenciales del
-técnico y carga el estado y las últimas 240 lecturas por REST. Conservamos el WebSocket
+La consola no genera telemetría simulada. El acceso acepta una tarjeta RFID o las
+credenciales del técnico y carga el estado y las últimas 240 lecturas por REST. Conservamos el WebSocket
 de FastAPI para la telemetría y nos conectamos directamente a Mosquitto con MQTT.js para
 recibir alarmas, disponibilidad y actuadores sin recargar la página.
 
@@ -31,6 +31,8 @@ cp .env.example .env.local
 |---|---|
 | `NEXT_PUBLIC_API_URL` | Origen de FastAPI, por ejemplo `http://localhost:8000` |
 | `NEXT_PUBLIC_INCUBATOR_ID` | Incubadora preferida; si se omite se usa la primera |
+| `NEXT_PUBLIC_INCUBATOR_CODE` | Código usado por el canal de acceso RFID |
+| `NEXT_PUBLIC_ACCESS_KIOSK_KEY` | Clave de la consola local; coincide con `KIOSK_API_KEY` |
 | `NEXT_PUBLIC_MQTT_URL` | Broker por WebSocket, por ejemplo `ws://localhost:9001` |
 | `NEXT_PUBLIC_MQTT_USERNAME` | Usuario autenticado de Mosquitto |
 | `NEXT_PUBLIC_MQTT_PASSWORD` | Contraseña MQTT usada por el navegador |
@@ -61,7 +63,8 @@ reutilizamos credenciales administrativas.
 Flujo utilizado:
 
 ```text
-Arduino --Serial USB--> FastAPI --REST inicial/respaldo------> Next.js
+ESP32 ---Serial USB---> FastAPI --REST inicial/respaldo------> Next.js
+   |----RFID/HTTP-----> FastAPI --WebSocket de acceso/JWT----> Next.js
                               |--WebSocket de telemetría-----> Next.js
                               `--MQTT--> Mosquitto --WS------> Next.js
 ```
@@ -127,16 +130,17 @@ contextos:
 - `TelemetryContext` — serie en vivo y reloj derivados de las lecturas recibidas. Al estar
   separados, cada trama sólo re-renderiza medidores y gráficas.
 
-La ocupación física procede del campo `SLOTS` del firmware. Una posición detectada y una
-ficha registrada son estados distintos: la primera habilita el formulario y la segunda
-aporta el rótulo, lote y fecha de ingreso persistidos en FastAPI.
+La ocupación física procede del campo `SLOTS` del firmware, generado por cuatro
+microinterruptores de presión, uno bajo cada soporte. Una posición detectada y una ficha
+registrada son estados distintos: la primera habilita el formulario y la segunda aporta
+el rótulo, lote y fecha de ingreso persistidos en FastAPI.
 
 `derive.ts` contiene funciones puras `(estado, config) → modelo de vista`, así
 que la lógica del panel es comprobable sin DOM.
 
 ### Registro e identificación de huevos
 
-En **Incubación**, una posición reportada como ocupada por el Arduino aparece como
+En **Incubación**, una posición reportada como ocupada por la ESP32 aparece como
 `SIN IDENTIFICAR` hasta que el técnico abre **Registrar huevo**. El formulario solicita:
 
 - código rotulado del huevo;
