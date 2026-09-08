@@ -1,8 +1,38 @@
 # Firmware ESP32
 
-El nodo de Proyecto 1 reutiliza el control ambiental de la Práctica 1 y lo adapta a una
-ESP32 DevKit. La misma placa controla la incubadora, lee el RC522, mueve el servo de
-acceso y envía los eventos de puerta al backend.
+El nodo de Proyecto 1 conserva la arquitectura modular y la lógica de control de la
+Práctica 1, adaptadas a una ESP32 DevKit con ESP-IDF y FreeRTOS nativos. No requiere
+el framework ni bibliotecas de Arduino. La misma placa controla la incubadora, lee el
+RC522, mueve el servo de acceso y envía los eventos de puerta al backend.
+
+## Arquitectura del firmware
+
+El programa no concentra la aplicación en `loop()`. Crea dos tareas FreeRTOS fijadas a
+núcleos distintos:
+
+| Tarea | Núcleo | Prioridad | Responsabilidad |
+|---|---:|---:|---|
+| `SensorControl` | 1 | 3 | DHT11, posiciones, interruptores, relés, buzzer, bandeja y LCD |
+| `Communication` | 0 | 2 | Protocolo serial, telemetría, Wi-Fi, RC522, HTTP y cerradura |
+
+`SensorControl` mantiene la histéresis y las protecciones de la Práctica 1, invalida el
+sensor después de tres lecturas fallidas y ejecuta la rotación periódica sin bloquear.
+Los comandos y el estado compartido se intercambian mediante regiones críticas aptas
+para los dos núcleos del ESP32.
+
+```text
+SmartEggESP32/
+├── Main.cpp            # app_main y creación de tareas
+├── Config.h            # Pines, tiempos, prioridades y tamaños de pila
+├── SystemModel.h       # Estado, configuración, comandos y eventos
+├── ControlLogic.*      # Control ambiental comprobable fuera del hardware
+├── Hardware.*          # GPIO, DHT11, I²C, LCD, PWM e interrupciones
+├── Display.*           # Pantallas y animaciones heredadas
+├── SerialProtocol.*    # Comandos JSON y telemetría UART
+├── RfidReader.*        # Control directo del RC522 mediante SPI
+├── AccessControl.*     # Wi-Fi, HTTP y sesión de acceso
+└── Tasks.*             # Planificación y sincronización FreeRTOS
+```
 
 ## Componentes
 
@@ -47,20 +77,24 @@ fuente externa de 5 V con GND común.
 
 ## Preparación
 
-1. Instalar las bibliotecas `ArduinoJson`, `DHT sensor library`, `ESP32Servo`,
-   `LiquidCrystal_I2C` y `MFRC522` desde el Library Manager.
+1. Instalar PlatformIO Core.
 2. Copiar `SmartEggESP32/secrets.example.h` como `SmartEggESP32/secrets.h`.
 3. Colocar el SSID, contraseña Wi-Fi, URL local del backend y `DEVICE_API_KEY`.
-4. Seleccionar **ESP32 Dev Module** y cargar `SmartEggESP32.ino`.
-
-El UID de cada tarjeta se obtiene primero con el ejemplo
-`Archivo > Ejemplos > MFRC522 > DumpInfo`. Ese valor se asigna como `rfid_uid` al
-Operador 1 u Operador 2 desde la API.
-
-La compilación reproducible también está definida en `platformio.ini`:
+4. Compilar y cargar desde la raíz del repositorio:
 
 ```bash
-uvx platformio run -d firmware
+uvx platformio run -d Proyecto_1_SmartEgg/firmware
+uvx platformio run -d Proyecto_1_SmartEgg/firmware -t upload
+uvx platformio run -d Proyecto_1_SmartEgg/firmware -t monitor
+```
+
+El UID hexadecimal que reporta el nodo se asigna como `rfid_uid` al Operador 1 u
+Operador 2 desde la API. El lector admite UID ISO/IEC 14443A de 4, 7 y 10 bytes.
+
+La lógica ambiental se puede probar en el equipo sin conectar la placa:
+
+```bash
+firmware/tests/run_host_tests.sh
 ```
 
 ## Flujo RFID
