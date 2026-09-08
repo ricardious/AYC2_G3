@@ -3,88 +3,193 @@
   "editable": false,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": false,
+      "title": "SmartEgg · Histórico",
+      "tooltip": "Dashboard alimentado por PostgreSQL",
+      "type": "link",
+      "url": "/d/smartegg-historical"
+    }
+  ],
   "panels": [
     {
-      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
-      "fieldConfig": {
-        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "max": 42, "min": 30, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "green", "value": 36 }, { "color": "yellow", "value": 38 }, { "color": "red", "value": 39 }] }, "unit": "celsius" },
-        "overrides": []
-      },
-      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
-      "id": 1,
-      "options": { "minVizHeight": 75, "minVizWidth": 75, "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true, "sizing": "auto" },
-      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/sensores/temperatura" }],
-      "title": "Temperatura actual",
-      "type": "gauge"
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "Estado del nodo",
+      "type": "row"
     },
     {
       "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Topic smartegg/${node_code}/status · QoS 1 · retained · Last Will and Testament.",
       "fieldConfig": {
-        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "max": 100, "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 45 }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 80 }] }, "unit": "percent" },
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [{ "options": { "offline": { "color": "red", "index": 1, "text": "Desconectado" }, "online": { "color": "green", "index": 0, "text": "En línea" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 0 },
-      "id": 2,
-      "options": { "minVizHeight": 75, "minVizWidth": 75, "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true, "sizing": "auto" },
-      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/sensores/humedad" }],
-      "title": "Humedad actual",
-      "type": "gauge"
-    },
-    {
-      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
-      "fieldConfig": {
-        "defaults": { "color": { "mode": "thresholds" }, "mappings": [{ "options": { "online": { "color": "green", "index": 0, "text": "En línea" }, "offline": { "color": "red", "index": 1, "text": "Desconectado" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
-        "overrides": []
-      },
-      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 0 },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
       "id": 3,
-      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^status$/", "values": false }, "textMode": "value_and_name", "wideLayout": true },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^status$/", "values": false }, "textMode": "value", "wideLayout": true },
       "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/status" }],
       "title": "Estado del nodo",
       "type": "stat"
     },
     {
       "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Topic smartegg/${node_code}/sensores/temperatura · rango óptimo 37 – 38 °C · crítico desde 39 °C.",
       "fieldConfig": {
-        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "defaults": { "color": { "mode": "thresholds" }, "decimals": 2, "mappings": [], "max": 42, "min": 30, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "green", "value": 37 }, { "color": "yellow", "value": 38 }, { "color": "red", "value": 39 }] }, "unit": "celsius" },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 0 },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 },
+      "id": 1,
+      "options": { "minVizHeight": 75, "minVizWidth": 75, "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": false }, "showThresholdLabels": true, "showThresholdMarkers": true, "sizing": "auto" },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/sensores/temperatura" }],
+      "title": "Temperatura actual",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Topic smartegg/${node_code}/sensores/humedad · rango óptimo 50 – 65 %.",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "decimals": 1, "mappings": [], "max": 100, "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 50 }, { "color": "yellow", "value": 65 }, { "color": "red", "value": 75 }] }, "unit": "percent" },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 1 },
+      "id": 2,
+      "options": { "minVizHeight": 75, "minVizWidth": 75, "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": false }, "showThresholdLabels": true, "showThresholdMarkers": true, "sizing": "auto" },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/sensores/humedad" }],
+      "title": "Humedad actual",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Sensor de puerta reportado en la telemetría consolidada.",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [{ "options": { "false": { "color": "green", "index": 1, "text": "CERRADA" }, "true": { "color": "orange", "index": 0, "text": "ABIERTA" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 1 },
+      "id": 7,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^door_open$/", "values": false }, "textMode": "value", "wideLayout": true },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/telemetria" }],
+      "title": "Puerta",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 101,
+      "panels": [],
+      "title": "Telemetría y actuadores",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Topic smartegg/${node_code}/actuadores/estado · QoS 1 · retained.",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "heater" }, "properties": [{ "id": "displayName", "value": "Calefactor" }, { "id": "mappings", "value": [{ "options": { "false": { "color": "text", "index": 1, "text": "APAGADO" }, "true": { "color": "red", "index": 0, "text": "ENCENDIDO" } }, "type": "value" }] }] },
+          { "matcher": { "id": "byName", "options": "fan" }, "properties": [{ "id": "displayName", "value": "Ventilador" }, { "id": "mappings", "value": [{ "options": { "false": { "color": "text", "index": 1, "text": "APAGADO" }, "true": { "color": "blue", "index": 0, "text": "ENCENDIDO" } }, "type": "value" }] }] },
+          { "matcher": { "id": "byName", "options": "buzzer" }, "properties": [{ "id": "displayName", "value": "Buzzer" }, { "id": "mappings", "value": [{ "options": { "false": { "color": "text", "index": 1, "text": "SILENCIO" }, "true": { "color": "orange", "index": 0, "text": "SONANDO" } }, "type": "value" }] }] },
+          { "matcher": { "id": "byName", "options": "servo_angle" }, "properties": [{ "id": "displayName", "value": "Bandeja" }, { "id": "unit", "value": "degree" }, { "id": "decimals", "value": 0 }, { "id": "color", "value": { "fixedColor": "purple", "mode": "fixed" } }] }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 6, "x": 0, "y": 8 },
       "id": 4,
-      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^(heater|fan|servo_angle|buzzer)$/", "values": false }, "textMode": "auto", "wideLayout": true },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^(heater|fan|servo_angle|buzzer)$/", "values": false }, "textMode": "value_and_name", "wideLayout": true },
       "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/actuadores/estado" }],
       "title": "Actuadores",
       "type": "stat"
     },
     {
       "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Topic smartegg/${node_code}/telemetria · una trama cada 2 s. La serie se dibuja desde que se abre el panel.",
       "fieldConfig": {
         "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "opacity", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 4, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "temperature_c" }, "properties": [{ "id": "unit", "value": "celsius" }, { "id": "displayName", "value": "Temperatura" }] },
-          { "matcher": { "id": "byName", "options": "humidity_pct" }, "properties": [{ "id": "unit", "value": "percent" }, { "id": "displayName", "value": "Humedad" }] },
+          { "matcher": { "id": "byName", "options": "temperature_c" }, "properties": [{ "id": "unit", "value": "celsius" }, { "id": "displayName", "value": "Temperatura" }, { "id": "decimals", "value": 2 }, { "id": "custom.axisPlacement", "value": "left" }] },
+          { "matcher": { "id": "byName", "options": "humidity_pct" }, "properties": [{ "id": "unit", "value": "percent" }, { "id": "displayName", "value": "Humedad" }, { "id": "decimals", "value": 1 }, { "id": "custom.axisPlacement", "value": "right" }] },
           { "matcher": { "id": "byRegexp", "options": "/^(door_open|occupied_slots|available_slots|recorded_at)$/" }, "properties": [{ "id": "custom.hideFrom", "value": { "legend": true, "tooltip": true, "viz": true } }] }
         ]
       },
-      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 7 },
+      "gridPos": { "h": 9, "w": 12, "x": 6, "y": 8 },
       "id": 5,
-      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
+      "options": { "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
       "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/telemetria" }],
       "title": "Telemetría en vivo",
       "type": "timeseries"
     },
     {
       "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Posiciones ocupadas y libres según la última trama publicada.",
       "fieldConfig": {
-        "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }] } },
-        "overrides": []
+        "defaults": { "color": { "mode": "thresholds" }, "decimals": 0, "mappings": [], "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }, "unit": "short" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "occupied_slots" }, "properties": [{ "id": "displayName", "value": "Ocupadas" }, { "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "available_slots" }, "properties": [{ "id": "displayName", "value": "Disponibles" }, { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] }
+        ]
       },
-      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 7 },
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 8 },
+      "id": 9,
+      "options": { "displayMode": "gradient", "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false }, "maxVizHeight": 300, "minVizHeight": 16, "minVizWidth": 8, "namePlacement": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^(occupied_slots|available_slots)$/", "values": false }, "showUnfilled": true, "sizing": "auto", "valueMode": "color" },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/telemetria" }],
+      "title": "Ocupación de la cámara",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+      "id": 102,
+      "panels": [],
+      "title": "Alarmas y accesos",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Topic smartegg/${node_code}/alarmas/critica · QoS 1 · retained. Al resolverse la alarma el backend publica un mensaje vacío y la tabla queda sin filas.",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "kind" }, "properties": [{ "id": "displayName", "value": "Tipo" }] },
+          { "matcher": { "id": "byName", "options": "message" }, "properties": [{ "id": "displayName", "value": "Mensaje" }] },
+          { "matcher": { "id": "byName", "options": "value" }, "properties": [{ "id": "displayName", "value": "Valor" }, { "id": "decimals", "value": 2 }] },
+          { "matcher": { "id": "byName", "options": "occurred_at" }, "properties": [{ "id": "displayName", "value": "Detectada" }] },
+          { "matcher": { "id": "byName", "options": "severity" }, "properties": [{ "id": "displayName", "value": "Severidad" }, { "id": "mappings", "value": [{ "options": { "critical": { "color": "red", "index": 2, "text": "Crítica" }, "info": { "color": "blue", "index": 0, "text": "Informativa" }, "warning": { "color": "yellow", "index": 1, "text": "Advertencia" } }, "type": "value" }] }, { "id": "custom.cellOptions", "value": { "mode": "basic", "type": "color-background" } }] }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
       "id": 6,
       "options": { "cellHeight": "sm", "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
       "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/alarmas/critica" }],
       "title": "Alarma crítica",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
+      "description": "Topic smartegg/${node_code}/acceso/eventos · QoS 1 · sin retención. Autorizaciones RFID, aperturas y cierres de la puerta.",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "session_id" }, "properties": [{ "id": "displayName", "value": "Sesión" }, { "id": "decimals", "value": 0 }] },
+          { "matcher": { "id": "byName", "options": "operator_id" }, "properties": [{ "id": "displayName", "value": "Operador" }, { "id": "decimals", "value": 0 }] },
+          { "matcher": { "id": "byName", "options": "recorded_at" }, "properties": [{ "id": "displayName", "value": "Fecha" }] },
+          { "matcher": { "id": "byName", "options": "event" }, "properties": [{ "id": "displayName", "value": "Evento" }, { "id": "mappings", "value": [{ "options": { "access_cancelled": { "color": "red", "index": 3, "text": "Sesión cancelada" }, "authorized": { "color": "green", "index": 0, "text": "Acceso autorizado" }, "door_closed": { "color": "green", "index": 2, "text": "Puerta cerrada" }, "door_opened": { "color": "orange", "index": 1, "text": "Puerta abierta" } }, "type": "value" }] }, { "id": "custom.cellOptions", "value": { "type": "color-text" } }] },
+          { "matcher": { "id": "byName", "options": "method" }, "properties": [{ "id": "displayName", "value": "Método" }, { "id": "mappings", "value": [{ "options": { "fingerprint": { "index": 1, "text": "Huella" }, "key": { "index": 2, "text": "Llave" }, "password": { "index": 3, "text": "Contraseña" }, "rfid": { "index": 0, "text": "Tarjeta RFID" } }, "type": "value" }] }] }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "id": 10,
+      "options": { "cellHeight": "sm", "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
+      "targets": [{ "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" }, "refId": "A", "topic": "smartegg/${node_code}/acceso/eventos" }],
+      "title": "Eventos de acceso",
       "type": "table"
     }
   ],
@@ -106,10 +211,10 @@
     ]
   },
   "time": { "from": "now-15m", "to": "now" },
-  "timepicker": {},
+  "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"] },
   "timezone": "browser",
   "title": "SmartEgg - Tiempo real",
   "uid": "smartegg-realtime",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
