@@ -1,6 +1,8 @@
 import type {
   AuthToken,
   DashboardState,
+  DoorEvent,
+  DoorEventCreate,
   Egg,
   EggCreate,
   Incubator,
@@ -36,6 +38,14 @@ function browserApiOrigin(): string {
 export function websocketUrl(incubatorId: number, token: string): string {
   const origin = browserApiOrigin().replace(/^http/, "ws");
   return `${origin}${API_PREFIX}/ws/incubators/${incubatorId}?token=${encodeURIComponent(token)}`;
+}
+
+export function rfidAccessWebsocketUrl(
+  incubatorCode: string,
+  kioskKey: string,
+): string {
+  const origin = browserApiOrigin().replace(/^http/, "ws");
+  return `${origin}${API_PREFIX}/access/ws/${encodeURIComponent(incubatorCode)}?key=${encodeURIComponent(kioskKey)}`;
 }
 
 async function parseError(response: Response): Promise<string> {
@@ -127,6 +137,17 @@ export const api = {
   registerEgg: (payload: EggCreate, token: string) =>
     request<Egg>(
       "/eggs",
+      { method: "POST", body: JSON.stringify(payload) },
+      token,
+    ),
+
+  createDoorEvent: (
+    incubatorId: number,
+    payload: DoorEventCreate,
+    token: string,
+  ) =>
+    request<DoorEvent>(
+      `/incubators/${incubatorId}/door-events`,
       { method: "POST", body: JSON.stringify(payload) },
       token,
     ),

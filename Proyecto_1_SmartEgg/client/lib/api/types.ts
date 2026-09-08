@@ -2,6 +2,10 @@ export interface Technician {
   id: number;
   username: string;
   full_name: string;
+  age: number | null;
+  gender: string | null;
+  role: "operator_1" | "operator_2" | "admin";
+  rfid_uid: string | null;
   is_active: boolean;
   created_at: string;
 }
@@ -11,6 +15,7 @@ export interface AuthToken {
   token_type: "bearer";
   expires_in: number;
   technician: Technician;
+  session_id?: number | null;
 }
 
 export interface Incubator {
@@ -64,6 +69,34 @@ export interface EggCreate {
   slot_number: number;
   registered_at?: string | null;
   notes?: string | null;
+}
+
+export type DoorEventType =
+  | "egg_entry"
+  | "egg_removal"
+  | "inspection"
+  | "maintenance";
+
+export interface DoorEventCreate {
+  event_type: DoorEventType;
+  eggs_added: number;
+  eggs_removed: number;
+  notes?: string | null;
+}
+
+export interface DoorEvent {
+  id: number;
+  incubator_id: number;
+  operator_id: number;
+  access_session_id: number | null;
+  access_method: "rfid" | "fingerprint" | "key" | "password";
+  event_type: DoorEventType;
+  opened_at: string;
+  closed_at: string | null;
+  eggs_added: number;
+  eggs_removed: number;
+  notes: string | null;
+  created_at: string;
 }
 
 export interface IncubatorConfig {
@@ -155,4 +188,26 @@ export interface ConnectedMessage {
   incubator_id: number;
 }
 
-export type WebSocketMessage = LiveTelemetryMessage | ConnectedMessage;
+export interface DoorAccessMessage {
+  type: "door_opened" | "door_closed" | "access_cancelled";
+  session_id: number;
+  session_closed: boolean;
+  servo_action: "unlock" | "lock";
+  servo_angle: number;
+}
+
+export interface RfidReadyMessage {
+  type: "rfid_ready";
+  incubator_code: string;
+}
+
+export interface RfidAuthenticatedMessage extends AuthToken {
+  type: "rfid_authenticated";
+  session_id: number;
+}
+
+export type RfidAccessMessage = RfidReadyMessage | RfidAuthenticatedMessage;
+export type WebSocketMessage =
+  | LiveTelemetryMessage
+  | ConnectedMessage
+  | DoorAccessMessage;
