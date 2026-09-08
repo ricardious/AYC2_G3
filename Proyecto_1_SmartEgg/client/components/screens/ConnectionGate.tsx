@@ -103,6 +103,69 @@ function FieldGlyph() {
   );
 }
 
+function RfidScanner({
+  status,
+}: {
+  status: "disabled" | "connecting" | "ready" | "authorized" | "offline";
+}) {
+  const copy = {
+    disabled: ["RFID NO CONFIGURADO", "Acceso disponible con usuario y contraseña"],
+    connecting: ["ENLAZANDO LECTOR", "Conectando con el punto de acceso local"],
+    ready: ["ACERCA TU TARJETA", "RC522 listo para identificar al operador"],
+    authorized: ["TARJETA AUTORIZADA", "Abriendo sesión y liberando la puerta"],
+    offline: ["LECTOR SIN CONEXIÓN", "Reconectando automáticamente con el backend"],
+  } as const;
+  const [title, detail] = copy[status];
+  const active = status === "ready" || status === "authorized";
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`group relative overflow-hidden border px-4 py-4 transition duration-500 ${
+        active
+          ? "border-primary/50 bg-primary/[0.09] shadow-[inset_0_0_24px_var(--accent-halo)]"
+          : "border-frame-soft bg-background/35"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`absolute inset-y-0 left-0 w-px bg-primary ${status === "ready" ? "animate-pulse" : "opacity-30"}`}
+      />
+      <div className="flex items-center gap-4">
+        <div className="relative grid h-12 w-12 shrink-0 place-items-center border border-primary/30 bg-background/50 text-primary">
+          {status === "ready" ? (
+            <span className="absolute inset-1 animate-ping border border-primary/20" />
+          ) : null}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 32 32"
+            className="relative h-7 w-7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.25"
+          >
+            <rect x="5" y="7" width="17" height="20" rx="1" />
+            <path d="M9 12h9M9 16h6M25 11c2.7 2.7 2.7 7.3 0 10M22.5 13.5c1.3 1.3 1.3 3.7 0 5" />
+          </svg>
+        </div>
+        <div className="min-w-0">
+          <div className="font-mono text-[10px] tracking-[0.2em] text-primary-soft">
+            {title}
+          </div>
+          <p className="mt-1.5 text-xs leading-5 text-foreground-muted">{detail}</p>
+        </div>
+        <StatusDot
+          size={6}
+          color={active ? "var(--color-success)" : "var(--color-foreground-fainter)"}
+          glow={active ? 7 : 0}
+          className={status === "ready" ? "animate-pulse-slow" : undefined}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ConnectionGate({ children }: { children: ReactNode }) {
   const {
     hydrated,
@@ -110,6 +173,8 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
     dashboard,
     error,
     loginPending,
+    rfidConnection,
+    accessMessage,
     actions,
   } = useSmartEgg();
   const [username, setUsername] = useState("");
@@ -152,12 +217,29 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
           </h1>
           <div aria-hidden="true" className="edge-light mt-5 h-px w-full opacity-70" />
           <p className="mt-5 max-w-[340px] text-sm leading-6 text-foreground-muted">
-            Autentícate para enlazar esta consola con la incubadora y recibir su
-            telemetría en tiempo real.
+            Usa tu tarjeta RFID o las credenciales asignadas para abrir una sesión de
+            operación.
           </p>
         </div>
 
-        <form className="mt-8 space-y-5" onSubmit={submit}>
+        <div className="mt-7">
+          <RfidScanner status={rfidConnection} />
+          {accessMessage ? (
+            <p className="mt-3 border-l-2 border-success/60 bg-success/[0.06] px-3.5 py-2.5 text-xs leading-5 text-success">
+              {accessMessage}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="mt-7 flex items-center gap-3" aria-hidden="true">
+          <span className="h-px flex-1 bg-divider" />
+          <span className="font-mono text-[8px] tracking-[0.24em] text-foreground-fainter">
+            ACCESO MANUAL
+          </span>
+          <span className="h-px flex-1 bg-divider" />
+        </div>
+
+        <form className="mt-6 space-y-5" onSubmit={submit}>
           <label className="group block">
             <span className={fieldLabelClass}>USUARIO</span>
             <span className="relative mt-2 block">
