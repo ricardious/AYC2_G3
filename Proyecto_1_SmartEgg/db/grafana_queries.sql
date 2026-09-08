@@ -85,3 +85,16 @@ JOIN technicians AS t ON t.id = d.operator_id
 WHERE d.incubator_id = ${incubator_id}
   AND $__timeFilter(d.opened_at)
 ORDER BY d.opened_at DESC;
+
+-- Total de aperturas en el rango seleccionado.
+SELECT COUNT(*) AS openings
+FROM door_events
+WHERE incubator_id = ${incubator_id}
+  AND $__timeFilter(opened_at);
+
+-- Total de cierres confirmados por el sensor en el rango seleccionado.
+SELECT COUNT(*) AS closings
+FROM door_events
+WHERE incubator_id = ${incubator_id}
+  AND closed_at IS NOT NULL
+  AND $__timeFilter(closed_at);
