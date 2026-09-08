@@ -11,7 +11,7 @@ from .api import api_router
 from .config import Settings, get_settings
 from .database import Base, build_session_factory, create_engine
 from .services.bootstrap import ensure_initial_incubators, ensure_initial_technicians
-from .services.broadcast import ConnectionManager
+from .services.broadcast import AccessConnectionManager, ConnectionManager
 from .services.mqtt import MqttPublisher, build_mqtt_snapshot
 from .services.serial_bridge import SerialBridge
 from .services.telemetry import ingest_telemetry
@@ -24,6 +24,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     engine = create_engine(configured.database_url)
     session_factory = build_session_factory(engine)
     broadcast = ConnectionManager()
+    access_broadcast = AccessConnectionManager()
     main_loop: asyncio.AbstractEventLoop | None = None
 
     def serial_payload_handler(payload) -> None:  # type: ignore[no-untyped-def]
@@ -96,6 +97,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.engine = engine
     app.state.session_factory = session_factory
     app.state.broadcast = broadcast
+    app.state.access_broadcast = access_broadcast
     app.state.mqtt = mqtt_publisher
     app.state.serial_bridge = serial_bridge
     app.add_middleware(
