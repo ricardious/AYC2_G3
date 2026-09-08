@@ -12,6 +12,7 @@ Definimos los topics de la siguiente forma:
 | `smartegg/{id}/telemetria` | Backend | Grafana | 0 | Sí |
 | `smartegg/{id}/actuadores/estado` | Backend | Frontend, Grafana | 1 | Sí |
 | `smartegg/{id}/alarmas/critica` | Backend | Frontend | 1 | Sí |
+| `smartegg/{id}/acceso/eventos` | Backend | Frontend, Grafana | 1 | No |
 | `smartegg/{id}/status` | Backend/LWT | Frontend, Grafana | 1 | Sí |
 
 ## Formato de los mensajes
@@ -91,4 +92,18 @@ se desconecta de forma inesperada:
 
 ```json
 {"status":"offline","reason":"unexpected_disconnect"}
+```
+
+### Acceso RFID y puerta
+
+Cada autorización, apertura y cierre genera un evento no retenido:
+
+```json
+{
+  "event": "door_closed",
+  "session_id": 12,
+  "operator_id": 1,
+  "method": "rfid",
+  "recorded_at": "2026-09-07T18:10:00Z"
+}
 ```
