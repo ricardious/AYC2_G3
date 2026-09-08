@@ -30,6 +30,8 @@ def bootstrap_technician(
         full_name=payload.full_name.strip(),
         age=payload.age,
         gender=payload.gender.strip() if payload.gender else None,
+        role=payload.role,
+        rfid_uid=payload.rfid_uid,
         password_hash=hash_password(payload.password),
     )
     db.add(technician)
@@ -79,6 +81,8 @@ def create_technician(
         full_name=payload.full_name.strip(),
         age=payload.age,
         gender=payload.gender.strip() if payload.gender else None,
+        role=payload.role,
+        rfid_uid=payload.rfid_uid,
         password_hash=hash_password(payload.password),
     )
     db.add(technician)
@@ -86,6 +90,8 @@ def create_technician(
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Username already exists") from exc
+        raise HTTPException(
+            status_code=409, detail="Username or RFID UID already exists"
+        ) from exc
     db.refresh(technician)
     return technician
