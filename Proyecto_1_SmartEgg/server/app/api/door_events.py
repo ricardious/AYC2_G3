@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import DoorEvent, Incubator, Technician
+from ..models import AccessSession, DoorEvent, Incubator, Technician
 from ..schemas import DoorEventClose, DoorEventCreate, DoorEventRead
 from ..security import get_current_technician
 
@@ -56,9 +56,21 @@ def create_door_event(
         raise HTTPException(
             status_code=422, detail="closed_at cannot be before opened_at"
         )
+    access_session_id = getattr(operator, "_access_session_id", None)
+    access_method = "password"
+    if access_session_id is not None:
+        access_session = db.get(AccessSession, access_session_id)
+        if access_session is None or access_session.incubator_id != incubator_id:
+            raise HTTPException(
+                status_code=403,
+                detail="RFID session does not belong to this incubator",
+            )
+        access_method = access_session.method
     event = DoorEvent(
         incubator_id=incubator_id,
         operator_id=operator.id,
+        access_session_id=access_session_id,
+        access_method=access_method,
         opened_at=opened_at,
         **payload.model_dump(exclude={"opened_at", "closed_at"}),
         closed_at=closed_at,
