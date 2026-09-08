@@ -1,10 +1,10 @@
 # Proyecto 1 — SmartEgg
 
-SmartEgg es un sistema de incubadora inteligente IoT. Un nodo Arduino Uno mide el
+SmartEgg es un sistema de incubadora inteligente IoT. Un nodo ESP32 mide el
 ambiente de la cámara y acciona sus actuadores; una plataforma en Docker persiste cada
 lectura, la publica en un broker MQTT y la distribuye a una consola web y a Grafana.
-Este proyecto reutiliza como base el frontend, el servidor y el firmware desarrollados
-para la Práctica 1.
+Este proyecto reutiliza como base el frontend, el servidor y la lógica de control
+desarrollados para la Práctica 1.
 
 ```bash
 cp .env.example .env
@@ -23,7 +23,7 @@ cd client && pnpm install && pnpm dev
 - [Ejecución local](#ejecución-local)
 - [Visualización de datos](#visualización-de-datos)
 - [HTTP vs. MQTT en SmartEgg](#http-vs-mqtt-en-smartegg)
-- [Firmware reutilizado](#firmware-reutilizado)
+- [Firmware ESP32](#firmware-esp32)
 
 ## Estructura
 
@@ -32,7 +32,7 @@ Proyecto_1_SmartEgg/
 ├── client/       # Aplicación web en Next.js — consola, Observatorio e Historial
 ├── server/       # API REST, WebSocket, puente serial y publicador MQTT en FastAPI
 ├── db/           # Modelo relacional (schema.dbml) y consultas de Grafana
-├── firmware/     # Referencia al firmware reutilizado de la Práctica 1
+├── firmware/     # Firmware integrado para ESP32, RC522 y los actuadores
 ├── docs/         # Documentación y enunciado
 ├── grafana/      # Dashboards provisionados y datasources
 ├── mqtt/         # Mosquitto, ACL y contrato de topics MQTT
@@ -48,7 +48,7 @@ en `db/schema.dbml` y las consultas de Grafana en `db/grafana_queries.sql`.
 
 ```mermaid
 flowchart TB
-    NODE["<b>NODO FÍSICO</b><br/><b>Arduino Uno R3</b> · FreeRTOS<br/>DHT11 · puerta · 4 posiciones<br/>relés · servo · buzzer · LCD 16×2<br/><i>una trama cada 2 s</i>"]
+    NODE["<b>NODO FÍSICO</b><br/><b>ESP32 DevKit</b> · FreeRTOS<br/>DHT11 · RC522 · puerta · 4 posiciones<br/>relés · 2 servos · buzzer · LCD 16×2"]
 
     subgraph PLATAFORMA["PLATAFORMA · red Docker <code>smartegg</code>"]
         direction TB
@@ -66,6 +66,7 @@ flowchart TB
     end
 
     NODE ==>|"UART/USB · 115200 8N1"| API
+    NODE -->|"Wi-Fi · HTTP · RFID y puerta"| API
     API -->|"REST · WebSocket"| WEB
     WEB -.->|"comandos y consultas"| API
     MQTT -->|"MQTT sobre WebSocket"| WEB
@@ -94,7 +95,8 @@ flowchart TB
 
 | Origen | Destino | Conexión | Datos |
 |---|---|---|---|
-| Arduino | Backend | UART/USB a 115200 baud | Temperatura, humedad, puerta, ocupación y actuadores |
+| ESP32 | Backend | UART/USB a 115200 baud | Temperatura, humedad, puerta, ocupación y actuadores |
+| ESP32 | Backend | HTTP por Wi-Fi | UID RFID y eventos del sensor de puerta |
 | Backend | PostgreSQL | SQLAlchemy con PostgreSQL | Telemetría, alarmas, configuración, lotes, huevos y operaciones de puerta |
 | Backend | Mosquitto | MQTT 3.1.1 por TCP | Telemetría, sensores, actuadores, alarmas y disponibilidad |
 | Frontend | Backend | REST por HTTP/JSON | Autenticación, consultas, configuración y registros |
@@ -117,7 +119,7 @@ completo desde esa línea hasta las tres superficies que la muestran:
 ```mermaid
 sequenceDiagram
     autonumber
-    participant ARD as Arduino Uno
+    participant ARD as ESP32
     participant BR as SerialBridge<br/>(hilo dedicado)
     participant ING as ingest_telemetry
     participant PG as PostgreSQL
@@ -149,9 +151,10 @@ sequenceDiagram
 ```
 
 Si la trama no se puede interpretar, el puente la descarta y registra la excepción sin
-interrumpir el flujo. Cuando `SLOTS` no viene en la trama, el backend deriva la
-ocupación contando los huevos en estado `incubating`, y siempre rechaza una ocupación
-mayor que la capacidad declarada de la incubadora.
+interrumpir el flujo. `SLOTS` contiene la cantidad confirmada por cuatro
+microinterruptores de presión, uno por posición. Cuando el campo no viene en la trama,
+el backend deriva la ocupación contando los huevos en estado `incubating`, y siempre
+rechaza una ocupación mayor que la capacidad declarada de la incubadora.
 
 ### Ciclo de vida de una alarma
 
@@ -189,13 +192,14 @@ y sin reiniciar ningún servicio.
 
 ## Modelo de datos
 
-Once tablas, todas colgando de `incubators` salvo el catálogo de lotes y el de técnicos.
+Doce tablas, todas colgando de `incubators` salvo el catálogo de lotes y el de técnicos.
 El esquema se administra con Alembic desde `server/migrations`; `db/schema.dbml`
 documenta cada columna e índice.
 
 ```mermaid
 erDiagram
     technicians  ||--o{ door_events        : "opera"
+    technicians  ||--o{ access_sessions    : "autentica"
     technicians  ||--o{ alarms             : "reconoce"
 
     incubators   ||--|| incubator_configs  : "define umbrales"
@@ -205,14 +209,17 @@ erDiagram
     incubators   ||--o{ alarms             : "dispara"
     incubators   ||--o{ rotation_events    : "rota"
     incubators   ||--o{ door_events        : "recibe"
+    incubators   ||--o{ access_sessions    : "autoriza"
     incubators   ||--o{ eggs               : "aloja"
 
     lots         ||--o{ eggs               : "agrupa"
+    access_sessions |o--o| door_events     : "genera"
 ```
 
 | Tabla | Qué guarda | Escrita por |
 |---|---|---|
-| `technicians` | Credenciales y perfil del personal | `POST /auth/bootstrap` y `/auth/technicians` |
+| `technicians` | Credenciales, rol y UID RFID del personal | `POST /auth/bootstrap` y `/auth/technicians` |
+| `access_sessions` | Sesión RFID, operador, apertura, cierre y causa de finalización | ESP32 mediante `/access` |
 | `incubators` | Código, capacidad, número de serie y última señal | Bootstrap y telemetría |
 | `incubator_configs` | Rangos de temperatura y humedad, umbral crítico, intervalo y ángulo de rotación | Consola (`PUT /config`) |
 | `telemetry_readings` | Una fila por trama recibida, con la línea original en `raw_payload` | Puente serial y `POST /telemetry` |
@@ -222,7 +229,7 @@ erDiagram
 | `rotation_events` | Cada cambio real del ángulo del servo, con dirección y origen | `ingest_telemetry` y rotación manual |
 | `lots` | Lote, especie, origen y fechas de incubación | Consola |
 | `eggs` | Ficha del huevo, su lote y su posición física | Consola |
-| `door_events` | Aperturas de puerta con operador, motivo y conteo de huevos | Consola |
+| `door_events` | Aperturas de puerta con operador, método de acceso, motivo y conteo de huevos | ESP32 y consola |
 
 `telemetry_readings` y `door_events` llevan índice compuesto por incubadora y fecha,
 que es la forma en que Grafana y el historial los consultan.
@@ -284,7 +291,7 @@ docker compose ps
 curl http://localhost:8000/health
 ```
 
-Para conectar el Arduino por `/dev/ttyACM0` usamos el archivo adicional:
+Para conectar la ESP32 por `/dev/ttyUSB0` usamos el archivo adicional:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.serial.yml up -d --build
@@ -363,7 +370,7 @@ flowchart LR
         CTRL["<b>Centro de control</b> · SVG<br/>medidores, urna y actuadores"]
         OBS["<b>Observatorio</b> · p5.js<br/>vista isométrica 2D a 30 FPS<br/>capas de temperatura<br/>y humedad"]
         HIS["<b>Historial</b> · Chart.js<br/>líneas de 30 / 120 / 240 muestras<br/>tabla accesible de valores"]
-        GFR["<b>Grafana</b><br/>6 paneles en vivo<br/>8 paneles históricos"]
+        GFR["<b>Grafana</b><br/>6 paneles en vivo<br/>10 paneles históricos"]
     end
 
     REST --> HIS
@@ -449,7 +456,8 @@ redes restringidas:
 
 | Flujo | Protocolo | Configuración |
 |---|---|---|
-| Arduino → backend | UART/USB | Lecturas seriales heredadas de la Práctica 1 |
+| ESP32 → backend | UART/USB | Telemetría basada en el protocolo de la Práctica 1 |
+| ESP32 → backend | HTTP | Autorización RFID y apertura/cierre de puerta |
 | Backend → PostgreSQL | Conexión SQL | Persistencia de telemetría, alarmas y registros |
 | Backend → Mosquitto | MQTT 3.1.1 | Publicación de telemetría y estado |
 | Backend → frontend | HTTP REST | Autenticación, configuración, lotes, huevos, historial y reportes |
@@ -471,12 +479,14 @@ flowchart LR
     ROOT --> TEL["<b>telemetria</b><br/>QoS 0 · retained<br/>lectura completa<br/><i>→ Grafana</i>"]
     ROOT --> ACT(["actuadores/"])
     ROOT --> ALA(["alarmas/"])
+    ROOT --> ACC(["acceso/"])
     ROOT --> STA["<b>status</b><br/>QoS 1 · retained · <b>LWT</b><br/>online / offline<br/><i>→ Frontend · Grafana</i>"]
 
     SEN --> TEMP["<b>temperatura</b><br/>QoS 0 · retained<br/><i>→ Grafana</i>"]
     SEN --> HUM["<b>humedad</b><br/>QoS 0 · retained<br/><i>→ Grafana</i>"]
     ACT --> AEST["<b>estado</b><br/>QoS 1 · retained<br/>calefactor, ventilador, servo y buzzer<br/><i>→ Frontend · Grafana</i>"]
     ALA --> ACRI["<b>critica</b><br/>QoS 1 · retained<br/>vacío al resolverse<br/><i>→ Frontend</i>"]
+    ACC --> AEV["<b>eventos</b><br/>QoS 1 · no retained<br/>RFID y puerta<br/><i>→ Frontend · Grafana</i>"]
 
     classDef raiz fill:#0c4a6e,stroke:#38bdf8,color:#f0f9ff,stroke-width:2px
     classDef rama fill:none,stroke:#64748b,color:#64748b,stroke-dasharray:4 3
@@ -484,12 +494,12 @@ flowchart LR
     classDef qos1 fill:#3b0764,stroke:#c084fc,color:#faf5ff,stroke-width:2px
 
     class ROOT raiz
-    class SEN,ACT,ALA rama
+    class SEN,ACT,ALA,ACC rama
     class TEL,TEMP,HUM qos0
-    class STA,AEST,ACRI qos1
+    class STA,AEST,ACRI,AEV qos1
 ```
 
-> ⬛ QoS 0 · retained — telemetría periódica · 🟪 QoS 1 · retained — estado y alarmas
+> ⬛ QoS 0 · retained — telemetría periódica · 🟪 QoS 1 — estados y eventos
 
 La telemetría periódica se publica con QoS 0 y retained. Una lectura posterior
 reemplaza el último valor. Los estados, actuadores y alarmas se publican con QoS 1 y
@@ -507,17 +517,17 @@ contrato de mensajes definido en [mqtt/TOPICS.md](mqtt/TOPICS.md).
 - [MQTT Version 3.1.1 — OASIS Standard](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html)
 - [RFC 7252 — Constrained Application Protocol](https://www.rfc-editor.org/rfc/rfc7252.html)
 
-## Firmware reutilizado
+## Firmware ESP32
 
-El firmware no se duplicó en este proyecto. Se reutiliza sin cambios el código de
-[`Practica_1_SmartEgg/firmware`](../Practica_1_SmartEgg/firmware/), que corre sobre
-FreeRTOS en un Arduino Uno R3 y emite una trama por línea a 115200 8N1:
+El firmware reutiliza la lógica de control de
+[`Practica_1_SmartEgg/firmware`](../Practica_1_SmartEgg/firmware/) y la adapta a una
+ESP32 DevKit. El nodo integra el RC522, el servo de acceso y las tareas FreeRTOS junto a
+los sensores y actuadores de la incubadora. La telemetría conserva una trama JSON por
+línea a 115200 8N1:
 
 ```text
-MSG:1,TEMP:37.52,HUM:58.1,DOOR:0,SLOTS:3,HEATER:0,FAN:0,SERVO:-45,BUZZER:0,POWER:1,SENSOR:1
+{"incubator_code":"NODE-01","temperature_c":37.52,"humidity_pct":58.1,"door_open":false,"occupied_slots":3,"heater":false,"fan":false,"servo_angle":-45,"buzzer":false}
 ```
 
-El campo `MSG` distingue telemetría (`1`), cambios de estado (`2`), eventos (`3`) y
-errores (`4`). El backend acepta esa trama y también su equivalente en JSON; el detalle
-completo del protocolo, incluidos los comandos de vuelta hacia el nodo, está en
-[`Practica_1_SmartEgg/firmware/PROTOCOL.md`](../Practica_1_SmartEgg/firmware/PROTOCOL.md).
+El acceso RFID se envía por HTTP y el backend devuelve el ángulo del servo. El mapa de
+pines, las bibliotecas y la configuración están en [firmware/README.md](firmware/README.md).
