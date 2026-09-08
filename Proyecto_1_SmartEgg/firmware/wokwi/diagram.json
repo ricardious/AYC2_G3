@@ -85,7 +85,7 @@
     {
       "type": "wokwi-servo",
       "id": "servoTray",
-      "top": 580,
+      "top": 590,
       "left": 240,
       "attrs": {},
       "rotate": 180
@@ -93,23 +93,27 @@
     {
       "type": "wokwi-relay-module",
       "id": "relayHeater",
-      "top": 690,
+      "top": 710,
       "left": 240,
-      "attrs": {},
+      "attrs": {
+        "transistor": "pnp"
+      },
       "rotate": 180
     },
     {
       "type": "wokwi-relay-module",
       "id": "relayFan",
-      "top": 790,
+      "top": 890,
       "left": 240,
-      "attrs": {},
+      "attrs": {
+        "transistor": "pnp"
+      },
       "rotate": 180
     },
     {
       "type": "wokwi-buzzer",
       "id": "buzzer1",
-      "top": 890,
+      "top": 1050,
       "left": 200,
       "attrs": {
         "volume": "0.1"
@@ -119,7 +123,7 @@
     {
       "type": "wokwi-dht22",
       "id": "dht1",
-      "top": 960,
+      "top": 1130,
       "left": 190,
       "attrs": {
         "temperature": "37.5",
@@ -238,7 +242,7 @@
     {
       "type": "wokwi-text",
       "id": "t6",
-      "top": 1040,
+      "top": 1240,
       "left": 60,
       "attrs": {
         "text": "GND y 5 V bajan encadenados de un módulo al siguiente y cierran en la placa",
