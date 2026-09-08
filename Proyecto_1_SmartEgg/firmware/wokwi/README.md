@@ -21,6 +21,25 @@ apuntan un nivel arriba, al build de PlatformIO.
 > nivel (a `firmware/`) resuelve el problema: la única condición del formato es que los
 > dos archivos vivan juntos.
 
+## Orden del diagrama
+
+El trazado sigue tres reglas para que los cables no se crucen:
+
+1. **Cada componente va del lado donde están sus pines.** En la DevKit C los GPIO 36, 34,
+   35, 32, 33, 25, 26, 27, 14 y 13 salen por el borde izquierdo, y 23, 22, 21, 19, 18, 5,
+   17, 16 y 2 por el derecho.
+2. **El orden vertical de los componentes copia el orden de los pines.** Así los cables
+   salen paralelos en lugar de cruzarse. Por eso las posiciones aparecen como 4-2-3-1 de
+   arriba abajo: ese es el orden físico de los pines 36, 34, 35 y 32.
+3. **La alimentación va encadenada, no en estrella.** GND y 5 V bajan de un módulo al
+   siguiente y solo el último cierra contra la placa; los cuatro pull-ups comparten un
+   riel de 3.3 V. Eso reemplaza una veintena de cables largos por cuatro.
+
+Quedan dos cruces inevitables en el lado derecho: los pines del LCD (21 y 22) y los de
+los switches (16 y 17) caen dentro del rango que ocupa el RC522 (23 a 4), así que su
+cable de MOSI y el de RST tienen que pasar por encima. Los dos llevan trazado explícito
+para rodear en lugar de atravesar.
+
 ## Qué contiene el diagrama
 
 | Parte | Pines | Nota |
