@@ -209,6 +209,16 @@ class MqttPublisher:
         else:
             self._publish(alarm_topic, snapshot.critical_alarm, qos=1, retain=True)
 
+    def publish_access_event(
+        self, node_code: str, payload: dict[str, object]
+    ) -> mqtt.MQTTMessageInfo | None:
+        return self._publish(
+            self._topic(node_code, "acceso/eventos"),
+            payload,
+            qos=1,
+            retain=False,
+        )
+
     def _publish(
         self, topic: str, payload: dict[str, object], *, qos: int, retain: bool
     ) -> mqtt.MQTTMessageInfo | None:
