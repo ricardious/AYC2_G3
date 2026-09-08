@@ -275,7 +275,7 @@ export const SENSORS: readonly SensorView[] = [
   },
   {
     id: "slots",
-    name: "Sensor de espacios",
+    name: "Sensores de presión",
     state: "ONLINE",
     color: SUCCESS,
     delay: 1,
@@ -309,7 +309,7 @@ export function buildSensors(sensors: Sensor[]): SensorView[] {
       0,
     ),
     view("limit", "Final de carrera", Boolean(door?.is_active), 0.5),
-    view("slots", "Sensor de espacios", Boolean(slots?.is_active), 1),
+    view("slots", "Sensores de presión", Boolean(slots?.is_active), 1),
   ];
 }
 
@@ -480,7 +480,7 @@ export function buildComponentCatalog(
     },
     slots: {
       kicker: "SENSOR",
-      title: "SENSOR DE ESPACIOS",
+      title: "SENSORES DE PRESIÓN",
       accent: SUCCESS,
       rows: [
         ["ESTADO", "ONLINE", SUCCESS],
