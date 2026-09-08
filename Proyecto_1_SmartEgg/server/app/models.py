@@ -30,6 +30,10 @@ class Technician(Base):
         CheckConstraint(
             "age IS NULL OR age BETWEEN 1 AND 120", name="ck_technician_age"
         ),
+        CheckConstraint(
+            "role IN ('operator_1', 'operator_2', 'admin')",
+            name="ck_technician_role",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -37,6 +41,10 @@ class Technician(Base):
     full_name: Mapped[str] = mapped_column(String(120))
     age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     gender: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="operator_1", index=True)
+    rfid_uid: Mapped[str | None] = mapped_column(
+        String(20), unique=True, nullable=True, index=True
+    )
     password_hash: Mapped[str] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -242,6 +250,10 @@ class DoorEvent(Base):
             "AND eggs_added = 0 AND eggs_removed = 0)",
             name="ck_door_event_counts_match_type",
         ),
+        CheckConstraint(
+            "access_method IN ('rfid', 'fingerprint', 'key', 'password')",
+            name="ck_door_event_access_method",
+        ),
         Index("ix_door_event_incubator_opened", "incubator_id", "opened_at"),
     )
 
@@ -252,6 +264,12 @@ class DoorEvent(Base):
     operator_id: Mapped[int] = mapped_column(
         ForeignKey("technicians.id", ondelete="RESTRICT"), index=True
     )
+    access_session_id: Mapped[int | None] = mapped_column(
+        ForeignKey("access_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    access_method: Mapped[str] = mapped_column(String(20), default="password")
     event_type: Mapped[str] = mapped_column(String(20))
     opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     closed_at: Mapped[datetime | None] = mapped_column(
@@ -266,6 +284,61 @@ class DoorEvent(Base):
 
     incubator: Mapped[Incubator] = relationship()
     operator: Mapped[Technician] = relationship()
+
+
+class AccessSession(Base):
+    __tablename__ = "access_sessions"
+    __table_args__ = (
+        CheckConstraint(
+            "method IN ('rfid', 'fingerprint', 'key', 'password')",
+            name="ck_access_session_method",
+        ),
+        CheckConstraint(
+            "ended_reason IS NULL OR ended_reason IN "
+            "('door_closed', 'expired', 'logout', 'replaced', 'unlock_timeout')",
+            name="ck_access_session_ended_reason",
+        ),
+        CheckConstraint(
+            "door_closed_at IS NULL OR door_opened_at IS NOT NULL",
+            name="ck_access_session_door_order",
+        ),
+        CheckConstraint(
+            "door_closed_at IS NULL OR door_closed_at >= door_opened_at",
+            name="ck_access_session_door_chronology",
+        ),
+        Index(
+            "ix_access_session_incubator_started",
+            "incubator_id",
+            "started_at",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    token_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    technician_id: Mapped[int] = mapped_column(
+        ForeignKey("technicians.id", ondelete="RESTRICT"), index=True
+    )
+    incubator_id: Mapped[int] = mapped_column(
+        ForeignKey("incubators.id", ondelete="CASCADE"), index=True
+    )
+    method: Mapped[str] = mapped_column(String(20), default="rfid")
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    ended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    ended_reason: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    door_opened_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    door_closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    technician: Mapped[Technician] = relationship()
+    incubator: Mapped[Incubator] = relationship()
 
 
 class ActuatorState(Base):
