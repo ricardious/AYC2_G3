@@ -192,6 +192,93 @@ def test_door_events_are_audited(
     assert history.json()[0]["eggs_added"] == 2
 
 
+def test_rfid_access_locks_servo_and_invalidates_session_when_door_closes(
+    client: TestClient, incubator: dict
+) -> None:
+    device_headers = {"X-Device-Key": "esp32-test-key"}
+    denied = client.post(
+        "/api/v1/access/rfid/authorize",
+        headers=device_headers,
+        json={"uid": "FFFFFFFF", "incubator_code": incubator["code"]},
+    )
+    assert denied.status_code == 401
+
+    access_ws_url = f"/api/v1/access/ws/{incubator['code']}?key=kiosk-test-key"
+    with client.websocket_connect(access_ws_url) as access_websocket:
+        assert access_websocket.receive_json()["type"] == "rfid_ready"
+        granted = client.post(
+            "/api/v1/access/rfid/authorize",
+            headers=device_headers,
+            json={"uid": "A1 B2 C3 D4", "incubator_code": incubator["code"]},
+        )
+        automatic_login = access_websocket.receive_json()
+        assert automatic_login["type"] == "rfid_authenticated"
+        assert automatic_login["access_token"] == granted.json()["access_token"]
+    assert granted.status_code == 200, granted.text
+    access = granted.json()
+    assert access["technician"]["role"] == "operator_1"
+    assert access["technician"]["rfid_uid"] == "A1B2C3D4"
+    assert access["servo_action"] == "unlock"
+    assert access["servo_angle"] == 90
+    session_headers = {"Authorization": f"Bearer {access['access_token']}"}
+    assert client.get("/api/v1/auth/me", headers=session_headers).status_code == 200
+    websocket_url = (
+        f"/api/v1/ws/incubators/{incubator['id']}?token={access['access_token']}"
+    )
+    with client.websocket_connect(websocket_url) as websocket:
+        assert websocket.receive_json()["type"] == "connected"
+        opened = client.post(
+            f"/api/v1/access/sessions/{access['session_id']}/door",
+            headers=device_headers,
+            json={"state": "open"},
+        )
+        assert opened.status_code == 200, opened.text
+        assert opened.json()["session"]["door_opened_at"] is not None
+        assert opened.json()["servo_action"] == "unlock"
+        assert websocket.receive_json()["type"] == "door_opened"
+
+        operation = client.post(
+            f"/api/v1/incubators/{incubator['id']}/door-events",
+            headers=session_headers,
+            json={"event_type": "egg_entry", "eggs_added": 2},
+        )
+        assert operation.status_code == 201, operation.text
+        assert operation.json()["access_session_id"] == access["session_id"]
+        assert operation.json()["access_method"] == "rfid"
+
+        closed = client.post(
+            f"/api/v1/access/sessions/{access['session_id']}/door",
+            headers=device_headers,
+            json={"state": "closed"},
+        )
+        websocket_event = websocket.receive_json()
+        assert websocket_event["type"] == "door_closed"
+        assert websocket_event["session_closed"] is True
+    assert closed.status_code == 200, closed.text
+    body = closed.json()
+    assert body["servo_action"] == "lock"
+    assert body["servo_angle"] == 0
+    assert body["session"]["ended_reason"] == "door_closed"
+    assert body["door_event"]["access_method"] == "rfid"
+    assert body["door_event"]["eggs_added"] == 2
+    assert client.get("/api/v1/auth/me", headers=session_headers).status_code == 401
+
+    second_grant = client.post(
+        "/api/v1/access/rfid/authorize",
+        headers=device_headers,
+        json={"uid": "A1B2C3D4", "incubator_code": incubator["code"]},
+    ).json()
+    cancelled = client.post(
+        f"/api/v1/access/sessions/{second_grant['session_id']}/cancel",
+        headers=device_headers,
+    )
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["session"]["ended_reason"] == "unlock_timeout"
+    assert cancelled.json()["servo_action"] == "lock"
+    cancelled_headers = {"Authorization": f"Bearer {second_grant['access_token']}"}
+    assert client.get("/api/v1/auth/me", headers=cancelled_headers).status_code == 401
+
+
 def test_report_is_a_pdf(
     client: TestClient, auth_headers: dict[str, str], incubator: dict
 ) -> None:
