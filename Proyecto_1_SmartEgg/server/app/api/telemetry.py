@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-import jwt
 from fastapi import (
     APIRouter,
     Depends,
@@ -13,14 +12,13 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-from jwt import InvalidTokenError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Incubator, Technician, TelemetryReading
+from ..models import Incubator, TelemetryReading
 from ..schemas import SerialStatus, TelemetryCreate, TelemetryRead, TelemetryStats
-from ..security import get_current_technician
+from ..security import decode_token, get_current_technician, resolve_token_technician
 from ..services.mqtt import build_mqtt_snapshot
 from ..services.telemetry import ingest_telemetry
 
@@ -160,21 +158,18 @@ def telemetry_stats(
 async def live_telemetry(
     websocket: WebSocket, incubator_id: int, token: str = Query()
 ) -> None:
-    settings = websocket.app.state.settings
     try:
-        payload = jwt.decode(
-            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
-        )
-        technician_id = int(payload["sub"])
-    except (InvalidTokenError, KeyError, TypeError, ValueError):
+        payload = decode_token(websocket, token)
+    except HTTPException:
         await websocket.close(code=4401, reason="Invalid or expired token")
         return
     with websocket.app.state.session_factory() as db:
-        technician = db.get(Technician, technician_id)
-        incubator = db.get(Incubator, incubator_id)
-        if technician is None or not technician.is_active:
-            await websocket.close(code=4401, reason="Inactive or unknown technician")
+        try:
+            resolve_token_technician(db, payload)
+        except HTTPException:
+            await websocket.close(code=4401, reason="Inactive access session")
             return
+        incubator = db.get(Incubator, incubator_id)
         if incubator is None:
             await websocket.close(code=4404, reason="Incubator not found")
             return
