@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import { ConsoleStage } from "@/components/templates/ConsoleStage";
 import { EggRegistrationDialog } from "@/components/organisms/EggRegistrationDialog";
+import { DoorOperationDialog } from "@/components/organisms/DoorOperationDialog";
 import { DEFAULT_CONFIG } from "@/lib/smartegg/config";
 import type { SmartEggConfig } from "@/lib/smartegg/types";
 import { SmartEggProvider } from "@/lib/state/SmartEggProvider";
@@ -40,7 +41,7 @@ function ActiveScreen() {
 }
 
 function DashboardContent() {
-  const { registrationSlot } = useSmartEgg();
+  const { registrationSlot, doorOperationOpen } = useSmartEgg();
 
   return (
     <ConnectionGate>
@@ -50,6 +51,7 @@ function DashboardContent() {
       {registrationSlot !== null ? (
         <EggRegistrationDialog key={registrationSlot} slot={registrationSlot} />
       ) : null}
+      {doorOperationOpen ? <DoorOperationDialog /> : null}
     </ConnectionGate>
   );
 }
