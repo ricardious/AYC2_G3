@@ -13,7 +13,21 @@ class InitialTechnician(BaseModel):
     full_name: str = Field(min_length=3, max_length=120)
     age: int | None = Field(default=None, ge=1, le=120)
     gender: str | None = Field(default=None, min_length=1, max_length=30)
+    role: str = Field(default="operator_1", pattern=r"^(operator_1|operator_2|admin)$")
+    rfid_uid: str | None = Field(default=None, min_length=8, max_length=29)
     password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("rfid_uid")
+    @classmethod
+    def normalize_rfid_uid(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.replace(":", "").replace("-", "").replace(" ", "").upper()
+        if len(normalized) not in {8, 14, 20} or any(
+            character not in "0123456789ABCDEF" for character in normalized
+        ):
+            raise ValueError("rfid_uid must be a 4, 7 or 10-byte hexadecimal UID")
+        return normalized
 
 
 class InitialIncubator(BaseModel):
@@ -40,6 +54,10 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(48))
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 480
+    device_api_key: str | None = None
+    kiosk_api_key: str | None = None
+    access_servo_unlock_degrees: int = Field(default=90, ge=0, le=180)
+    access_servo_lock_degrees: int = Field(default=0, ge=0, le=180)
     timezone: str = "America/Guatemala"
     initial_technicians: list[InitialTechnician] = Field(default_factory=list)
     initial_incubators: list[InitialIncubator] = Field(default_factory=list)

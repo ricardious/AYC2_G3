@@ -37,6 +37,15 @@ def ensure_initial_technicians(
                     full_name=item.full_name.strip(),
                     age=item.age,
                     gender=item.gender.strip() if item.gender else None,
+                    role=item.role,
+                    rfid_uid=(
+                        item.rfid_uid.replace(":", "")
+                        .replace("-", "")
+                        .replace(" ", "")
+                        .upper()
+                        if item.rfid_uid
+                        else None
+                    ),
                     password_hash=hash_password(item.password),
                 )
             )
