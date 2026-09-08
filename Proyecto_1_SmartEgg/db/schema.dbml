@@ -4,6 +4,8 @@ Table technicians {
   full_name varchar(120) [not null]
   age integer
   gender varchar(30)
+  role varchar(20) [not null, note: 'operator_1, operator_2, admin']
+  rfid_uid varchar(20) [unique, note: 'UID hexadecimal normalizado']
   password_hash varchar(255) [not null]
   is_active boolean [not null]
   created_at timestamptz [not null]
@@ -77,6 +79,8 @@ Table door_events {
   id integer [pk, increment]
   incubator_id integer [not null, ref: > incubators.id]
   operator_id integer [not null, ref: > technicians.id]
+  access_session_id integer [ref: > access_sessions.id]
+  access_method varchar(20) [not null, note: 'rfid, fingerprint, key, password']
   event_type varchar(20) [not null, note: 'egg_entry, egg_removal, inspection, maintenance']
   opened_at timestamptz [not null]
   closed_at timestamptz
@@ -87,6 +91,24 @@ Table door_events {
 
   indexes {
     (incubator_id, opened_at)
+  }
+}
+
+Table access_sessions {
+  id integer [pk, increment]
+  token_id varchar(64) [not null, unique]
+  technician_id integer [not null, ref: > technicians.id]
+  incubator_id integer [not null, ref: > incubators.id]
+  method varchar(20) [not null, note: 'rfid, fingerprint, key, password']
+  started_at timestamptz [not null]
+  expires_at timestamptz [not null]
+  ended_at timestamptz
+  ended_reason varchar(20) [note: 'door_closed, expired, logout, replaced, unlock_timeout']
+  door_opened_at timestamptz
+  door_closed_at timestamptz
+
+  indexes {
+    (incubator_id, started_at)
   }
 }
 
