@@ -12,9 +12,17 @@ import {
 } from "react";
 import mqtt from "mqtt";
 
-import { ApiError, api, websocketUrl } from "@/lib/api/client";
+import {
+  ApiError,
+  api,
+  rfidAccessWebsocketUrl,
+  websocketUrl,
+} from "@/lib/api/client";
 import type {
+  AuthToken,
   DashboardState,
+  DoorEvent,
+  DoorEventCreate,
   Egg,
   EggCreate,
   Incubator,
@@ -22,6 +30,7 @@ import type {
   IncubatorConfigUpdate,
   Lot,
   LotCreate,
+  RfidAccessMessage,
   Technician,
   TelemetryReading,
   WebSocketMessage,
@@ -51,6 +60,7 @@ interface ConsoleState {
   selection: Selection;
   hoveredEgg: string | null;
   registrationSlot: number | null;
+  doorOperationOpen: boolean;
 }
 
 type ConsoleAction =
@@ -59,6 +69,8 @@ type ConsoleAction =
   | { type: "clearSelection" }
   | { type: "openRegistration"; slot: number }
   | { type: "closeRegistration" }
+  | { type: "openDoorOperation" }
+  | { type: "closeDoorOperation" }
   | { type: "hover"; egg: string | null };
 
 const INITIAL_STATE: ConsoleState = {
@@ -66,6 +78,7 @@ const INITIAL_STATE: ConsoleState = {
   selection: null,
   hoveredEgg: null,
   registrationSlot: null,
+  doorOperationOpen: false,
 };
 
 function reducer(state: ConsoleState, action: ConsoleAction): ConsoleState {
@@ -80,6 +93,10 @@ function reducer(state: ConsoleState, action: ConsoleAction): ConsoleState {
       return { ...state, registrationSlot: action.slot, selection: null };
     case "closeRegistration":
       return { ...state, registrationSlot: null };
+    case "openDoorOperation":
+      return { ...state, doorOperationOpen: true, selection: null };
+    case "closeDoorOperation":
+      return { ...state, doorOperationOpen: false };
     case "hover":
       return { ...state, hoveredEgg: action.egg };
     default:
@@ -93,6 +110,13 @@ export type ConnectionStatus =
   | "polling"
   | "offline";
 
+export type RfidConnectionStatus =
+  | "disabled"
+  | "connecting"
+  | "ready"
+  | "authorized"
+  | "offline";
+
 export interface SmartEggActions {
   navigate: (screen: ScreenId) => void;
   selectComponent: (id: ComponentId) => void;
@@ -101,6 +125,8 @@ export interface SmartEggActions {
   clearSelection: () => void;
   openEggRegistration: (slot: number) => void;
   closeEggRegistration: () => void;
+  openDoorOperation: () => void;
+  closeDoorOperation: () => void;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
@@ -110,6 +136,7 @@ export interface SmartEggActions {
   ) => Promise<IncubatorConfig>;
   createLot: (payload: LotCreate) => Promise<Lot>;
   registerEgg: (payload: EggCreate) => Promise<Egg>;
+  createDoorEvent: (payload: DoorEventCreate) => Promise<DoorEvent>;
 }
 
 export interface SmartEggContextValue extends ConsoleState {
@@ -127,6 +154,8 @@ export interface SmartEggContextValue extends ConsoleState {
   criticalAlarm: MqttCriticalAlarm | null;
   error: string | null;
   loginPending: boolean;
+  rfidConnection: RfidConnectionStatus;
+  accessMessage: string | null;
   actions: SmartEggActions;
 }
 
@@ -210,6 +239,10 @@ export function SmartEggProvider({
   const connectionRef = useRef<ConnectionStatus>("connecting");
   const [error, setError] = useState<string | null>(null);
   const [loginPending, setLoginPending] = useState(false);
+  const [rfidConnection, setRfidConnection] = useState<RfidConnectionStatus>(
+    process.env.NEXT_PUBLIC_ACCESS_KIOSK_KEY ? "connecting" : "disabled",
+  );
+  const [accessMessage, setAccessMessage] = useState<string | null>(null);
   const mqttNodeCode = incubator?.code;
 
   const updateConnection = useCallback((next: ConnectionStatus) => {
@@ -228,6 +261,30 @@ export function SmartEggProvider({
       return [...current, nextPoint].slice(-SERIES_LIMIT);
     });
   }, []);
+
+  const acceptAuthentication = useCallback((response: AuthToken) => {
+    window.localStorage.setItem(TOKEN_KEY, response.access_token);
+    setToken(response.access_token);
+    setTechnician(response.technician);
+    setError(null);
+  }, []);
+
+  const logout = useCallback(() => {
+    window.localStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+    setTechnician(null);
+    setIncubator(null);
+    setDashboard(null);
+    setLots([]);
+    setEggs([]);
+    setSeries([]);
+    setMqttConnected(false);
+    setNodeOnline(null);
+    setCriticalAlarm(null);
+    setError(null);
+    dispatch({ type: "closeRegistration" });
+    updateConnection("offline");
+  }, [updateConnection]);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(TOKEN_KEY);
@@ -248,6 +305,54 @@ export function SmartEggProvider({
       })
       .finally(() => setHydrated(true));
   }, [updateConnection]);
+
+  useEffect(() => {
+    if (!hydrated || technician) return;
+    const kioskKey = process.env.NEXT_PUBLIC_ACCESS_KIOSK_KEY;
+    const incubatorCode =
+      process.env.NEXT_PUBLIC_INCUBATOR_CODE?.trim() || "NODE-01";
+    if (!kioskKey) return;
+
+    let disposed = false;
+    let socket: WebSocket | null = null;
+    let retryTimer: number | null = null;
+    const connect = () => {
+      if (disposed) return;
+      setRfidConnection("connecting");
+      socket = new WebSocket(rfidAccessWebsocketUrl(incubatorCode, kioskKey));
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(String(event.data)) as RfidAccessMessage;
+          if (message.type === "rfid_ready") {
+            setRfidConnection("ready");
+            return;
+          }
+          if (message.type === "rfid_authenticated") {
+            setRfidConnection("authorized");
+            setAccessMessage(
+              `Acceso RFID autorizado para ${message.technician.full_name}`,
+            );
+            acceptAuthentication(message);
+          }
+        } catch {
+          setRfidConnection("offline");
+        }
+      };
+      socket.onerror = () => socket?.close();
+      socket.onclose = () => {
+        if (disposed) return;
+        setRfidConnection("offline");
+        retryTimer = window.setTimeout(connect, 3_000);
+      };
+    };
+
+    connect();
+    return () => {
+      disposed = true;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+      socket?.close();
+    };
+  }, [acceptAuthentication, hydrated, technician]);
 
   const refresh = useCallback(async () => {
     if (!token) return;
@@ -374,7 +479,20 @@ export function SmartEggProvider({
       socket.onmessage = (event) => {
         try {
           const message = JSON.parse(String(event.data)) as WebSocketMessage;
-          if (message.type === "telemetry") applyReading(message.data);
+          if (message.type === "telemetry") {
+            applyReading(message.data);
+          } else if (
+            (message.type === "door_closed" ||
+              message.type === "access_cancelled") &&
+            message.session_closed
+          ) {
+            logout();
+            setAccessMessage(
+              message.type === "door_closed"
+                ? "Puerta cerrada · sesión RFID finalizada"
+                : "Acceso cancelado · vuelve a acercar tu tarjeta",
+            );
+          }
         } catch {
           setError("El backend envió un mensaje en tiempo real no válido");
         }
@@ -393,7 +511,7 @@ export function SmartEggProvider({
       if (retryTimer !== null) window.clearTimeout(retryTimer);
       socket?.close();
     };
-  }, [applyReading, incubator, token, updateConnection]);
+  }, [applyReading, incubator, logout, token, updateConnection]);
 
   useEffect(() => {
     if (!token || !mqttNodeCode) return;
@@ -495,33 +613,15 @@ export function SmartEggProvider({
     setError(null);
     try {
       const response = await api.login(username, password);
-      window.localStorage.setItem(TOKEN_KEY, response.access_token);
-      setToken(response.access_token);
-      setTechnician(response.technician);
+      setAccessMessage(null);
+      acceptAuthentication(response);
     } catch (reason) {
       setError(errorMessage(reason));
       throw reason;
     } finally {
       setLoginPending(false);
     }
-  }, []);
-
-  const logout = useCallback(() => {
-    window.localStorage.removeItem(TOKEN_KEY);
-    setToken(null);
-    setTechnician(null);
-    setIncubator(null);
-    setDashboard(null);
-    setLots([]);
-    setEggs([]);
-    setSeries([]);
-    setMqttConnected(false);
-    setNodeOnline(null);
-    setCriticalAlarm(null);
-    setError(null);
-    dispatch({ type: "closeRegistration" });
-    updateConnection("offline");
-  }, [updateConnection]);
+  }, [acceptAuthentication]);
 
   const downloadDailyReport = useCallback(
     async (day?: string) => {
@@ -601,6 +701,16 @@ export function SmartEggProvider({
     [incubator, token],
   );
 
+  const createDoorEvent = useCallback(
+    async (payload: DoorEventCreate) => {
+      if (!token || !incubator) {
+        throw new Error("No hay una sesión activa para operar la puerta");
+      }
+      return api.createDoorEvent(incubator.id, payload, token);
+    },
+    [incubator, token],
+  );
+
   const actions = useMemo<SmartEggActions>(
     () => ({
       navigate: (screen) => dispatch({ type: "navigate", screen }),
@@ -623,6 +733,8 @@ export function SmartEggProvider({
       openEggRegistration: (slot) =>
         dispatch({ type: "openRegistration", slot }),
       closeEggRegistration: () => dispatch({ type: "closeRegistration" }),
+      openDoorOperation: () => dispatch({ type: "openDoorOperation" }),
+      closeDoorOperation: () => dispatch({ type: "closeDoorOperation" }),
       login,
       logout,
       refresh,
@@ -630,9 +742,11 @@ export function SmartEggProvider({
       updateIncubatorConfig,
       createLot,
       registerEgg,
+      createDoorEvent,
     }),
     [
       createLot,
+      createDoorEvent,
       downloadDailyReport,
       login,
       logout,
@@ -673,6 +787,8 @@ export function SmartEggProvider({
       criticalAlarm,
       error,
       loginPending,
+      rfidConnection,
+      accessMessage,
       actions,
     }),
     [
@@ -691,6 +807,8 @@ export function SmartEggProvider({
       criticalAlarm,
       error,
       loginPending,
+      rfidConnection,
+      accessMessage,
       actions,
     ],
   );
