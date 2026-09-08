@@ -21,6 +21,41 @@ apuntan un nivel arriba, al build de PlatformIO.
 > nivel (a `firmware/`) resuelve el problema: la única condición del formato es que los
 > dos archivos vivan juntos.
 
+## Orden del diagrama
+
+El trazado sigue cinco reglas para que ningún componente quede encima de otro y para que
+los cables no crucen por arriba de las piezas:
+
+1. **Cada componente va del lado donde están sus pines.** En la DevKit C los GPIO 36, 34,
+   35, 32, 33, 25, 26, 27, 14 y 13 salen por el borde izquierdo, y 23, 22, 21, 19, 18, 5,
+   17, 16 y 2 por el derecho.
+2. **El orden vertical de los componentes copia el orden de los pines.** Así los cables
+   salen paralelos en lugar de cruzarse. Por eso las posiciones aparecen como 4-2-3-1 de
+   arriba abajo: ese es el orden físico de los pines 36, 34, 35 y 32.
+3. **Cada módulo se gira lo necesario para que sus pines miren a la placa.** Servos y
+   relés llevan los pines en un borde lateral y van a 180°; el buzzer y el DHT los traen
+   en el borde inferior y van a 270°, porque a 180° apuntarían hacia arriba y el cable
+   tendría que volver por encima del cuerpo del módulo. Los dos switches de la derecha
+   van a 90° por la misma razón.
+4. **La alimentación va encadenada, no en estrella.** GND y 5 V bajan de un módulo al
+   siguiente por dos carriles paralelos —uno para cada riel, para que no queden
+   superpuestos— y cierran contra la placa por el extremo que cae más cerca del pin: GND
+   sube del DHT a `GND.1` y 5 V baja del pin de la placa al DHT, que es el último de la
+   cadena. Los cuatro pull-ups comparten un riel de 3.3 V.
+5. **Cada cable de señal lleva su propio carril.** Las conexiones traen trazado explícito
+   (`h`/`v` en el cuarto campo) para que los tramos verticales del abanico queden lado a
+   lado en el pasillo entre los módulos y la placa, en vez de apilarse sobre la misma
+   línea.
+
+Los únicos cables largos son los de 3.3 V del RC522 y 5 V del LCD, porque en esta placa
+ambas alimentaciones salen solo por el borde izquierdo. El de 3.3 V rodea por arriba de
+la placa y el de 5 V por debajo; ninguno de los dos pasa por encima de un componente.
+
+Quedan dos cruces inevitables en el lado derecho: los pines del LCD (21 y 22) y los de
+los switches (16 y 17) caen dentro del rango que ocupa el RC522 (23 a 4), así que el
+cable de MOSI y el de RST tienen que pasar por encima del resto del bus. Los dos llevan
+trazado explícito para rodear en lugar de atravesar.
+
 ## Qué contiene el diagrama
 
 | Parte | Pines | Nota |
@@ -31,7 +66,7 @@ apuntan un nivel arriba, al build de PlatformIO.
 | DHT | DATA 13 | Ver la limitación más abajo |
 | Servo bandeja | 25 | |
 | Servo cerradura | 33 | |
-| Relés calefacción / ventilador | 26 / 27 | Activos en bajo |
+| Relés calefacción / ventilador | 26 / 27 | Activos en bajo (`transistor: pnp`) |
 | Buzzer activo | 14 | |
 | Puerta | 16 | Deslizante: arriba = abierta (HIGH) |
 | Switch general | 17 | Deslizante: abajo = encendido (LOW) |
