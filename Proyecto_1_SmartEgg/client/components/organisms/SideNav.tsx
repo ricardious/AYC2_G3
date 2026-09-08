@@ -59,6 +59,13 @@ export function SideNav() {
       </div>
 
       <div className="px-5 py-3 console:mt-auto console:px-[22px] console:pt-0 console:pb-3">
+        <button
+          type="button"
+          onClick={actions.openDoorOperation}
+          className="mb-3 w-full border border-primary/35 bg-primary/[0.07] px-2 py-2.5 font-mono text-[8px] tracking-[0.16em] text-primary-soft transition hover:border-primary/70 hover:bg-primary/15"
+        >
+          ◇ PUERTA
+        </button>
         <ThemeSwitcher />
       </div>
     </nav>
