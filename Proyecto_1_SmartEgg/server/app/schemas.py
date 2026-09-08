@@ -3,7 +3,18 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+
+def normalize_rfid_uid(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.replace(":", "").replace("-", "").replace(" ", "").upper()
+    if len(normalized) not in {8, 14, 20} or any(
+        character not in "0123456789ABCDEF" for character in normalized
+    ):
+        raise ValueError("rfid_uid must contain a 4, 7 or 10-byte hexadecimal UID")
+    return normalized
 
 
 class ORMModel(BaseModel):
@@ -19,7 +30,11 @@ class TechnicianCreate(BaseModel):
     full_name: str = Field(min_length=3, max_length=120)
     age: int | None = Field(default=None, ge=1, le=120)
     gender: str | None = Field(default=None, min_length=1, max_length=30)
+    role: Literal["operator_1", "operator_2", "admin"] = "operator_1"
+    rfid_uid: str | None = None
     password: str = Field(min_length=8, max_length=128)
+
+    _normalize_rfid_uid = field_validator("rfid_uid", mode="before")(normalize_rfid_uid)
 
 
 class TechnicianRead(ORMModel):
@@ -28,6 +43,8 @@ class TechnicianRead(ORMModel):
     full_name: str
     age: int | None
     gender: str | None
+    role: str
+    rfid_uid: str | None
     is_active: bool
     created_at: datetime
 
@@ -42,6 +59,7 @@ class Token(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     technician: TechnicianRead
+    session_id: int | None = None
 
 
 class IncubatorCreate(BaseModel):
@@ -256,6 +274,8 @@ class DoorEventRead(ORMModel):
     id: int
     incubator_id: int
     operator_id: int
+    access_session_id: int | None
+    access_method: str
     event_type: str
     opened_at: datetime
     closed_at: datetime | None
@@ -325,3 +345,68 @@ class SerialStatus(BaseModel):
     baudrate: int
     last_error: str | None
     last_message_at: datetime | None
+
+
+class RfidAccessRequest(BaseModel):
+    uid: str
+    incubator_code: str = Field(min_length=2, max_length=40)
+
+    _normalize_uid = field_validator("uid", mode="before")(normalize_rfid_uid)
+
+
+class RfidAccessGrant(Token):
+    result: Literal["authorized"] = "authorized"
+    servo_action: Literal["unlock"] = "unlock"
+    servo_angle: int
+
+
+class DoorStateUpdate(BaseModel):
+    state: Literal["open", "closed"]
+    event_type: Literal["egg_entry", "egg_removal", "inspection", "maintenance"] = (
+        "inspection"
+    )
+    eggs_added: int = Field(default=0, ge=0)
+    eggs_removed: int = Field(default=0, ge=0)
+    notes: str | None = Field(default=None, max_length=1000)
+
+    @model_validator(mode="after")
+    def validate_operation(self) -> DoorStateUpdate:
+        if self.state == "open":
+            if self.eggs_added or self.eggs_removed:
+                raise ValueError("egg counts are recorded when the door closes")
+            return self
+        if self.event_type == "egg_entry":
+            if self.eggs_added < 1 or self.eggs_removed:
+                raise ValueError("egg_entry requires eggs_added and no eggs_removed")
+        elif self.event_type == "egg_removal":
+            if self.eggs_removed < 1 or self.eggs_added:
+                raise ValueError("egg_removal requires eggs_removed and no eggs_added")
+        elif self.eggs_added or self.eggs_removed:
+            raise ValueError("inspection and maintenance cannot change egg counts")
+        return self
+
+
+class AccessSessionRead(ORMModel):
+    id: int
+    technician_id: int
+    incubator_id: int
+    method: str
+    started_at: datetime
+    expires_at: datetime
+    ended_at: datetime | None
+    ended_reason: str | None
+    door_opened_at: datetime | None
+    door_closed_at: datetime | None
+
+
+class DoorStateResult(BaseModel):
+    session: AccessSessionRead
+    door_event: DoorEventRead | None = None
+    servo_action: Literal["unlock", "lock"]
+    servo_angle: int
+
+
+class AccessSessionCommandResult(BaseModel):
+    session: AccessSessionRead
+    servo_action: Literal["lock"] = "lock"
+    servo_angle: int
