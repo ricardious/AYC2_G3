@@ -52,3 +52,6 @@ Thumbs.db
 .playwright-cli/
 .vercel/
 .pio/
+
+# Revisión personal de la hoja de calificación (solo local)
+docs/calificacion/REVISION_PRACTICA_1.md
