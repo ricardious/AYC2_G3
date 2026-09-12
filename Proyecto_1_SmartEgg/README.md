@@ -24,7 +24,6 @@ cd client && pnpm install && pnpm dev
 - [Visualización de datos](#visualización-de-datos)
 - [HTTP vs. MQTT en SmartEgg](#http-vs-mqtt-en-smartegg)
 - [Firmware ESP32](#firmware-esp32)
-- [Revisión de calificación](#revisión-de-calificación)
 
 ## Estructura
 
@@ -532,11 +531,3 @@ línea a 115200 8N1:
 
 El acceso RFID se envía por HTTP y el backend devuelve el ángulo del servo. El mapa de
 pines, las bibliotecas y la configuración están en [firmware/README.md](firmware/README.md).
-
-## Revisión de calificación
-
-La hoja de calificación de la Práctica 1 está guardada en
-[`docs/calificacion/Hoja_Calificacion_Practica1_SmartEgg.pdf`](docs/calificacion/Hoja_Calificacion_Practica1_SmartEgg.pdf).
-La revisión punto por punto, las evidencias disponibles y los pendientes para optar a
-la nota máxima están en
-[`docs/calificacion/REVISION_PRACTICA_1.md`](docs/calificacion/REVISION_PRACTICA_1.md).
