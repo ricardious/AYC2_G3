@@ -97,7 +97,7 @@ flowchart TB
 | Origen | Destino | Conexión | Datos |
 |---|---|---|---|
 | ESP32 | Backend | UART/USB a 115200 baud | Temperatura, humedad, puerta, ocupación y actuadores |
-| ESP32 | Backend | HTTP por Wi-Fi | UID RFID y eventos del sensor de puerta |
+| ESP32 | Backend | HTTP por Wi-Fi | UID RFID y eventos del final de carrera de la puerta |
 | Backend | PostgreSQL | SQLAlchemy con PostgreSQL | Telemetría, alarmas, configuración, lotes, huevos y operaciones de puerta |
 | Backend | Mosquitto | MQTT 3.1.1 por TCP | Telemetría, sensores, actuadores, alarmas y disponibilidad |
 | Frontend | Backend | REST por HTTP/JSON | Autenticación, consultas, configuración y registros |

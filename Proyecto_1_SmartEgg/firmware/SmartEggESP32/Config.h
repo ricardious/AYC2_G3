@@ -15,6 +15,8 @@ constexpr uint8_t kFanRelayPin = 27;
 constexpr uint8_t kBuzzerPin = 14;
 constexpr uint8_t kTrayServoPin = 25;
 constexpr uint8_t kAccessServoPin = 33;
+// Door limit switch: COM -> GND, NO -> GPIO 16. The lever is pressed when the
+// door is closed, so the input reads LOW when closed and HIGH when open.
 constexpr uint8_t kDoorSwitchPin = 16;
 constexpr uint8_t kPowerSwitchPin = 17;
 constexpr uint8_t kSlotPins[] = {32, 34, 35, 36};

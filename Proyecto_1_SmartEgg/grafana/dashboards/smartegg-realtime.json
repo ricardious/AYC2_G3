@@ -70,7 +70,7 @@
     },
     {
       "datasource": { "type": "grafana-mqtt-datasource", "uid": "smartegg-mqtt" },
-      "description": "Sensor de puerta reportado en la telemetría consolidada.",
+      "description": "Final de carrera de la puerta reportado en la telemetría consolidada.",
       "fieldConfig": {
         "defaults": { "color": { "mode": "thresholds" }, "mappings": [{ "options": { "false": { "color": "green", "index": 1, "text": "CERRADA" }, "true": { "color": "orange", "index": 0, "text": "ABIERTA" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
         "overrides": []

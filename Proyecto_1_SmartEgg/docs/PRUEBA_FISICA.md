@@ -5,7 +5,8 @@
 - ESP32 DevKit conectado por USB.
 - RC522 conectado según `firmware/README.md`.
 - Servo de acceso con alimentación externa y tierra común con el ESP32.
-- Sensor magnético instalado en la puerta.
+- Final de carrera instalado de modo que la puerta cerrada presione su palanca; `COM` a
+  GND, `NO` a GPIO 16 y `NC` sin conectar.
 - Cuatro microinterruptores con palanca instalados bajo los soportes de los huevos.
 - UID real de cada tarjeta registrado en `INITIAL_TECHNICIANS`.
 - `secrets.h` creado a partir de `secrets.example.h`.

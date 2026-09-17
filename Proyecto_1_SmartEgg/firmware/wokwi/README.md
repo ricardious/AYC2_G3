@@ -68,14 +68,15 @@ trazado explícito para rodear en lugar de atravesar.
 | Servo cerradura | 33 | |
 | Relés calefacción / ventilador | 26 / 27 | Activos en bajo (`transistor: pnp`) |
 | Buzzer activo | 14 | |
-| Puerta | 16 | Deslizante: arriba = abierta (HIGH) |
+| Final de carrera de puerta | 16 | Deslizante: arriba = abierta (HIGH) |
 | Switch general | 17 | Deslizante: abajo = encendido (LOW) |
 | Posiciones 1-4 | 32 · 34 · 35 · 36 | Deslizantes; abajo = ocupada (LOW) |
 | LED de estado | 2 | Refleja el switch general |
 
 Las cuatro posiciones llevan su resistencia de 10 kΩ a 3V3 porque `Hardware.cpp` las
-configura con `GPIO_PULLUP_DISABLE`. La puerta y el switch general usan el pull-up
-interno, así que no llevan resistencia.
+configura con `GPIO_PULLUP_DISABLE`. El final de carrera de la puerta y el switch general
+usan el pull-up interno, así que no llevan resistencia. En el montaje físico, conecte
+`COM` del final de carrera a GND, `NO` a GPIO 16 y deje `NC` libre.
 
 El UID de la tarjeta azul está en el atributo `uid` del RC522 (`A1:B2:C3:D4`). Debe
 coincidir con el `rfid_uid` de un Operador registrado en `SMARTEGG_INITIAL_TECHNICIANS`,

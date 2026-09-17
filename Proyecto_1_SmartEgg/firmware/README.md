@@ -39,7 +39,7 @@ SmartEggESP32/
 - ESP32 DevKit V1.
 - RFID RC522 y tarjetas MIFARE.
 - Dos servos con alimentación externa de 5 V: bandeja y cerradura.
-- DHT11, LCD 16×2 I²C, sensor de puerta y cuatro microinterruptores de presión
+- DHT11, LCD 16×2 I²C, final de carrera para la puerta y cuatro microinterruptores de presión
   con palanca.
 - Dos canales de relé, buzzer activo y switch general.
 
@@ -58,13 +58,19 @@ SmartEggESP32/
 | 14 | Buzzer activo |
 | 25 | Servo de bandeja |
 | 33 | Servo de acceso |
-| 16 | Sensor de puerta |
+| 16 | Final de carrera de puerta |
 | 17 | Switch general |
 | 32 / 34 / 35 / 36 | Microinterruptores de presión 1–4 |
 
 GPIO 34, 35 y 36 no incluyen pull-up interno. Cada microinterruptor usa una resistencia
 externa de 10 kΩ a 3.3 V y su contacto normalmente abierto cierra contra GND al recibir
 presión. El firmware confirma dos lecturas consecutivas antes de cambiar la ocupación.
+
+El final de carrera de la puerta se conecta con `COM` a GND, `NO` a GPIO 16 y `NC` sin
+conectar. GPIO 16 usa el pull-up interno del ESP32: al cerrar la puerta, esta presiona la
+palanca y la entrada cambia a `LOW`; al abrirla, la palanca se libera y la entrada vuelve
+a `HIGH`. La interrupción en ambos flancos permite detectar tanto la apertura como el
+cierre.
 
 | Estado físico | Entrada | Posición |
 |---|---|---|

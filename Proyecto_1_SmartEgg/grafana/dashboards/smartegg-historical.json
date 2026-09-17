@@ -197,7 +197,7 @@
     },
     {
       "datasource": { "type": "postgres", "uid": "smartegg-postgres" },
-      "description": "Cierres confirmados por el sensor de puerta en el rango seleccionado.",
+      "description": "Cierres confirmados por el final de carrera de la puerta en el rango seleccionado.",
       "fieldConfig": {
         "defaults": { "color": { "mode": "fixed", "fixedColor": "green" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
         "overrides": []
