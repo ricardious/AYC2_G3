@@ -3,11 +3,69 @@ from __future__ import annotations
 import json
 import threading
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Literal
 
 import serial
 
 from ..schemas import TelemetryCreate
+
+
+@dataclass(frozen=True)
+class SerialAccessEvent:
+    kind: Literal["rfid", "door", "cancel"]
+    uid: str | None = None
+    session_id: int | None = None
+    door_open: bool | None = None
+    incubator_code: str | None = None
+
+
+def _parse_fragments(line: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    for fragment in line.strip().split(","):
+        key, separator, value = fragment.partition(":")
+        if not separator:
+            raise ValueError(f"Invalid serial fragment: {fragment}")
+        fields[key.strip().upper()] = value.strip()
+    return fields
+
+
+def parse_serial_access_event(
+    line: str, default_incubator_code: str
+) -> SerialAccessEvent:
+    fields = _parse_fragments(line)
+    node = fields.get("NODE", default_incubator_code)
+    if "RFID" in fields:
+        uid = fields["RFID"].replace(":", "").replace("-", "").upper()
+        if len(uid) not in {8, 14, 20} or any(
+            character not in "0123456789ABCDEF" for character in uid
+        ):
+            raise ValueError("Invalid RFID UID")
+        return SerialAccessEvent(kind="rfid", uid=uid, incubator_code=node)
+
+    action = fields.get("ACCESS", "").upper()
+    try:
+        session_id = int(fields["SESSION"])
+    except (KeyError, ValueError) as exc:
+        raise ValueError("Invalid access session") from exc
+    if session_id <= 0:
+        raise ValueError("Invalid access session")
+    if action == "DOOR":
+        state = fields.get("STATE", "").upper()
+        if state not in {"OPEN", "CLOSED"}:
+            raise ValueError("Invalid door state")
+        return SerialAccessEvent(
+            kind="door",
+            session_id=session_id,
+            door_open=state == "OPEN",
+            incubator_code=node,
+        )
+    if action == "CANCEL":
+        return SerialAccessEvent(
+            kind="cancel", session_id=session_id, incubator_code=node
+        )
+    raise ValueError("Unknown serial access event")
 
 
 def parse_serial_line(line: str, default_incubator_code: str) -> TelemetryCreate:
@@ -60,6 +118,7 @@ class SerialBridge:
         reconnect_seconds: float,
         default_incubator_code: str,
         on_payload: Callable[[TelemetryCreate], None],
+        on_access_event: Callable[[SerialAccessEvent], None] | None = None,
     ) -> None:
         self.enabled = enabled
         self.port = port
@@ -68,6 +127,7 @@ class SerialBridge:
         self.reconnect_seconds = reconnect_seconds
         self.default_incubator_code = default_incubator_code
         self.on_payload = on_payload
+        self.on_access_event = on_access_event
         self.connected = False
         self.last_error: str | None = None
         self.last_message_at: datetime | None = None
@@ -100,7 +160,7 @@ class SerialBridge:
     def _run(self) -> None:
         while not self._stop.is_set():
             try:
-                with serial.Serial(
+                with serial.serial_for_url(
                     self.port, self.baudrate, timeout=self.timeout
                 ) as connection:
                     self._serial = connection
@@ -112,6 +172,21 @@ class SerialBridge:
                             continue
                         line = raw.decode("utf-8", errors="replace")
                         try:
+                            stripped = line.strip()
+                            if stripped.startswith(("RFID:", "ACCESS:")):
+                                if self.on_access_event is not None:
+                                    self.on_access_event(
+                                        parse_serial_access_event(
+                                            stripped, self.default_incubator_code
+                                        )
+                                    )
+                                self.last_message_at = datetime.now(UTC)
+                                self.last_error = None
+                                continue
+                            if stripped.startswith("DIAG:") or (
+                                stripped.startswith("MSG:") and "TEMP:" not in stripped
+                            ):
+                                continue
                             payload = parse_serial_line(
                                 line, self.default_incubator_code
                             )

@@ -58,11 +58,9 @@ constexpr uint16_t kDisplayFramePeriodMs = 150;
 constexpr uint8_t kMarqueeFrameDivider = 2;
 constexpr uint16_t kTelemetryPeriodMs = 2000;
 constexpr uint16_t kPowerSwitchDebounceMs = 250;
-constexpr uint32_t kWifiRetryPeriodMs = 5000UL;
 constexpr uint32_t kRfidCooldownMs = 2000UL;
+constexpr uint32_t kAccessAuthorizationTimeoutMs = 5000UL;
 constexpr uint32_t kUnlockTimeoutMs = 15000UL;
-constexpr uint32_t kDoorPostRetryMs = 1000UL;
-constexpr uint16_t kHttpTimeoutMs = 2500;
 
 constexpr uint8_t kSplashLetterMs = 40;
 constexpr uint8_t kSplashEggMs = 25;
@@ -70,7 +68,7 @@ constexpr uint8_t kSplashHatchMs = 110;
 constexpr uint16_t kSplashHoldMs = 200;
 
 // ESP-IDF expresses task stack sizes in bytes. Communication needs more room
-// because HTTP, cJSON and the RFID flow execute on that task.
+// because serial parsing and the RFID flow execute on that task.
 constexpr uint32_t kSensorControlStackBytes = 4096;
 constexpr uint32_t kCommunicationStackBytes = 8192;
 constexpr uint8_t kSensorControlCore = 1;

@@ -10,6 +10,7 @@ from pwdlib import PasswordHash
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .config import Settings
 from .database import get_db
 from .models import AccessSession, Technician
 
@@ -30,7 +31,16 @@ def create_access_token(
     technician: Technician,
     access_session: AccessSession | None = None,
 ) -> tuple[str, int]:
-    settings = request.app.state.settings
+    return create_access_token_for_settings(
+        request.app.state.settings, technician, access_session
+    )
+
+
+def create_access_token_for_settings(
+    settings: Settings,
+    technician: Technician,
+    access_session: AccessSession | None = None,
+) -> tuple[str, int]:
     expires = timedelta(minutes=settings.access_token_minutes)
     now = datetime.now(UTC)
     claims: dict[str, object] = {

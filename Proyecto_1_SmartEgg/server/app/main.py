@@ -13,6 +13,7 @@ from .database import Base, build_session_factory, create_engine
 from .services.bootstrap import ensure_initial_incubators, ensure_initial_technicians
 from .services.broadcast import AccessConnectionManager, ConnectionManager
 from .services.mqtt import MqttPublisher, build_mqtt_snapshot
+from .services.serial_access import process_serial_access_event
 from .services.serial_bridge import SerialBridge
 from .services.telemetry import ingest_telemetry
 
@@ -59,6 +60,37 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 main_loop,
             )
 
+    def serial_access_handler(event) -> None:  # type: ignore[no-untyped-def]
+        with session_factory() as db:
+            try:
+                outcome = process_serial_access_event(db, event, configured)
+            except Exception:
+                logger.exception("Rejected serial access event")
+                return
+        if outcome.command is not None:
+            try:
+                serial_bridge.send_command(outcome.command)
+            except RuntimeError:
+                logger.exception("Could not send serial access response")
+                return
+        mqtt_publisher.publish_access_event(
+            outcome.incubator_code, outcome.mqtt_payload
+        )
+        if main_loop is None:
+            return
+        if outcome.incubator_id is not None and outcome.dashboard_payload is not None:
+            asyncio.run_coroutine_threadsafe(
+                broadcast.broadcast(outcome.incubator_id, outcome.dashboard_payload),
+                main_loop,
+            )
+        if outcome.kiosk_payload is not None:
+            asyncio.run_coroutine_threadsafe(
+                access_broadcast.broadcast(
+                    outcome.incubator_code, outcome.kiosk_payload
+                ),
+                main_loop,
+            )
+
     mqtt_publisher = MqttPublisher(configured)
     serial_bridge = SerialBridge(
         enabled=configured.serial_enabled,
@@ -68,6 +100,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         reconnect_seconds=configured.serial_reconnect_seconds,
         default_incubator_code=configured.default_incubator_code,
         on_payload=serial_payload_handler,
+        on_access_event=serial_access_handler,
     )
 
     @asynccontextmanager

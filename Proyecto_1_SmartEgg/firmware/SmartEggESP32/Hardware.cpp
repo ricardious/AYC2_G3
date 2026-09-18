@@ -3,6 +3,7 @@
 #include <driver/gpio.h>
 #include <driver/i2c_master.h>
 #include <driver/ledc.h>
+#include <driver/uart.h>
 #include <esp_attr.h>
 #include <esp_check.h>
 #include <esp_err.h>
@@ -141,7 +142,84 @@ void lcdCommand(uint8_t command) {
   }
 }
 
+// An external pull-up beats the internal pull-down, so this tells the bus wires
+// apart from a floating pin without needing a meter.
+bool hasExternalPullUp(uint8_t pin) {
+  gpio_config_t settings = {};
+  settings.pin_bit_mask = 1ULL << pin;
+  settings.mode = GPIO_MODE_INPUT;
+  settings.pull_up_en = GPIO_PULLUP_DISABLE;
+  settings.pull_down_en = GPIO_PULLDOWN_ENABLE;
+  settings.intr_type = GPIO_INTR_DISABLE;
+  if (gpio_config(&settings) != ESP_OK) {
+    return false;
+  }
+  esp_rom_delay_us(5000);
+  const int level = gpio_get_level(gpio(pin));
+  settings.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  gpio_config(&settings);
+  return level == 1;
+}
+
+void reportI2cPins() {
+  const bool sda = hasExternalPullUp(config::kI2cSdaPin);
+  const bool scl = hasExternalPullUp(config::kI2cSclPin);
+  char line[128];
+  const int length = snprintf(
+      line, sizeof(line),
+      "DIAG:PINS,SDA_GPIO:%u,SDA_EXTPULL:%u,SCL_GPIO:%u,SCL_EXTPULL:%u\n",
+      static_cast<unsigned>(config::kI2cSdaPin), sda ? 1U : 0U,
+      static_cast<unsigned>(config::kI2cSclPin), scl ? 1U : 0U);
+  if (length > 0) {
+    const size_t bounded = static_cast<size_t>(length) < sizeof(line)
+                               ? static_cast<size_t>(length)
+                               : sizeof(line) - 1;
+    uart_write_bytes(UART_NUM_0, line, bounded);
+  }
+}
+
+// The LCD failing to answer is otherwise silent, so the bus scan travels with
+// the protocol and names every address that replied.
+void reportLcdDiagnostics() {
+  char addresses[96];
+  size_t used = 0;
+  uint8_t found = 0;
+  if (i2cBus != nullptr) {
+    for (uint8_t address = 0x08; address <= 0x77; ++address) {
+      if (i2c_master_probe(i2cBus, address, 20) != ESP_OK) {
+        continue;
+      }
+      const int written =
+          snprintf(addresses + used, sizeof(addresses) - used, "%s0x%02X",
+                   found == 0 ? "" : ";", address);
+      if (written > 0 &&
+          static_cast<size_t>(written) < sizeof(addresses) - used) {
+        used += static_cast<size_t>(written);
+      }
+      ++found;
+    }
+  }
+  if (used == 0) {
+    snprintf(addresses, sizeof(addresses), "none");
+  }
+
+  char line[192];
+  const int length = snprintf(
+      line, sizeof(line),
+      "DIAG:I2C,FOUND:%u,ADDR:%s,EXPECTED:0x%02X,LCD:%u\n",
+      static_cast<unsigned>(found), addresses,
+      static_cast<unsigned>(config::kLcdAddress),
+      lcdAvailable ? 1U : 0U);
+  if (length > 0) {
+    const size_t bounded = static_cast<size_t>(length) < sizeof(line)
+                               ? static_cast<size_t>(length)
+                               : sizeof(line) - 1;
+    uart_write_bytes(UART_NUM_0, line, bounded);
+  }
+}
+
 void initializeLcd() {
+  reportI2cPins();
   i2c_master_bus_config_t busConfig = {};
   busConfig.i2c_port = 0;
   busConfig.sda_io_num = gpio(config::kI2cSdaPin);
@@ -149,8 +227,13 @@ void initializeLcd() {
   busConfig.clk_source = I2C_CLK_SRC_DEFAULT;
   busConfig.glitch_ignore_cnt = 7;
   busConfig.flags.enable_internal_pullup = true;
-  if (i2c_new_master_bus(&busConfig, &i2cBus) != ESP_OK ||
-      i2c_master_probe(i2cBus, config::kLcdAddress, 100) != ESP_OK) {
+  if (i2c_new_master_bus(&busConfig, &i2cBus) != ESP_OK) {
+    i2cBus = nullptr;
+    reportLcdDiagnostics();
+    return;
+  }
+  if (i2c_master_probe(i2cBus, config::kLcdAddress, 100) != ESP_OK) {
+    reportLcdDiagnostics();
     return;
   }
 
@@ -159,6 +242,7 @@ void initializeLcd() {
   deviceConfig.device_address = config::kLcdAddress;
   deviceConfig.scl_speed_hz = 100000;
   if (i2c_master_bus_add_device(i2cBus, &deviceConfig, &lcdDevice) != ESP_OK) {
+    reportLcdDiagnostics();
     return;
   }
   lcdAvailable = true;
@@ -174,6 +258,7 @@ void initializeLcd() {
   lcdCommand(0x0C);
   lcdCommand(0x06);
   lcdCommand(0x01);
+  reportLcdDiagnostics();
 }
 
 uint32_t expectDhtPulse(int level) {

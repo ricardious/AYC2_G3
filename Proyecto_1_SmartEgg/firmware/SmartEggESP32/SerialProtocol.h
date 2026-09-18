@@ -8,6 +8,9 @@ void initializeSerialProtocol();
 void pollSerialCommands();
 void emitProtocolFrame(MessageType type, uint8_t code,
                        const SystemState& state);
+void emitRfidAccessRequest(const char* uid);
+void emitDoorAccessEvent(int sessionId, bool open);
+void emitAccessCancelEvent(int sessionId);
 
 // Implemented by Tasks.cpp. SerialProtocol submits parsed commands and config
 // updates without owning actuator logic.

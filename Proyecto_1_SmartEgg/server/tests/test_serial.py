@@ -1,6 +1,9 @@
 import pytest
+from sqlalchemy import select
 
-from app.services.serial_bridge import parse_serial_line
+from app.models import AccessSession, DoorEvent
+from app.services.serial_access import process_serial_access_event
+from app.services.serial_bridge import parse_serial_access_event, parse_serial_line
 
 
 def test_parse_json_serial_message() -> None:
@@ -24,3 +27,81 @@ def test_parse_key_value_serial_message() -> None:
 def test_reject_invalid_serial_message() -> None:
     with pytest.raises(ValueError):
         parse_serial_line("garbage", "NODE-01")
+
+
+def test_parse_rfid_serial_event() -> None:
+    event = parse_serial_access_event("RFID:A1B2C3D4", "NODE-01")
+    assert event.kind == "rfid"
+    assert event.uid == "A1B2C3D4"
+    assert event.incubator_code == "NODE-01"
+
+
+def test_parse_door_and_cancel_serial_events() -> None:
+    opened = parse_serial_access_event("ACCESS:DOOR,SESSION:12,STATE:OPEN", "NODE-01")
+    cancelled = parse_serial_access_event("ACCESS:CANCEL,SESSION:12", "NODE-01")
+    assert opened.kind == "door"
+    assert opened.session_id == 12
+    assert opened.door_open is True
+    assert cancelled.kind == "cancel"
+    assert cancelled.session_id == 12
+
+
+def test_reject_invalid_rfid_serial_event() -> None:
+    with pytest.raises(ValueError):
+        parse_serial_access_event("RFID:not-a-card", "NODE-01")
+
+
+def test_rfid_serial_access_lifecycle(client, auth_headers, incubator) -> None:
+    del auth_headers, incubator
+    settings = client.app.state.settings
+    session_factory = client.app.state.session_factory
+
+    with session_factory() as db:
+        authorization = process_serial_access_event(
+            db,
+            parse_serial_access_event("RFID:A1B2C3D4", "NODE-01"),
+            settings,
+        )
+        assert authorization.command is not None
+        assert authorization.command["authorized"] is True
+        session_id = int(authorization.command["session_id"])
+
+        opened = process_serial_access_event(
+            db,
+            parse_serial_access_event(
+                f"ACCESS:DOOR,SESSION:{session_id},STATE:OPEN", "NODE-01"
+            ),
+            settings,
+        )
+        assert opened.mqtt_payload["event"] == "door_opened"
+
+        closed = process_serial_access_event(
+            db,
+            parse_serial_access_event(
+                f"ACCESS:DOOR,SESSION:{session_id},STATE:CLOSED", "NODE-01"
+            ),
+            settings,
+        )
+        assert closed.mqtt_payload["event"] == "door_closed"
+        access_session = db.get(AccessSession, session_id)
+        assert access_session is not None
+        assert access_session.ended_reason == "door_closed"
+        assert (
+            db.scalar(
+                select(DoorEvent).where(DoorEvent.access_session_id == session_id)
+            )
+            is not None
+        )
+
+
+def test_unknown_rfid_is_denied_over_serial(client, incubator) -> None:
+    del incubator
+    with client.app.state.session_factory() as db:
+        outcome = process_serial_access_event(
+            db,
+            parse_serial_access_event("RFID:00112233", "NODE-01"),
+            client.app.state.settings,
+        )
+    assert outcome.command is not None
+    assert outcome.command["authorized"] is False
+    assert outcome.mqtt_payload["reason"] == "card_not_authorized"

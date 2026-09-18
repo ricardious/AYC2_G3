@@ -66,8 +66,7 @@ flowchart TB
         GRAFANA["<b>Grafana 13</b> · :3001<br/>monitoreo y análisis"]
     end
 
-    NODE ==>|"UART/USB · 115200 8N1"| API
-    NODE -->|"Wi-Fi · HTTP · RFID y puerta"| API
+    NODE ==>|"UART/USB · telemetría, RFID y puerta · 115200 8N1"| API
     API -->|"REST · WebSocket"| WEB
     WEB -.->|"comandos y consultas"| API
     MQTT -->|"MQTT sobre WebSocket"| WEB
@@ -96,8 +95,7 @@ flowchart TB
 
 | Origen | Destino | Conexión | Datos |
 |---|---|---|---|
-| ESP32 | Backend | UART/USB a 115200 baud | Temperatura, humedad, puerta, ocupación y actuadores |
-| ESP32 | Backend | HTTP por Wi-Fi | UID RFID y eventos del final de carrera de la puerta |
+| ESP32 | Backend | UART/USB a 115200 baud | Temperatura, humedad, puerta, ocupación, actuadores, UID RFID y autorización del servo |
 | Backend | PostgreSQL | SQLAlchemy con PostgreSQL | Telemetría, alarmas, configuración, lotes, huevos y operaciones de puerta |
 | Backend | Mosquitto | MQTT 3.1.1 por TCP | Telemetría, sensores, actuadores, alarmas y disponibilidad |
 | Frontend | Backend | REST por HTTP/JSON | Autenticación, consultas, configuración y registros |
@@ -457,8 +455,7 @@ redes restringidas:
 
 | Flujo | Protocolo | Configuración |
 |---|---|---|
-| ESP32 → backend | UART/USB | Telemetría basada en el protocolo de la Práctica 1 |
-| ESP32 → backend | HTTP | Autorización RFID y apertura/cierre de puerta |
+| ESP32 ↔ backend | UART/USB | Telemetría, UID RFID, eventos de puerta y autorización del servo |
 | Backend → PostgreSQL | Conexión SQL | Persistencia de telemetría, alarmas y registros |
 | Backend → Mosquitto | MQTT 3.1.1 | Publicación de telemetría y estado |
 | Backend → frontend | HTTP REST | Autenticación, configuración, lotes, huevos, historial y reportes |
@@ -530,8 +527,10 @@ línea a 115200 8N1:
 {"incubator_code":"NODE-01","temperature_c":37.52,"humidity_pct":58.1,"door_open":false,"occupied_slots":3,"heater":false,"fan":false,"servo_angle":-45,"buzzer":false}
 ```
 
-El acceso RFID se envía por HTTP y el backend devuelve el ángulo del servo. El mapa de
-pines, las bibliotecas y la configuración están en [firmware/README.md](firmware/README.md).
+El acceso RFID viaja por el mismo puerto UART/USB: el ESP32 envía el UID, el backend
+valida la tarjeta y responde por serial con la autorización y el ángulo del servo. El
+nodo físico no usa Wi-Fi ni HTTP. El mapa de pines, las bibliotecas y la configuración
+están en [firmware/README.md](firmware/README.md).
 
 ## Hoja de calificación
 

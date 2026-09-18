@@ -29,9 +29,8 @@ del microcontrolador.
 
 ```mermaid
 flowchart LR
-    ESP32[ESP32 + RC522 + sensores/actuadores] <-->|JSON\nUART/USB| Serial[SerialBridge]
-    ESP32 -->|RFID y puerta · HTTP| API
-    Serial --> Domain[Servicio de telemetría]
+    ESP32[ESP32 + RC522 + sensores/actuadores] <-->|Telemetría, RFID, puerta y órdenes\nUART/USB| Serial[SerialBridge]
+    Serial --> Domain[Telemetría y control de acceso]
     Web[Frontend web/móvil] <-->|REST + WebSocket| API[FastAPI]
     API --> Domain
     Domain --> DB[(PostgreSQL)]
@@ -104,7 +103,7 @@ Variables principales:
 | `SMARTEGG_DATABASE_URL` | URL SQLAlchemy de PostgreSQL | `postgresql+psycopg://...` |
 | `SMARTEGG_AUTO_CREATE_SCHEMA` | Solo pruebas; en operación se usa Alembic | `false` |
 | `SMARTEGG_JWT_SECRET` | Firma de tokens | aleatorio por proceso |
-| `SMARTEGG_DEVICE_API_KEY` | Autenticación HTTP de la ESP32 | vacío |
+| `SMARTEGG_DEVICE_API_KEY` | Compatibilidad con endpoints HTTP de acceso | vacío |
 | `SMARTEGG_KIOSK_API_KEY` | Emparejamiento del login RFID local | vacío |
 | `SMARTEGG_ACCESS_SERVO_UNLOCK_DEGREES` | Ángulo de desbloqueo | `90` |
 | `SMARTEGG_ACCESS_SERVO_LOCK_DEGREES` | Ángulo de bloqueo | `0` |

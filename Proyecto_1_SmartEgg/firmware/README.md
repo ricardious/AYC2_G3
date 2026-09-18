@@ -13,7 +13,7 @@ núcleos distintos:
 | Tarea | Núcleo | Prioridad | Responsabilidad |
 |---|---:|---:|---|
 | `SensorControl` | 1 | 3 | DHT11, posiciones, interruptores, relés, buzzer, bandeja y LCD |
-| `Communication` | 0 | 2 | Protocolo serial, telemetría, Wi-Fi, RC522, HTTP y cerradura |
+| `Communication` | 0 | 2 | Protocolo serial, telemetría, RC522 y cerradura |
 
 `SensorControl` mantiene la histéresis y las protecciones de la Práctica 1, invalida el
 sensor después de tres lecturas fallidas y ejecuta la rotación periódica sin bloquear.
@@ -30,11 +30,14 @@ SmartEggESP32/
 ├── Display.*           # Pantallas y animaciones heredadas
 ├── SerialProtocol.*    # Comandos JSON y telemetría UART
 ├── RfidReader.*        # Control directo del RC522 mediante SPI
-├── AccessControl.*     # Wi-Fi, HTTP y sesión de acceso
+├── AccessControl.*     # RFID, servo y sesión de acceso por UART/USB
 └── Tasks.*             # Planificación y sincronización FreeRTOS
 ```
 
 ## Componentes
+
+Para realizar el cableado físico terminal por terminal, consulte la
+[guía de montaje paso a paso](MONTAJE_PASO_A_PASO.md).
 
 - ESP32 DevKit V1.
 - RFID RC522 y tarjetas MIFARE.
@@ -84,9 +87,7 @@ fuente externa de 5 V con GND común.
 ## Preparación
 
 1. Instalar PlatformIO Core.
-2. Copiar `SmartEggESP32/secrets.example.h` como `SmartEggESP32/secrets.h`.
-3. Colocar el SSID, contraseña Wi-Fi, URL local del backend y `DEVICE_API_KEY`.
-4. Compilar y cargar desde la raíz del repositorio:
+2. Compilar y cargar desde la raíz del repositorio:
 
 ```bash
 uvx platformio run -d Proyecto_1_SmartEgg/firmware
@@ -112,15 +113,16 @@ sequenceDiagram
     participant A as Backend
     participant W as Frontend
     R->>E: UID de tarjeta
-    E->>A: POST /access/rfid/authorize
+    E->>A: RFID:UID por UART/USB
     A-->>W: rfid_authenticated + JWT
-    A-->>E: unlock + ángulo
+    A-->>E: authorize + ángulo por UART/USB
     E->>E: Servo desbloquea
-    E->>A: state=open
-    E->>A: state=closed
+    E->>A: ACCESS:DOOR OPEN por UART/USB
+    E->>A: ACCESS:DOOR CLOSED por UART/USB
     A-->>W: door_closed
     E->>E: Servo bloquea
 ```
 
 El servo vuelve a la posición bloqueada si la puerta no se abre durante 15 segundos.
-La telemetría ambiental conserva el protocolo UART/USB de la Práctica 1 a 115200 baud.
+La telemetría, el UID RFID y los eventos de puerta utilizan exclusivamente UART/USB a
+115200 baud; el ESP32 no usa Wi-Fi ni HTTP.

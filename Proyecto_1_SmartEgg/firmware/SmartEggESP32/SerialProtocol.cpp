@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "AccessControl.h"
 #include "Config.h"
 #include "ControlLogic.h"
 
@@ -79,6 +80,20 @@ bool readBoolField(const char* input, const char* fieldName, bool& output) {
     return true;
   }
   return false;
+}
+
+bool readIntegerField(const char* input, const char* fieldName, int& output) {
+  const char* value = findFieldValue(input, fieldName);
+  if (value == nullptr) {
+    return false;
+  }
+  char* end = nullptr;
+  const long parsed = strtol(value, &end, 10);
+  if (end == value) {
+    return false;
+  }
+  output = static_cast<int>(parsed);
+  return true;
 }
 
 void parseRotateCommand(const char* input) {
@@ -164,6 +179,42 @@ void parseConfigCommand(const char* input) {
                       static_cast<uint8_t>(EventCode::kConfigUpdated));
 }
 
+void parseAccessCommand(const char* input) {
+  char action[16];
+  if (!readStringField(input, "\"action\"", action, sizeof(action))) {
+    postProtocolMessage(MessageType::kError,
+                        static_cast<uint8_t>(ErrorCode::kUnknownCommand));
+    return;
+  }
+  if (strcmp(action, "lock") == 0) {
+    handleAccessLock();
+    return;
+  }
+  if (strcmp(action, "authorize") != 0) {
+    postProtocolMessage(MessageType::kError,
+                        static_cast<uint8_t>(ErrorCode::kUnknownCommand));
+    return;
+  }
+
+  bool authorized = false;
+  int sessionId = 0;
+  int servoAngle = config::kAccessUnlockedDegrees;
+  if (!readBoolField(input, "\"authorized\"", authorized)) {
+    postProtocolMessage(MessageType::kError,
+                        static_cast<uint8_t>(ErrorCode::kUnknownCommand));
+    return;
+  }
+  readIntegerField(input, "\"session_id\"", sessionId);
+  readIntegerField(input, "\"servo_angle\"", servoAngle);
+  if (servoAngle < 0) {
+    servoAngle = 0;
+  } else if (servoAngle > 180) {
+    servoAngle = 180;
+  }
+  handleAccessAuthorization(authorized, sessionId,
+                            static_cast<uint8_t>(servoAngle));
+}
+
 void parseCommand(const char* input) {
   char type[16];
   if (!readStringField(input, "\"type\"", type, sizeof(type))) {
@@ -177,6 +228,8 @@ void parseCommand(const char* input) {
     parseActuatorCommand(input);
   } else if (strcmp(type, "config") == 0) {
     parseConfigCommand(input);
+  } else if (strcmp(type, "access") == 0) {
+    parseAccessCommand(input);
   } else {
     postProtocolMessage(MessageType::kError,
                         static_cast<uint8_t>(ErrorCode::kUnknownCommand));
@@ -271,6 +324,42 @@ void emitProtocolFrame(MessageType type, uint8_t code,
       state.buzzerOn ? 1U : 0U, state.systemEnabled ? 1U : 0U,
       state.sensorOk ? 1U : 0U);
   uart_write_bytes(UART_NUM_0, frame, length);
+}
+
+void emitRfidAccessRequest(const char* uid) {
+  char frame[64];
+  const int length = snprintf(frame, sizeof(frame), "RFID:%s\n", uid);
+  if (length > 0) {
+    uart_write_bytes(UART_NUM_0, frame,
+                     length < static_cast<int>(sizeof(frame))
+                         ? length
+                         : static_cast<int>(sizeof(frame) - 1));
+  }
+}
+
+void emitDoorAccessEvent(int sessionId, bool open) {
+  char frame[96];
+  const int length = snprintf(frame, sizeof(frame),
+                              "ACCESS:DOOR,SESSION:%d,STATE:%s\n", sessionId,
+                              open ? "OPEN" : "CLOSED");
+  if (length > 0) {
+    uart_write_bytes(UART_NUM_0, frame,
+                     length < static_cast<int>(sizeof(frame))
+                         ? length
+                         : static_cast<int>(sizeof(frame) - 1));
+  }
+}
+
+void emitAccessCancelEvent(int sessionId) {
+  char frame[64];
+  const int length = snprintf(frame, sizeof(frame),
+                              "ACCESS:CANCEL,SESSION:%d\n", sessionId);
+  if (length > 0) {
+    uart_write_bytes(UART_NUM_0, frame,
+                     length < static_cast<int>(sizeof(frame))
+                         ? length
+                         : static_cast<int>(sizeof(frame) - 1));
+  }
 }
 
 }  // namespace smartegg

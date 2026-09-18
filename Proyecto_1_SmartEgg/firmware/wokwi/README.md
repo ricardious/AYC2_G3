@@ -112,27 +112,17 @@ if ((data[2] & 0x80) != 0 || (data[3] & 0x80) != 0) temperatureC = -temperatureC
 
 Con eso, `kDhtType = 22` sirve para la simulación y `11` para la placa real.
 
-### 2. Llegar al backend desde el simulador requiere el gateway privado
+### 2. El nodo físico no usa Wi-Fi
 
-El ESP32 simulado se conecta a la red `Wokwi-GUEST` con contraseña vacía, así que en
-`secrets.h` hay que poner:
-
-```c
-#define WIFI_SSID "Wokwi-GUEST"
-#define WIFI_PASSWORD ""
-```
-
-Para que el `POST /api/v1/access/rfid/authorize` llegue a un backend en la misma
-computadora, la URL debe apuntar a `http://host.wokwi.internal:8000`, y eso solo
-funciona con el **gateway privado de Wokwi, que es de pago**. Sin él, el flujo RFID se
-puede ver en el LCD y en el servo de la cerradura, pero no llega al backend.
+La telemetría, el UID RFID, los eventos de puerta y la respuesta de autorización viajan
+por el puerto serial. No se necesita `Wokwi-GUEST`, `secrets.h` ni un gateway HTTP para
+el ESP32.
 
 ### 3. El puente serial del backend no acepta URLs
 
 `wokwi.toml` publica el puerto serial simulado en `rfc2217://localhost:4000`, pero
-`server/app/services/serial_bridge.py` abre el puerto con `serial.Serial(self.port, …)`,
-que solo acepta rutas de dispositivo. Cambiar esa llamada por `serial.serial_for_url`
-—que acepta tanto `/dev/ttyUSB0` como `rfc2217://localhost:4000`— permite alimentar
+`server/app/services/serial_bridge.py` usa `serial.serial_for_url`, que acepta tanto
+`/dev/ttyUSB0` como `rfc2217://localhost:4000`, y permite alimentar
 toda la plataforma con el nodo simulado:
 
 ```bash

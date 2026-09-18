@@ -9,7 +9,7 @@
   GND, `NO` a GPIO 16 y `NC` sin conectar.
 - Cuatro microinterruptores con palanca instalados bajo los soportes de los huevos.
 - UID real de cada tarjeta registrado en `INITIAL_TECHNICIANS`.
-- `secrets.h` creado a partir de `secrets.example.h`.
+- Puente UART/USB del backend habilitado para el puerto del ESP32.
 - Backend, PostgreSQL, Mosquitto y Grafana activos.
 
 ## Secuencia
