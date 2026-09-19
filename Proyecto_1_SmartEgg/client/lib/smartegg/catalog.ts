@@ -22,7 +22,13 @@ export const STAGE_WIDTH = 1680;
 export const STAGE_HEIGHT = 1000;
 /** Breathing room subtracted before computing the scale. */
 export const STAGE_GUTTER = 24;
-export const STAGE_MIN_SCALE = 0.42;
+/**
+ * Suelo del ajuste. El plano se compone a 1680 × 1000 y después se escala, así
+ * que la reducción encoge también la tipografía: a 0.42 un rótulo de 11 px
+ * llegaba al ojo como 4.6. Por debajo de este factor el plano desborda y la
+ * caja que lo envuelve se desplaza, que es preferible a un texto ilegible.
+ */
+export const STAGE_MIN_SCALE = 0.8;
 export const STAGE_MAX_SCALE = 1;
 
 /**
