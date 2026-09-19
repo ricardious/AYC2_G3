@@ -5,7 +5,7 @@ export function EventRow({ time, kind, text, color }: EventView) {
 
   return (
     <li
-      className="flex list-none gap-3 font-mono text-[8px] tracking-[0.12em]"
+      className="flex list-none gap-3 font-mono text-[11px] tracking-[0.09em]"
       style={style}
     >
       <span className="w-[52px] shrink-0 text-foreground-fainter">{time}</span>

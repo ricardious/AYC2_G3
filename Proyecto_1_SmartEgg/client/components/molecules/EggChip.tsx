@@ -28,7 +28,7 @@ export function EggChip({
       onBlur={() => onHoverChange(false)}
       style={style}
       className={cx(
-        "block w-full border-t pt-3 transition-colors hover:border-t-primary console:w-[88px]",
+        "block w-full border-t pt-3 transition-colors hover:border-t-primary console:w-[100px]",
         egg.hot ? "border-t-primary" : "border-t-divider-chip",
       )}
     >
@@ -42,11 +42,11 @@ export function EggChip({
       </span>
       <span
         className={cx(
-          "mt-2.5 block font-mono text-[8px] leading-[1.9] tracking-[0.12em]",
+          "mt-2.5 block font-mono text-[11px] leading-[1.7] tracking-normal",
           egg.hot ? "text-foreground-bright" : "text-neutral",
         )}
       >
-        <span className="block text-[9px] text-foreground">{egg.label}</span>
+        <span className="block text-[11px] text-foreground">{egg.label}</span>
         <span className="block">{egg.line2}</span>
         <span className="block text-[var(--state)]">{egg.line3}</span>
       </span>

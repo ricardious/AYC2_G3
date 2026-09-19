@@ -48,7 +48,7 @@ export function StationEgg({
         />
       </span>
 
-      <span className="mt-2 block font-mono text-[8px] leading-[1.7] tracking-[0.16em] text-neutral">
+      <span className="mt-2 block font-mono text-[11px] leading-[1.7] tracking-[0.12em] text-neutral">
         <span className="block font-display text-sm tracking-[0.14em] text-foreground-bright">
           {egg.label}
         </span>

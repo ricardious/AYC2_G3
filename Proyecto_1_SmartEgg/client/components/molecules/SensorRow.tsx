@@ -15,7 +15,7 @@ export function SensorRow({ sensor, onSelect }: SensorRowProps) {
       type="button"
       onClick={onSelect}
       style={style}
-      className="flex min-h-11 items-center justify-between gap-2.5 font-mono text-[9px] tracking-[0.14em] text-foreground-muted transition-colors hover:text-foreground-bright console:min-h-0"
+      className="flex min-h-11 items-center justify-between gap-2.5 font-mono text-[11px] tracking-[0.11em] text-foreground-muted transition-colors hover:text-foreground-bright console:min-h-0"
     >
       <span className="flex items-center gap-[9px]">
         <StatusDot
