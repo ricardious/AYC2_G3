@@ -163,13 +163,13 @@ export function SetpointPanel() {
     >
       <div className="flex items-end justify-between">
         <SectionKicker>CALIBRACIÓN DE SETPOINTS</SectionKicker>
-        <span className="font-mono text-[7px] tracking-[0.15em] text-foreground-fainter">
+        <span className="font-mono text-[10px] tracking-[0.1em] text-foreground-fainter">
           {config ? "DATOS DEL NODO" : "ESPERANDO NODO"}
         </span>
       </div>
 
       {!draft ? (
-        <div className="mt-7 border-l border-primary/40 py-5 pl-4 font-mono text-[8px] tracking-[0.14em] text-foreground-muted">
+        <div className="mt-7 border-l border-primary/40 py-5 pl-4 font-mono text-[11px] tracking-[0.1em] text-foreground-muted">
           CARGANDO PARÁMETROS DE CONTROL…
         </div>
       ) : (
@@ -255,21 +255,21 @@ export function SetpointPanel() {
                 type="button"
                 disabled={!dirty || busy}
                 onClick={reset}
-                className="font-mono text-[7px] tracking-[0.15em] text-foreground-fainter transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
+                className="font-mono text-[10px] tracking-[0.1em] text-foreground-fainter transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
               >
                 RESTABLECER
               </button>
               <button
                 type="submit"
                 disabled={!dirty || busy}
-                className="border border-primary/60 bg-primary/8 px-5 py-2.5 font-mono text-[8px] tracking-[0.16em] text-primary transition-[background-color,box-shadow,color] hover:bg-primary/15 hover:shadow-[0_0_18px_color-mix(in_srgb,var(--color-primary)_20%,transparent)] disabled:cursor-not-allowed disabled:border-rule disabled:bg-transparent disabled:text-foreground-fainter disabled:shadow-none"
+                className="border border-primary/60 bg-primary/8 px-5 py-2.5 font-mono text-[11px] tracking-[0.12em] text-primary transition-[background-color,box-shadow,color] hover:bg-primary/15 hover:shadow-[0_0_18px_color-mix(in_srgb,var(--color-primary)_20%,transparent)] disabled:cursor-not-allowed disabled:border-rule disabled:bg-transparent disabled:text-foreground-fainter disabled:shadow-none"
               >
                 {busy ? "SINCRONIZANDO…" : "GUARDAR CAMBIOS"}
               </button>
             </div>
             <p
               aria-live="polite"
-              className={`mt-3 min-h-3 font-mono text-[7px] tracking-[0.1em] ${
+              className={`mt-3 min-h-3 font-mono text-[10px] tracking-[0.07em] ${
                 saveState === "error"
                   ? "text-danger"
                   : saveState === "saved"

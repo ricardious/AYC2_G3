@@ -23,7 +23,7 @@ export function SideNav() {
   return (
     <nav
       aria-label="Navegación del nodo"
-      className="border-b border-divider console:absolute console:inset-y-0 console:left-0 console:flex console:w-[132px] console:flex-col console:border-r console:border-b-0 console:pt-[34px]"
+      className="border-b border-divider console:absolute console:inset-y-0 console:left-0 console:flex console:w-[148px] console:flex-col console:border-r console:border-b-0 console:pt-[34px]"
     >
       {/* En el riel la fila se desvanece con `contents`, para que el estado sea
           hijo directo de la columna y `mt-auto` pueda bajarlo al pie. */}
@@ -36,7 +36,7 @@ export function SideNav() {
 
         <div
           style={statusStyle}
-          className="flex shrink-0 items-center gap-3 font-mono text-[9px] tracking-[0.14em] text-foreground-fainter console:order-last console:flex-col console:items-start console:gap-0 console:pb-[30px] console:pl-[22px] console:text-[8px] console:leading-[1.9]"
+          className="flex shrink-0 items-center gap-3 font-mono text-[11px] tracking-[0.11em] text-foreground-fainter console:order-last console:flex-col console:items-start console:gap-0 console:pb-[18px] console:pl-[22px] console:leading-[1.6]"
         >
           <span className="hidden sm:block">NODO 01</span>
           <span className="hidden sm:block">LOTE A</span>
@@ -62,7 +62,7 @@ export function SideNav() {
         <button
           type="button"
           onClick={actions.openDoorOperation}
-          className="mb-3 w-full border border-primary/35 bg-primary/[0.07] px-2 py-2.5 font-mono text-[8px] tracking-[0.16em] text-primary-soft transition hover:border-primary/70 hover:bg-primary/15"
+          className="mb-3 w-full border border-primary/35 bg-primary/[0.07] px-2 py-2.5 font-mono text-[11px] tracking-[0.12em] text-primary-soft transition hover:border-primary/70 hover:bg-primary/15"
         >
           ◇ PUERTA
         </button>

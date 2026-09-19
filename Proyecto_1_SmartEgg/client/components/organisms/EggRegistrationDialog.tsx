@@ -8,6 +8,8 @@ import {
 } from "react";
 
 import { GhostButton } from "@/components/atoms/GhostButton";
+import { ThemedSelect } from "@/components/molecules/ThemedSelect";
+import { useDialogFocus } from "@/lib/hooks/useDialogFocus";
 import { useEggViews, useSmartEgg } from "@/lib/state/hooks";
 
 function localDateTime(date = new Date()): string {
@@ -36,13 +38,14 @@ function registrationError(reason: unknown): string {
 }
 
 const FIELD_CLASS =
-  "mt-2 w-full box-border border border-rule bg-background/75 px-3 py-2.5 font-mono text-[11px] tracking-[0.08em] text-foreground-bright outline-none transition-colors placeholder:text-foreground-fainter focus:border-primary";
+  "mt-2 w-full box-border border border-rule bg-background/75 px-3 py-2.5 font-mono text-[12px] tracking-[0.07em] text-foreground-bright outline-none transition-colors placeholder:text-foreground-fainter focus:border-primary";
 
 const LABEL_CLASS =
-  "block font-mono text-[8px] tracking-[0.2em] text-foreground-faint";
+  "block font-mono text-[11px] tracking-[0.15em] text-foreground-faint";
 
 export function EggRegistrationDialog({ slot }: { slot: number }) {
   const { incubator, lots, actions } = useSmartEgg();
+  const dialogRef = useDialogFocus<HTMLElement>();
   const eggViews = useEggViews();
   const currentSlot = eggViews.find((egg) => egg.id === `slot-${slot}`);
   const [code, setCode] = useState("");
@@ -162,6 +165,7 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
       }}
     >
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="egg-registration-title"
@@ -174,7 +178,7 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
 
         <div className="flex items-start justify-between gap-6">
           <div>
-            <div className="font-mono text-[8px] tracking-[0.28em] text-primary">
+            <div className="font-mono text-[11px] tracking-[0.2em] text-primary">
               FICHA DE IDENTIFICACIÓN · POSICIÓN {slotLabel}
             </div>
             <h2
@@ -183,7 +187,7 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
             >
               REGISTRAR HUEVO
             </h2>
-            <p className="mt-2 max-w-[520px] font-mono text-[9px] leading-5 tracking-[0.08em] text-foreground-faint">
+            <p className="mt-2 max-w-[520px] font-mono text-[11px] leading-5 tracking-[0.07em] text-foreground-faint">
               El sensor confirma ocupación física. Complete el rótulo y el
               ingreso para conservar la ficha en el historial del lote.
             </p>
@@ -193,7 +197,7 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
             aria-label="Cerrar formulario"
             disabled={pending}
             onClick={actions.closeEggRegistration}
-            className="px-2 py-1 font-mono text-sm text-foreground-faint transition-colors hover:text-foreground-bright disabled:opacity-40"
+            className="-mt-2 -mr-2 flex size-11 shrink-0 items-center justify-center font-mono text-[20px] leading-none text-foreground-faint transition-colors hover:text-foreground-bright disabled:opacity-40"
           >
             ×
           </button>
@@ -223,22 +227,16 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
               />
             </label>
 
-            <label className={LABEL_CLASS}>
-              LOTE ACTIVO <span className="text-danger">*</span>
-              <select
-                required
-                value={lotChoice}
-                onChange={(event) => setLotChoice(event.target.value)}
-                className={FIELD_CLASS}
-              >
-                {lots.map((lot) => (
-                  <option key={lot.id} value={lot.id}>
-                    {lot.code} · {lot.species}
-                  </option>
-                ))}
-                <option value="new">+ CREAR NUEVO LOTE</option>
-              </select>
-            </label>
+            <ThemedSelect
+              label="LOTE ACTIVO"
+              required
+              value={lotChoice}
+              onValueChange={setLotChoice}
+              options={[
+                ...lots.map((lot) => ({ value: String(lot.id), label: `${lot.code} · ${lot.species}` })),
+                { value: "new", label: "+ CREAR NUEVO LOTE" },
+              ]}
+            />
 
             <label className={LABEL_CLASS}>
               FECHA Y HORA DE INGRESO <span className="text-danger">*</span>
@@ -255,7 +253,7 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
 
           {lotChoice === "new" ? (
             <fieldset className="mt-6 border border-dashed border-rule px-4 py-4">
-              <legend className="px-2 font-mono text-[8px] tracking-[0.2em] text-warning">
+              <legend className="px-2 font-mono text-[11px] tracking-[0.15em] text-warning">
                 NUEVO LOTE
               </legend>
               <div className="grid gap-5 console:grid-cols-3">
@@ -311,14 +309,14 @@ export function EggRegistrationDialog({ slot }: { slot: number }) {
           {error ? (
             <div
               role="alert"
-              className="mt-5 border-l-2 border-danger bg-danger/8 px-4 py-3 font-mono text-[9px] leading-5 tracking-[0.08em] text-danger-soft"
+              className="mt-5 border-l-2 border-danger bg-danger/8 px-4 py-3 font-mono text-[11px] leading-5 tracking-[0.07em] text-danger-soft"
             >
               {error}
             </div>
           ) : null}
 
           <div className="mt-7 flex flex-wrap items-center justify-between gap-4 border-t border-divider pt-5">
-            <div className="font-mono text-[8px] tracking-[0.16em] text-foreground-fainter">
+            <div className="font-mono text-[11px] tracking-[0.12em] text-foreground-fainter">
               SENSOR · DETECTADO&nbsp;&nbsp; BASE DE DATOS · PENDIENTE
             </div>
             <div className="flex gap-3">

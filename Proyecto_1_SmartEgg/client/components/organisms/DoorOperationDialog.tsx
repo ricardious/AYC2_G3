@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import type { DoorEvent, DoorEventType } from "@/lib/api/types";
+import { useDialogFocus } from "@/lib/hooks/useDialogFocus";
 import { useSmartEgg } from "@/lib/state/hooks";
 
 const OPERATIONS: Array<{
@@ -18,10 +19,11 @@ const OPERATIONS: Array<{
 ];
 
 const fieldClass =
-  "mt-2 w-full border border-rule bg-background/75 px-3 py-2.5 font-mono text-[11px] text-foreground-bright outline-none transition focus:border-primary";
+  "mt-2 w-full border border-rule bg-background/75 px-3 py-2.5 font-mono text-[12px] text-foreground-bright outline-none transition focus:border-primary";
 
 export function DoorOperationDialog() {
   const { technician, actions } = useSmartEgg();
+  const dialogRef = useDialogFocus<HTMLElement>();
   const [eventType, setEventType] = useState<DoorEventType>("inspection");
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
@@ -73,6 +75,7 @@ export function DoorOperationDialog() {
       }}
     >
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="door-operation-title"
@@ -81,7 +84,7 @@ export function DoorOperationDialog() {
         <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
         <div className="flex items-start justify-between gap-6">
           <div>
-            <div className="font-mono text-[8px] tracking-[0.28em] text-primary">
+            <div className="font-mono text-[11px] tracking-[0.2em] text-primary">
               CONTROL DE ACCESO · {technician?.role.replace("_", " ").toUpperCase()}
             </div>
             <h2
@@ -100,7 +103,7 @@ export function DoorOperationDialog() {
             aria-label="Cerrar formulario"
             disabled={pending}
             onClick={actions.closeDoorOperation}
-            className="px-2 py-1 font-mono text-sm text-foreground-faint transition hover:text-foreground-bright"
+            className="-mt-2 -mr-2 flex size-11 shrink-0 items-center justify-center font-mono text-[20px] leading-none text-foreground-faint transition hover:text-foreground-bright"
           >
             ×
           </button>
@@ -108,7 +111,7 @@ export function DoorOperationDialog() {
 
         {prepared ? (
           <div className="mt-8 border border-success/35 bg-success/[0.06] px-5 py-6">
-            <div className="font-mono text-[9px] tracking-[0.24em] text-success">
+            <div className="font-mono text-[11px] tracking-[0.2em] text-success">
               OPERACIÓN #{prepared.id} PREPARADA
             </div>
             <p className="mt-3 text-sm leading-6 text-foreground-muted">
@@ -118,7 +121,7 @@ export function DoorOperationDialog() {
             <button
               type="button"
               onClick={actions.closeDoorOperation}
-              className="mt-6 w-full border border-success/50 bg-success/10 px-4 py-3 font-mono text-[9px] tracking-[0.24em] text-success transition hover:bg-success/20"
+              className="mt-6 w-full border border-success/50 bg-success/10 px-4 py-3 font-mono text-[11px] tracking-[0.2em] text-success transition hover:bg-success/20"
             >
               LISTO · ABRIR PUERTA
             </button>
@@ -126,7 +129,7 @@ export function DoorOperationDialog() {
         ) : (
           <form className="mt-7" onSubmit={submit}>
             <fieldset>
-              <legend className="font-mono text-[8px] tracking-[0.22em] text-foreground-faint">
+              <legend className="font-mono text-[11px] tracking-[0.16em] text-foreground-faint">
                 TIPO DE OPERACIÓN
               </legend>
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -144,10 +147,10 @@ export function DoorOperationDialog() {
                   >
                     <span className="font-mono text-lg">{operation.symbol}</span>
                     <span>
-                      <span className="block font-mono text-[9px] tracking-[0.16em]">
+                      <span className="block font-mono text-[11px] tracking-[0.13em]">
                         {operation.label}
                       </span>
-                      <span className="mt-1 block text-[10px] text-foreground-faint">
+                      <span className="mt-1 block text-[12px] text-foreground-faint">
                         {operation.detail}
                       </span>
                     </span>
@@ -157,7 +160,7 @@ export function DoorOperationDialog() {
             </fieldset>
 
             {changesEggs ? (
-              <label className="mt-5 block font-mono text-[8px] tracking-[0.2em] text-foreground-faint">
+              <label className="mt-5 block font-mono text-[11px] tracking-[0.15em] text-foreground-faint">
                 CANTIDAD DE HUEVOS
                 <input
                   type="number"
@@ -171,7 +174,7 @@ export function DoorOperationDialog() {
               </label>
             ) : null}
 
-            <label className="mt-5 block font-mono text-[8px] tracking-[0.2em] text-foreground-faint">
+            <label className="mt-5 block font-mono text-[11px] tracking-[0.15em] text-foreground-faint">
               OBSERVACIONES
               <textarea
                 rows={3}
@@ -194,14 +197,14 @@ export function DoorOperationDialog() {
                 type="button"
                 disabled={pending}
                 onClick={actions.closeDoorOperation}
-                className="border border-frame px-4 py-3 font-mono text-[9px] tracking-[0.18em] text-foreground-muted transition hover:text-foreground"
+                className="border border-frame px-4 py-3 font-mono text-[11px] tracking-[0.15em] text-foreground-muted transition hover:text-foreground"
               >
                 CANCELAR
               </button>
               <button
                 type="submit"
                 disabled={pending || (changesEggs && quantity < 1)}
-                className="border border-primary/60 bg-primary/15 px-5 py-3 font-mono text-[9px] tracking-[0.2em] text-primary-soft transition hover:bg-primary/25 disabled:opacity-50"
+                className="border border-primary/60 bg-primary/15 px-5 py-3 font-mono text-[11px] tracking-[0.16em] text-primary-soft transition hover:bg-primary/25 disabled:opacity-50"
               >
                 {pending ? "REGISTRANDO…" : "PREPARAR APERTURA"}
               </button>
