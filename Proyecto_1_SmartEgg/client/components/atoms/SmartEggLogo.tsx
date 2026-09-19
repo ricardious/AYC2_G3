@@ -67,7 +67,7 @@ export function SmartEggLogo({
           <div className="text-[13px] font-semibold tracking-[0.2em] text-foreground-bright">
             SMART<span className="text-primary">EGG</span>
           </div>
-          <div className="mt-2 font-mono text-[6.5px] tracking-[0.18em] text-foreground-faint">
+          <div className="mt-2 font-mono text-[10px] tracking-[0.06em] whitespace-nowrap text-foreground-faint">
             {subtitle}
           </div>
         </div>

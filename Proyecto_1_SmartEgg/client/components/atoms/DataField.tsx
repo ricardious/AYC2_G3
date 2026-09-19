@@ -11,19 +11,19 @@ const FIELD: Record<
   { root: string; label: string; value: string; fallback: string }
 > = {
   sm: {
-    root: "font-mono text-[8px] tracking-[0.16em]",
+    root: "font-mono text-[11px] tracking-[0.12em]",
     label: "block text-foreground-faint",
     value: "block mt-1",
     fallback: "var(--color-foreground-muted)",
   },
   md: {
-    root: "font-mono text-[8px] tracking-[0.18em]",
+    root: "font-mono text-[11px] tracking-[0.13em]",
     label: "block text-foreground-faint",
     value: "block mt-[5px] text-[15px]",
     fallback: "var(--color-foreground-muted)",
   },
   lg: {
-    root: "font-mono text-[9px] tracking-[0.16em]",
+    root: "font-mono text-[11px] tracking-[0.13em]",
     label: "block text-foreground-paper",
     value: "block mt-[5px] text-base",
     fallback: "var(--color-foreground-bright)",
