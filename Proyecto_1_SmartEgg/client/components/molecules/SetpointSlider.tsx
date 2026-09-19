@@ -51,7 +51,7 @@ export function SetpointSlider({
 
   return (
     <div style={style} className={disabled ? "opacity-45" : undefined}>
-      <div className="flex items-center justify-between gap-4 font-mono text-[9px] tracking-[0.16em] text-neutral">
+      <div className="flex items-center justify-between gap-4 font-mono text-[11px] tracking-[0.13em] text-neutral">
         <label>{label}</label>
         <label className="flex items-baseline gap-1 border-b border-[var(--accent)]/35 pb-0.5 text-[var(--accent)] transition-colors focus-within:border-[var(--accent)]">
           <input
@@ -65,9 +65,9 @@ export function SetpointSlider({
             onChange={(event) =>
               onChange(numericValue(event.target.value, value))
             }
-            className="w-[54px] bg-transparent text-right text-[11px] font-semibold tracking-normal tabular-nums outline-none disabled:cursor-not-allowed"
+            className="w-[54px] bg-transparent text-right text-[12px] font-semibold tracking-normal tabular-nums outline-none disabled:cursor-not-allowed"
           />
-          <span className="text-[8px]">{suffix}</span>
+          <span className="text-[11px]">{suffix}</span>
         </label>
       </div>
 
@@ -88,7 +88,7 @@ export function SetpointSlider({
         <span className="pointer-events-none absolute top-0 left-[var(--pct)] -ml-1 size-[9px] border border-[var(--accent)] bg-background shadow-[0_0_8px_var(--accent)]" />
       </div>
 
-      <div className="mt-[7px] flex min-h-5 items-center justify-between font-mono text-[7.5px] tracking-[0.14em] text-foreground-fainter">
+      <div className="mt-[7px] flex min-h-5 items-center justify-between font-mono text-[10px] tracking-[0.11em] text-foreground-fainter">
         {secondary ? (
           <>
             <span>{secondary.label}</span>
@@ -106,7 +106,7 @@ export function SetpointSlider({
                     numericValue(event.target.value, secondary.value),
                   )
                 }
-                className="w-[44px] border-b border-rule bg-transparent text-right text-[8px] tabular-nums outline-none transition-colors focus:border-[var(--accent)] disabled:cursor-not-allowed"
+                className="w-[44px] border-b border-rule bg-transparent text-right text-[11px] tabular-nums outline-none transition-colors focus:border-[var(--accent)] disabled:cursor-not-allowed"
               />
               <span>{secondary.suffix}</span>
             </label>
