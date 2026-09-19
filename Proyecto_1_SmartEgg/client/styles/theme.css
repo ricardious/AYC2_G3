@@ -30,32 +30,32 @@
   --color-foreground-bright-base: oklch(15% 0.025 250);
   --color-foreground-muted-base: oklch(40% 0.018 245);
   --color-foreground-soft-base: oklch(46% 0.016 245);
-  --color-foreground-faint-base: oklch(50% 0.016 245);
-  --color-foreground-fainter-base: oklch(56% 0.014 245);
+  --color-foreground-faint-base: oklch(47% 0.016 245);
+  --color-foreground-fainter-base: oklch(50% 0.014 245);
   --color-foreground-idle-base: oklch(45% 0.016 245);
   --color-foreground-paper-base: oklch(38% 0.02 245);
 
   --color-primary-base: oklch(47% 0.115 202);
   --color-primary-soft-base: oklch(37% 0.09 204);
-  --color-primary-dim-base: oklch(62% 0.078 202);
+  --color-primary-dim-base: oklch(49% 0.082 202);
   --color-primary-link-base: oklch(40% 0.115 202);
 
-  --color-warning-base: oklch(53% 0.145 62);
+  --color-warning-base: oklch(48% 0.145 62);
   --color-warning-dim-base: oklch(47% 0.09 62);
-  --color-success-base: oklch(48% 0.135 158);
+  --color-success-base: oklch(45% 0.135 158);
   --color-danger-base: oklch(51% 0.2 27);
   --color-danger-soft-base: oklch(45% 0.17 27);
   --color-danger-text-base: oklch(40% 0.06 27);
   --color-neutral-base: oklch(46% 0.016 245);
 
-  --color-divider-base: oklch(30% 0.015 250 / 0.13);
-  --color-divider-soft-base: oklch(30% 0.015 250 / 0.09);
-  --color-divider-chip-base: oklch(30% 0.015 250 / 0.2);
-  --color-rule-base: oklch(32% 0.02 245 / 0.18);
-  --color-rule-soft-base: oklch(32% 0.02 245 / 0.26);
-  --color-hairline-base: oklch(32% 0.02 245 / 0.32);
-  --color-frame-base: oklch(35% 0.025 240 / 0.26);
-  --color-frame-soft-base: oklch(35% 0.025 240 / 0.15);
+  --color-divider-base: oklch(30% 0.015 250 / 0.2);
+  --color-divider-soft-base: oklch(30% 0.015 250 / 0.14);
+  --color-divider-chip-base: oklch(30% 0.015 250 / 0.3);
+  --color-rule-base: oklch(32% 0.02 245 / 0.26);
+  --color-rule-soft-base: oklch(32% 0.02 245 / 0.34);
+  --color-hairline-base: oklch(32% 0.02 245 / 0.42);
+  --color-frame-base: oklch(35% 0.025 240 / 0.36);
+  --color-frame-soft-base: oklch(35% 0.025 240 / 0.22);
   --color-glass-base: oklch(40% 0.03 235 / 0.14);
   --color-panel-base: oklch(100% 0 0 / 0.88);
   --color-dot-idle-base: oklch(50% 0.015 245 / 0.55);
@@ -149,7 +149,7 @@
       oklch(98.6% 0.005 235) 42%,
       oklch(95.8% 0.011 240) 100%
     );
-    --console-grid-line: oklch(55% 0.07 235 / 0.05);
+    --console-grid-line: oklch(55% 0.07 235 / 0.085);
     --console-glow-color: oklch(82% 0.045 215 / 0.13);
     --console-vignette-shadow: inset 0 0 160px 30px oklch(55% 0.03 245 / 0.045);
     --panel-shadow:
@@ -162,38 +162,38 @@
 
     --material-rail: linear-gradient(
       180deg,
-      oklch(94% 0.004 240),
-      oklch(85.5% 0.008 245)
+      oklch(95% 0.004 240),
+      oklch(89% 0.008 245)
     );
     --material-shell: linear-gradient(
       150deg,
-      oklch(98% 0.003 240),
-      oklch(87.5% 0.01 246)
+      oklch(98.5% 0.003 240),
+      oklch(92% 0.01 246)
     );
     --material-shell-shadow:
       0 36px 70px -32px oklch(38% 0.05 255 / 0.3),
       inset 0 1px 0 oklch(100% 0 0),
-      inset 0 0 0 1px oklch(45% 0.03 245 / 0.09);
+      inset 0 0 0 1px oklch(45% 0.03 245 / 0.18);
     --material-glass: linear-gradient(
       160deg,
-      oklch(93% 0.008 240 / 0.85),
-      oklch(88% 0.013 245 / 0.82) 45%,
-      oklch(84% 0.022 225 / 0.82)
+      oklch(96% 0.008 240 / 0.88),
+      oklch(93% 0.013 245 / 0.86) 45%,
+      oklch(90% 0.022 225 / 0.86)
     );
     --material-plate: linear-gradient(
       180deg,
-      oklch(88% 0.008 246),
-      oklch(79.5% 0.013 249)
+      oklch(93% 0.008 246),
+      oklch(87% 0.013 249)
     );
     /* En claro el filo se dibuja con una línea oscura: un blanco sobre
        blanco no describe ningún borde. */
-    --material-edge-light: oklch(42% 0.04 245 / 0.3);
+    --material-edge-light: oklch(42% 0.04 245 / 0.45);
     --material-sheen: oklch(100% 0 0 / 0.5);
-    --material-tray-line: oklch(38% 0.03 245 / 0.38);
+    --material-tray-line: oklch(38% 0.03 245 / 0.52);
     --material-bench: linear-gradient(
       180deg,
-      oklch(97% 0.004 240 / 0.95),
-      oklch(86% 0.014 246 / 0.95)
+      oklch(98% 0.004 240 / 0.95),
+      oklch(91% 0.014 246 / 0.95)
     );
     --material-bench-shadow: 0 52px 95px -48px oklch(38% 0.05 255 / 0.4);
     --material-report: linear-gradient(
@@ -211,14 +211,14 @@
        En claro cada acento baja de luminosidad y sube de opacidad hasta
        pesar lo mismo que su equivalente encendido. */
 
-    --accent-beam: oklch(55% 0.12 200 / 0.55);
-    --accent-bars: oklch(52% 0.12 200 / 0.5);
-    --accent-flow: oklch(52% 0.12 200 / 0.4);
+    --accent-beam: oklch(52% 0.12 200 / 0.66);
+    --accent-bars: oklch(50% 0.12 200 / 0.62);
+    --accent-flow: oklch(50% 0.12 200 / 0.58);
     --accent-face: oklch(62% 0.11 200 / 0.12);
     --accent-halo: oklch(62% 0.11 200 / 0.16);
     --accent-sweep: oklch(58% 0.12 200 / 0.24);
     --accent-band: oklch(60% 0.1 200 / 0.14);
-    --accent-mark: oklch(45% 0.11 202 / 0.5);
+    --accent-mark: oklch(45% 0.11 202 / 0.68);
 
     --humidity-tube: linear-gradient(
       180deg,
@@ -231,24 +231,24 @@
       oklch(72% 0.1 200 / 0.3)
     );
     --humidity-fill-glow: 0 0 22px oklch(50% 0.12 200 / 0.18) inset;
-    --humidity-grad-line: oklch(45% 0.03 240 / 0.22);
+    --humidity-grad-line: oklch(45% 0.03 240 / 0.34);
 
     --heat-plume-color: oklch(70% 0.16 60 / 0.2);
     --heat-bar-color: oklch(70% 0.16 62 / 0.26);
     --heat-band: oklch(75% 0.14 62 / 0.16);
-    --heat-line: oklch(58% 0.16 60 / 0.6);
+    --heat-line: oklch(54% 0.16 60 / 0.75);
     --heat-trace-glow: oklch(70% 0.16 62 / 0.35);
 
     --alarm-plume-color: oklch(62% 0.2 27 / 0.3);
     --alarm-glow-color: oklch(58% 0.2 27 / 0.28);
 
     /* Instrumentos: pistas, retículas y marcas de escala. */
-    --gauge-outline: oklch(45% 0.02 245 / 0.22);
-    --gauge-track: oklch(45% 0.02 245 / 0.17);
-    --gauge-optimal: oklch(65% 0.14 158 / 0.3);
-    --gauge-ticks: oklch(40% 0.02 245 / 0.44);
-    --chart-grid: oklch(45% 0.02 245 / 0.14);
-    --optimal-band-line: oklch(55% 0.14 158 / 0.45);
+    --gauge-outline: oklch(45% 0.02 245 / 0.32);
+    --gauge-track: oklch(45% 0.02 245 / 0.26);
+    --gauge-optimal: oklch(58% 0.14 158 / 0.42);
+    --gauge-ticks: oklch(40% 0.02 245 / 0.62);
+    --chart-grid: oklch(45% 0.02 245 / 0.26);
+    --optimal-band-line: oklch(50% 0.14 158 / 0.62);
     --optimal-band-fill: oklch(70% 0.13 158 / 0.16);
     --playhead-glow: oklch(45% 0.03 245 / 0.35);
 
@@ -286,7 +286,7 @@
       0 2px 4px -1px oklch(38% 0.04 250 / 0.26),
       0 0 26px oklch(60% 0.12 200 / 0.35);
     --egg-shadow-chip: 0 0 16px oklch(58% 0.12 200 / 0.4);
-    --egg-empty-border: oklch(45% 0.03 245 / 0.4);
+    --egg-empty-border: oklch(45% 0.03 245 / 0.55);
 
     --particle-color: oklch(58% 0.06 220 / 0.4);
     /* El velo del modal: sobre una consola blanca un negro al 78 % apaga la
@@ -302,9 +302,9 @@
       --color-foreground-bright-base: oklch(95% 0.025 195);
       --color-foreground-muted-base: oklch(75% 0.025 215);
       --color-foreground-soft-base: oklch(67% 0.025 215);
-      --color-foreground-faint-base: oklch(52% 0.03 215);
-      --color-foreground-fainter-base: oklch(44% 0.026 215);
-      --color-foreground-idle-base: oklch(58% 0.023 215);
+      --color-foreground-faint-base: oklch(62% 0.03 215);
+      --color-foreground-fainter-base: oklch(58% 0.026 215);
+      --color-foreground-idle-base: oklch(60% 0.023 215);
       --color-foreground-paper-base: oklch(65% 0.035 215);
 
       --color-primary-base: oklch(84% 0.14 195);
@@ -313,7 +313,7 @@
       --color-primary-link-base: oklch(89% 0.105 195);
 
       --color-warning-base: oklch(76% 0.14 68);
-      --color-warning-dim-base: oklch(55% 0.09 68);
+      --color-warning-dim-base: oklch(64% 0.1 68);
       --color-success-base: oklch(79% 0.15 155);
       --color-danger-base: oklch(68% 0.22 27);
       --color-danger-soft-base: oklch(75% 0.16 27);
