@@ -11,6 +11,19 @@ pnpm build
 pnpm lint
 ```
 
+## Probar solo el frontend
+
+En desarrollo, `pnpm dev` deja un atajo oculto en la pantalla de acceso: tres toques
+seguidos sobre el emblema del huevo. No hay que iniciar Docker, PostgreSQL, Mosquitto
+ni el ESP32. El gesto abre el dashboard con datos de ejemplo y una etiqueta permanente
+de modo demo. Los cambios hechos allí viven solo en memoria y desaparecen al recargar;
+la descarga del PDF real requiere el backend. La pantalla no anuncia el atajo y este no
+se incluye en la compilación de producción.
+
+El formulario normal de usuario y contraseña sigue conectado al backend y no acepta
+credenciales ficticias. El modo demo tampoco sirve como evidencia de lecturas reales,
+RFID o funcionamiento físico.
+
 ## Conexión con el backend
 
 La consola no genera telemetría simulada. El acceso acepta una tarjeta RFID o las
@@ -277,6 +290,38 @@ en pila; lo que anotan está debajo en los paneles de actuadores y sensores, que
 además son seleccionables. Las motas del fondo tampoco se dibujan.
 
 `prefers-reduced-motion` desactiva el movimiento ambiental.
+
+### Accesibilidad
+
+**Suelo tipográfico de 11 px.** La consola se compone sobre el plano de 1680 ×
+1000 y después se escala a la ventana, así que el cuerpo declarado no es el que
+llega al ojo: en un portátil de 1080 el factor ronda 0.88 y un rótulo de 8 px
+se leía como 7. Ningún texto se compone ya por debajo de 11 px —10 px en los
+rótulos escenográficos de la urna y la marca— y el tracking baja en la misma
+proporción en que sube el cuerpo, para que el rótulo no gane ancho. Los tamaños
+compartidos viven en `.kicker` y `.caption` (`styles/components.css`).
+
+**El plano deja de encoger en 0.8** (`STAGE_MIN_SCALE`). Por debajo de ese
+factor desborda y la caja que lo envuelve se desplaza: una ventana baja ya no
+compra su vista completa a costa de un texto ilegible.
+
+**Contraste AA en los dos temas.** Todos los tokens de texto llegan a 4.5:1
+contra su fondo —3:1 en los cuerpos grandes—, medido sobre las seis pantallas en
+claro y en oscuro. El tema claro es el que más se movió: los grises del fondo de
+la escalera bajaron de luminosidad, las planchas metálicas subieron (una
+superficie al 79 % dejaba cualquier rótulo por debajo de 3.5:1) y el volumen
+pasó a describirlo el filo, no el relleno. Las retículas, las pistas de los
+instrumentos y el trazo del Observatorio suben de opacidad sobre papel, donde el
+mismo alfa que funciona en la cámara oscura desaparece.
+
+**Teclado.** El anillo de foco es de 2 px y existe en toda la aplicación, no
+sólo en el plano. Los diálogos se llevan el foco al abrirse, lo encierran
+mientras están abiertos y lo devuelven a quien los abrió al cerrarse
+(`lib/hooks/useDialogFocus.ts`); `Escape` los cierra. El selector de la consola
+es un `listbox` con flechas, `Home`/`End`, búsqueda por letra y `Escape`.
+
+**Objetivos táctiles de 44 px** fuera del plano, incluidos los cierres de los
+diálogos.
 
 ## Visualización avanzada
 
