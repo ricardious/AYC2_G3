@@ -19,7 +19,7 @@ export function ComponentHotspot({ hotspot, onSelect }: ComponentHotspotProps) {
       type="button"
       onClick={onSelect}
       style={style}
-      className="absolute block font-mono text-[8px] tracking-[0.16em] text-neutral transition-colors hover:text-foreground-bright"
+      className="absolute block font-mono text-[11px] tracking-[0.12em] text-neutral transition-colors hover:text-foreground-bright"
     >
       <span className="block whitespace-nowrap">{hotspot.label}</span>
       <span className="mt-[3px] block whitespace-nowrap text-[var(--accent)]">

@@ -34,11 +34,11 @@ export function ActuatorRow({ actuator, onSelect }: ActuatorRowProps) {
         <span className="block text-xs tracking-[0.1em] text-foreground">
           {actuator.name}
         </span>
-        <span className="mt-1 block font-mono text-[8px] tracking-[0.18em] text-[var(--accent)]">
+        <span className="mt-1 block font-mono text-[11px] tracking-[0.13em] text-[var(--accent)]">
           {actuator.state}
         </span>
       </span>
-      <span className="font-mono text-[9px] text-foreground-faint">
+      <span className="font-mono text-[11px] text-foreground-faint">
         {actuator.metric}
       </span>
       <StatusDot

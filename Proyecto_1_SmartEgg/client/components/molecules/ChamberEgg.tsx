@@ -27,7 +27,7 @@ export function ChamberEgg({
       onMouseLeave={() => onHoverChange(false)}
       onFocus={() => onHoverChange(true)}
       onBlur={() => onHoverChange(false)}
-      className="group relative flex w-[60px] flex-col items-center"
+      className="group relative flex w-[78px] flex-col items-center"
     >
       <EggShape
         variant="chamber"
@@ -42,7 +42,7 @@ export function ChamberEgg({
       />
       <span
         className={cx(
-          "mt-[7px] font-mono text-[7.5px] tracking-[0.12em]",
+          "mt-[7px] font-mono text-[10px] tracking-[0.04em] whitespace-nowrap",
           egg.hot ? "text-foreground-bright" : "text-neutral",
         )}
       >
