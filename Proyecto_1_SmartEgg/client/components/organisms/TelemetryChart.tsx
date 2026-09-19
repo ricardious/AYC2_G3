@@ -23,7 +23,7 @@ export function TelemetryChart() {
     >
       <div className="flex items-baseline justify-between">
         <SectionKicker>HISTORIAL · 6 H</SectionKicker>
-        <div className="flex gap-4 font-mono text-[8px] tracking-[0.14em]">
+        <div className="flex gap-4 font-mono text-[11px] tracking-[0.1em]">
           <span className="text-warning">— TEMP</span>
           <span className="text-primary">— HUM</span>
         </div>
@@ -66,7 +66,7 @@ export function TelemetryChart() {
         />
       </svg>
 
-      <div className="mt-2 flex justify-between font-mono text-[8px] tracking-[0.14em] text-foreground-fainter">
+      <div className="mt-2 flex justify-between font-mono text-[11px] tracking-[0.1em] text-foreground-fainter">
         <span>04:42</span>
         <span>07:42</span>
         <span>AHORA</span>

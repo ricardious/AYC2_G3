@@ -12,10 +12,10 @@ export function SpecimenStrip() {
   return (
     <section
       aria-label="Huevos del lote A"
-      className="w-full max-w-[400px] console:w-[400px]"
+      className="w-full max-w-[430px] console:w-[430px]"
     >
       <SectionKicker>HUEVOS · LOTE A</SectionKicker>
-      <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 console:flex console:gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 console:flex console:gap-2.5">
         {eggs.map((egg) => (
           <EggChip
             key={egg.id}

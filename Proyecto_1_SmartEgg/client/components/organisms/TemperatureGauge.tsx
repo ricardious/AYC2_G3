@@ -84,14 +84,14 @@ export function TemperatureGauge() {
           <text
             x="26"
             y="166"
-            className="fill-foreground-fainter font-mono text-[8px] tracking-[1px]"
+            className="fill-foreground-fainter font-mono text-[11px] tracking-[1px]"
           >
             35
           </text>
           <text
             x="252"
             y="166"
-            className="fill-foreground-fainter font-mono text-[8px] tracking-[1px]"
+            className="fill-foreground-fainter font-mono text-[11px] tracking-[1px]"
           >
             41
           </text>
@@ -101,7 +101,7 @@ export function TemperatureGauge() {
           <div className="text-[44px] leading-none font-light tracking-[-0.01em] text-[var(--accent)]">
             {reading.label}
           </div>
-          <div className="mt-1 font-mono text-[9px] tracking-[0.2em] text-neutral">
+          <div className="mt-1 font-mono text-[11px] tracking-[0.16em] text-neutral">
             °C
           </div>
         </div>

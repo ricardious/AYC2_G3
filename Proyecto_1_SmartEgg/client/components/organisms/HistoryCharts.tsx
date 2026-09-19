@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
-import { useTelemetry } from "@/lib/state/hooks";
+import { ThemedSelect } from "@/components/molecules/ThemedSelect";
+import { useSmartEgg, useTelemetry } from "@/lib/state/hooks";
 import { useCanvasPalette } from "@/lib/hooks/useCanvasPalette";
 
 /** Histórico recibido por REST, actualizado con las lecturas en vivo. */
 export function HistoryCharts() {
   const { series } = useTelemetry();
+  const { demoActive } = useSmartEgg();
   const palette = useCanvasPalette();
   const [windowSize, setWindowSize] = useState(240);
   const [metric, setMetric] = useState<"t" | "h">("t");
@@ -56,7 +58,7 @@ export function HistoryCharts() {
               color: palette.foreground,
               maxTicksLimit: 6,
               maxRotation: 0,
-              font: { family: "monospace", size: 10 },
+              font: { family: "monospace", size: 12 },
             },
             grid: { display: false },
           },
@@ -68,9 +70,10 @@ export function HistoryCharts() {
             },
             ticks: { color: palette.foreground },
             grid: {
+              // Al 10 % la retícula desaparecía sobre papel.
               color: palette.foreground
                 .replace("rgb(", "rgba(")
-                .replace(")", ",0.1)"),
+                .replace(")", ",0.22)"),
             },
           },
         },
@@ -79,38 +82,29 @@ export function HistoryCharts() {
     return () => chart.destroy();
   }, [series, windowSize, metric, palette]);
   return (
-    <section aria-label="Historial de lecturas reales">
+    <section aria-label={demoActive ? "Historial de ejemplo" : "Historial de lecturas reales"}>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="font-mono text-[10px] tracking-widest text-foreground-faint">
+          <p className="font-mono text-[12px] tracking-widest text-foreground-faint">
             TRAZAS DEL MICROCLIMA
           </p>
           <h2 className="mt-2 text-2xl font-light">Cada lectura cuenta.</h2>
         </div>
-        <div className="flex flex-wrap gap-4 text-xs">
-          <label>
-            Variable
-            <select
-              className="ml-2 border border-divider bg-background p-2"
-              value={metric}
-              onChange={(e) => setMetric(e.target.value as "t" | "h")}
-            >
-              <option value="t">Temperatura</option>
-              <option value="h">Humedad</option>
-            </select>
-          </label>
-          <label>
-            Lecturas
-            <select
-              className="ml-2 border border-divider bg-background p-2"
-              value={windowSize}
-              onChange={(e) => setWindowSize(Number(e.target.value))}
-            >
-              <option value={30}>Últimas 30</option>
-              <option value={120}>Últimas 120</option>
-              <option value={240}>Últimas 240</option>
-            </select>
-          </label>
+        <div className="flex flex-wrap gap-4">
+          <ThemedSelect
+            compact
+            label="Variable"
+            value={metric}
+            onValueChange={(value) => setMetric(value as "t" | "h")}
+            options={[{ value: "t", label: "Temperatura" }, { value: "h", label: "Humedad" }]}
+          />
+          <ThemedSelect
+            compact
+            label="Lecturas"
+            value={String(windowSize)}
+            onValueChange={(value) => setWindowSize(Number(value))}
+            options={[30, 120, 240].map((count) => ({ value: String(count), label: `Últimas ${count}` }))}
+          />
         </div>
       </div>
       <div className="relative h-[330px] w-full">
@@ -125,8 +119,8 @@ export function HistoryCharts() {
           </p>
         )}
       </div>
-      <div className="mt-5 flex justify-between gap-4 border-t border-divider pt-4 font-mono text-[10px] text-foreground-faint">
-        <span>{points.length} LECTURAS REALES</span>
+      <div className="mt-5 flex justify-between gap-4 border-t border-divider pt-4 font-mono text-[12px] text-foreground-faint">
+        <span>{points.length} LECTURAS {demoActive ? "DE EJEMPLO" : "REALES"}</span>
         <span>Desliza sobre la curva para inspeccionar</span>
       </div>
       <details className="mt-5 text-xs">

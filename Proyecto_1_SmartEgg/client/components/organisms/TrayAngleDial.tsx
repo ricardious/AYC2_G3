@@ -68,7 +68,7 @@ export function TrayAngleDial() {
               className="absolute top-[-5px] left-[var(--angle-pct)] h-[11px] w-px bg-primary shadow-[0_0_10px_var(--color-primary)]"
             />
           </div>
-          <div className="mt-[7px] flex justify-between font-mono text-[8px] tracking-[0.14em] text-foreground-fainter">
+          <div className="mt-[7px] flex justify-between font-mono text-[11px] tracking-[0.1em] text-foreground-fainter">
             <span>-{angle.limit}°</span>
             <span>0°</span>
             <span>+{angle.limit}°</span>

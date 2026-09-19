@@ -51,12 +51,12 @@ export function ReportSidebar() {
       {message ? (
         <p
           role={failed ? "alert" : "status"}
-          className={`mt-3 font-mono text-[8px] leading-4 tracking-[0.12em] ${failed ? "text-danger-soft" : "text-success"}`}
+          className={`mt-3 font-mono text-[11px] leading-4 tracking-[0.09em] ${failed ? "text-danger-soft" : "text-success"}`}
         >
           {message.toUpperCase()}
         </p>
       ) : null}
-      <div className="mt-[34px] font-mono text-[8px] leading-[2.2] tracking-[0.16em] text-foreground-faint">
+      <div className="mt-[34px] font-mono text-[11px] leading-[2.2] tracking-[0.12em] text-foreground-faint">
         <div>FORMATO · PDF · A4</div>
         <div>INCLUYE · TELEMETRÍA · EVENTOS</div>
         <div>TÉCNICO AUTENTICADO · NODO 01</div>

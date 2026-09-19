@@ -22,7 +22,7 @@ export function ReportSheet() {
 
   return (
     <article className="report-surface box-border w-full border border-frame-soft px-6 py-8 text-foreground-bright backdrop-blur-[3px] console:h-[660px] console:w-[520px] console:px-12 console:py-14 console:[transform:perspective(1600px)_rotateY(-14deg)_rotateX(4deg)_rotateZ(-1.5deg)]">
-      <div className="font-mono text-[8px] tracking-[0.3em] text-primary">
+      <div className="font-mono text-[11px] tracking-[0.22em] text-primary">
         SMART EGG · SISTEMA IOT
       </div>
       <div className="mt-[18px] text-[26px] font-medium tracking-[0.04em]">
@@ -64,7 +64,7 @@ export function ReportSheet() {
         />
       </svg>
 
-      <div className="mt-[26px] flex justify-between font-mono text-[7.5px] tracking-[0.14em] text-foreground-paper">
+      <div className="mt-[26px] flex justify-between font-mono text-[10px] tracking-[0.11em] text-foreground-paper">
         <span>TÉCNICO · {config.technician}</span>
         <span>11 AGO 2026 · 10:42</span>
       </div>

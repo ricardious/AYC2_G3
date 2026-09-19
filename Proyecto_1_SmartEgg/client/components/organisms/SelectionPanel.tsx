@@ -32,7 +32,7 @@ export function SelectionPanel() {
       <div className="flex items-start justify-between">
         <div>
           <div
-            className="font-mono text-[8px] tracking-[0.26em] text-[var(--accent)]"
+            className="font-mono text-[11px] tracking-[0.19em] text-[var(--accent)]"
             style={style}
           >
             {detail.kicker}
@@ -45,7 +45,7 @@ export function SelectionPanel() {
           type="button"
           aria-label="Cerrar detalle"
           onClick={actions.clearSelection}
-          className="px-1.5 py-0.5 font-mono text-[11px] text-foreground-faint transition-colors hover:text-foreground-bright"
+          className="px-1.5 py-0.5 font-mono text-[12px] text-foreground-faint transition-colors hover:text-foreground-bright"
         >
           ×
         </button>

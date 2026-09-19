@@ -10,7 +10,7 @@ export function StationSummary() {
   const occupiedSlots = useOccupiedSlots();
 
   return (
-    <div className="w-[130px] font-mono text-[8px] leading-[2.2] tracking-[0.16em] text-foreground-faint">
+    <div className="w-[130px] font-mono text-[11px] leading-[2.2] tracking-[0.12em] text-foreground-faint">
       {STATION_META.map((entry) => {
         const style: CSSVars = { "--value": entry.color };
         return (
