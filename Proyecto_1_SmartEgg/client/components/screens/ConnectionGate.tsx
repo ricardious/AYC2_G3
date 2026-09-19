@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { BackdropLayers } from "@/components/atoms/BackdropLayers";
 import { SmartEggMark } from "@/components/atoms/SmartEggLogo";
 import { StatusDot } from "@/components/atoms/StatusDot";
 import { ThemeSwitcher } from "@/components/molecules/ThemeSwitcher";
 import { apiOrigin } from "@/lib/api/client";
+import { DEMO_AVAILABLE } from "@/lib/state/demo";
 import { useSmartEgg } from "@/lib/state/hooks";
 
 /** Espécimen sobre su anillo orbital de escaneo — la firma visual del acceso. */
@@ -21,6 +22,41 @@ function EggEmblem() {
       <div className="absolute inset-5 animate-breathe rounded-full bg-primary/15 blur-lg" />
       <SmartEggMark className="relative z-10 h-14 w-12 drop-shadow-[0_0_12px_var(--accent-mark)]" />
     </div>
+  );
+}
+
+/**
+ * Atajo silencioso a los datos de ejemplo: tres toques seguidos sobre el emblema.
+ * Fuera de desarrollo no envuelve nada y el gesto no existe.
+ */
+function DemoGesture({ children, onUnlock }: { children: ReactNode; onUnlock: () => void }) {
+  const taps = useRef(0);
+  const reset = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  if (!DEMO_AVAILABLE) return <>{children}</>;
+
+  const tap = () => {
+    if (reset.current) clearTimeout(reset.current);
+    taps.current += 1;
+    if (taps.current >= 3) {
+      taps.current = 0;
+      onUnlock();
+      return;
+    }
+    reset.current = setTimeout(() => {
+      taps.current = 0;
+    }, 900);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={tap}
+      aria-label="Abrir datos de ejemplo"
+      className="block w-full cursor-default appearance-none bg-transparent focus:outline-none"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -68,7 +104,7 @@ function Shell({ children }: { children: ReactNode }) {
           />
           {children}
         </section>
-        <footer className="mt-5 flex items-center justify-between font-mono text-[8px] tracking-[0.2em] text-foreground-fainter">
+        <footer className="mt-5 flex items-center justify-between font-mono text-[11px] tracking-[0.15em] text-foreground-fainter">
           <span className="flex items-center gap-2">
             <StatusDot
               size={5}
@@ -87,7 +123,7 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 const fieldLabelClass =
-  "font-mono text-[9px] tracking-[0.24em] text-foreground-faint transition-colors group-focus-within:text-primary";
+  "font-mono text-[11px] tracking-[0.2em] text-foreground-faint transition-colors group-focus-within:text-primary";
 
 const fieldInputClass =
   "w-full border border-frame-soft bg-background/60 py-3 pr-4 pl-9 font-mono text-[13px] tracking-[0.06em] text-foreground outline-none transition focus:border-primary/70 focus:bg-background/90 focus:shadow-[0_0_0_1px_var(--accent-mark),0_0_28px_var(--accent-halo)]";
@@ -96,7 +132,7 @@ function FieldGlyph() {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 font-mono text-[11px] text-foreground-fainter transition-colors group-focus-within:text-primary/80"
+      className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 font-mono text-[12px] text-foreground-fainter transition-colors group-focus-within:text-primary/80"
     >
       ›
     </span>
@@ -150,7 +186,7 @@ function RfidScanner({
           </svg>
         </div>
         <div className="min-w-0">
-          <div className="font-mono text-[10px] tracking-[0.2em] text-primary-soft">
+          <div className="font-mono text-[12px] tracking-[0.17em] text-primary-soft">
             {title}
           </div>
           <p className="mt-1.5 text-xs leading-5 text-foreground-muted">{detail}</p>
@@ -173,6 +209,7 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
     dashboard,
     error,
     loginPending,
+    demoActive,
     rfidConnection,
     accessMessage,
     actions,
@@ -186,7 +223,7 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
         <EggEmblem />
         <div className="mt-8 text-center">
           <div className="kicker text-primary">SMART EGG · ENLACE LOCAL</div>
-          <p className="mt-5 font-mono text-[11px] tracking-[0.17em] text-foreground-muted">
+          <p className="mt-5 font-mono text-[12px] tracking-[0.16em] text-foreground-muted">
             VALIDANDO SESIÓN…
           </p>
           <div className="mx-auto mt-6 h-px w-32 overflow-hidden bg-divider">
@@ -209,7 +246,9 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
 
     return (
       <Shell>
-        <EggEmblem />
+        <DemoGesture onUnlock={actions.enterDemo}>
+          <EggEmblem />
+        </DemoGesture>
         <div className="mt-8">
           <GateKicker>SMART EGG · ACCESO TÉCNICO</GateKicker>
           <h1 className="mt-4 text-[26px] font-extralight tracking-[0.14em] text-foreground-bright">
@@ -233,7 +272,7 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
 
         <div className="mt-7 flex items-center gap-3" aria-hidden="true">
           <span className="h-px flex-1 bg-divider" />
-          <span className="font-mono text-[8px] tracking-[0.24em] text-foreground-fainter">
+          <span className="font-mono text-[11px] tracking-[0.17em] text-foreground-fainter">
             ACCESO MANUAL
           </span>
           <span className="h-px flex-1 bg-divider" />
@@ -280,7 +319,7 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
           <button
             type="submit"
             disabled={loginPending}
-            className="group relative w-full overflow-hidden border border-primary/60 bg-primary/15 px-5 py-3.5 font-mono text-[10px] tracking-[0.3em] text-primary-soft transition hover:border-primary hover:bg-primary/25 hover:text-foreground-bright hover:shadow-[0_0_32px_var(--accent-halo)] disabled:cursor-wait disabled:opacity-60"
+            className="group relative w-full overflow-hidden border border-primary/60 bg-primary/15 px-5 py-3.5 font-mono text-[12px] tracking-[0.25em] text-primary-soft transition hover:border-primary hover:bg-primary/25 hover:text-foreground-bright hover:shadow-[0_0_32px_var(--accent-halo)] disabled:cursor-wait disabled:opacity-60"
           >
             <span
               aria-hidden="true"
@@ -324,14 +363,14 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => void actions.refresh().catch(() => undefined)}
-            className="border border-primary/50 bg-primary/10 px-5 py-2.5 font-mono text-[9px] tracking-[0.2em] text-primary-soft transition hover:bg-primary/20"
+            className="border border-primary/50 bg-primary/10 px-5 py-2.5 font-mono text-[11px] tracking-[0.16em] text-primary-soft transition hover:bg-primary/20"
           >
             REINTENTAR
           </button>
           <button
             type="button"
             onClick={actions.logout}
-            className="border border-frame px-5 py-2.5 font-mono text-[9px] tracking-[0.2em] text-foreground-muted transition hover:border-hairline hover:text-foreground"
+            className="border border-frame px-5 py-2.5 font-mono text-[11px] tracking-[0.16em] text-foreground-muted transition hover:border-hairline hover:text-foreground"
           >
             CERRAR SESIÓN
           </button>
@@ -340,5 +379,12 @@ export function ConnectionGate({ children }: { children: ReactNode }) {
     );
   }
 
-  return children;
+  return demoActive ? (
+    <>
+      <div className="fixed right-3 bottom-3 z-[60] border border-primary/45 bg-background/95 px-3 py-2 font-mono text-[12px] tracking-[0.15em] text-primary shadow-lg backdrop-blur-sm">
+        MODO DEMO · DATOS DE EJEMPLO
+      </div>
+      {children}
+    </>
+  ) : children;
 }

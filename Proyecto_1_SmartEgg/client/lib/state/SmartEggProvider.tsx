@@ -41,6 +41,7 @@ import {
   type MqttCriticalAlarm,
 } from "@/lib/mqtt/messages";
 import { mqttWebSocketUrl } from "@/lib/mqtt/url";
+import { createDemoState, DEMO_AVAILABLE } from "./demo";
 import type {
   ComponentId,
   EggView,
@@ -128,6 +129,7 @@ export interface SmartEggActions {
   openDoorOperation: () => void;
   closeDoorOperation: () => void;
   login: (username: string, password: string) => Promise<void>;
+  enterDemo: () => void;
   logout: () => void;
   refresh: () => Promise<void>;
   downloadDailyReport: (day?: string) => Promise<string>;
@@ -143,6 +145,7 @@ export interface SmartEggContextValue extends ConsoleState {
   config: SmartEggConfig;
   critical: boolean;
   hydrated: boolean;
+  demoActive: boolean;
   technician: Technician | null;
   incubator: Incubator | null;
   dashboard: DashboardState | null;
@@ -223,6 +226,7 @@ export function SmartEggProvider({
 }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const [hydrated, setHydrated] = useState(false);
+  const [demoActive, setDemoActive] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [technician, setTechnician] = useState<Technician | null>(null);
   const [incubator, setIncubator] = useState<Incubator | null>(null);
@@ -270,6 +274,7 @@ export function SmartEggProvider({
   }, []);
 
   const logout = useCallback(() => {
+    setDemoActive(false);
     window.localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setTechnician(null);
@@ -283,6 +288,21 @@ export function SmartEggProvider({
     setCriticalAlarm(null);
     setError(null);
     dispatch({ type: "closeRegistration" });
+    updateConnection("offline");
+  }, [updateConnection]);
+
+  const enterDemo = useCallback(() => {
+    if (!DEMO_AVAILABLE) return;
+    const demo = createDemoState();
+    setDemoActive(true);
+    setTechnician(demo.technician);
+    setIncubator(demo.incubator);
+    setDashboard(demo.dashboard);
+    setLots(demo.lots);
+    setEggs(demo.eggs);
+    setSeries(demo.series);
+    setError(null);
+    setAccessMessage(null);
     updateConnection("offline");
   }, [updateConnection]);
 
@@ -307,7 +327,7 @@ export function SmartEggProvider({
   }, [updateConnection]);
 
   useEffect(() => {
-    if (!hydrated || technician) return;
+    if (!hydrated || technician || demoActive) return;
     const kioskKey = process.env.NEXT_PUBLIC_ACCESS_KIOSK_KEY;
     const incubatorCode =
       process.env.NEXT_PUBLIC_INCUBATOR_CODE?.trim() || "NODE-01";
@@ -352,9 +372,10 @@ export function SmartEggProvider({
       if (retryTimer !== null) window.clearTimeout(retryTimer);
       socket?.close();
     };
-  }, [acceptAuthentication, hydrated, technician]);
+  }, [acceptAuthentication, demoActive, hydrated, technician]);
 
   const refresh = useCallback(async () => {
+    if (demoActive) return;
     if (!token) return;
     if (!incubator) {
       const items = await api.incubators(token);
@@ -378,10 +399,10 @@ export function SmartEggProvider({
     setEggs(nextEggs);
     if (next.latest) applyReading(next.latest);
     setError(null);
-  }, [applyReading, incubator, token]);
+  }, [applyReading, demoActive, incubator, token]);
 
   useEffect(() => {
-    if (!token || !technician) return;
+    if (demoActive || !token || !technician) return;
     let cancelled = false;
 
     api
@@ -409,10 +430,10 @@ export function SmartEggProvider({
     return () => {
       cancelled = true;
     };
-  }, [technician, token, updateConnection]);
+  }, [demoActive, technician, token, updateConnection]);
 
   useEffect(() => {
-    if (!token || !technician || incubator) return;
+    if (demoActive || !token || !technician || incubator) return;
     let disposed = false;
     const retry = window.setInterval(() => {
       api
@@ -432,10 +453,10 @@ export function SmartEggProvider({
       disposed = true;
       window.clearInterval(retry);
     };
-  }, [incubator, technician, token, updateConnection]);
+  }, [demoActive, incubator, technician, token, updateConnection]);
 
   useEffect(() => {
-    if (!token || !incubator) return;
+    if (demoActive || !token || !incubator) return;
     let cancelled = false;
     Promise.all([
       api.state(incubator.id, token),
@@ -461,10 +482,10 @@ export function SmartEggProvider({
     return () => {
       cancelled = true;
     };
-  }, [incubator, token, updateConnection]);
+  }, [demoActive, incubator, token, updateConnection]);
 
   useEffect(() => {
-    if (!token || !incubator) return;
+    if (demoActive || !token || !incubator) return;
     let disposed = false;
     let socket: WebSocket | null = null;
     let retryTimer: number | null = null;
@@ -511,10 +532,10 @@ export function SmartEggProvider({
       if (retryTimer !== null) window.clearTimeout(retryTimer);
       socket?.close();
     };
-  }, [applyReading, incubator, logout, token, updateConnection]);
+  }, [applyReading, demoActive, incubator, logout, token, updateConnection]);
 
   useEffect(() => {
-    if (!token || !mqttNodeCode) return;
+    if (demoActive || !token || !mqttNodeCode) return;
 
     const mqttClient = mqtt.connect(mqttWebSocketUrl(), {
       clientId: `smartegg-web-${mqttNodeCode}-${Math.random().toString(16).slice(2, 10)}`,
@@ -575,10 +596,10 @@ export function SmartEggProvider({
       setMqttConnected(false);
       void mqttClient.endAsync(true);
     };
-  }, [mqttNodeCode, token]);
+  }, [demoActive, mqttNodeCode, token]);
 
   useEffect(() => {
-    if (!token || !incubator) return;
+    if (demoActive || !token || !incubator) return;
     let disposed = false;
     let timer: number | null = null;
 
@@ -606,7 +627,7 @@ export function SmartEggProvider({
       disposed = true;
       if (timer !== null) window.clearTimeout(timer);
     };
-  }, [incubator, refresh, token, updateConnection]);
+  }, [demoActive, incubator, refresh, token, updateConnection]);
 
   const login = useCallback(async (username: string, password: string) => {
     setLoginPending(true);
@@ -625,6 +646,9 @@ export function SmartEggProvider({
 
   const downloadDailyReport = useCallback(
     async (day?: string) => {
+      if (demoActive) {
+        throw new Error("El PDF real requiere backend; estás en modo demo.");
+      }
       if (!token || !incubator) {
         throw new Error("No hay una incubadora autenticada para generar el reporte");
       }
@@ -643,11 +667,16 @@ export function SmartEggProvider({
       window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
       return filename;
     },
-    [incubator, token],
+    [demoActive, incubator, token],
   );
 
   const updateIncubatorConfig = useCallback(
     async (payload: IncubatorConfigUpdate) => {
+      if (demoActive && dashboard) {
+        const updated = { ...dashboard.config, ...payload, updated_at: new Date().toISOString() };
+        setDashboard((current) => current ? { ...current, config: updated } : current);
+        return updated;
+      }
       if (!token || !incubator) {
         throw new Error("No hay una incubadora autenticada para configurar");
       }
@@ -658,21 +687,41 @@ export function SmartEggProvider({
       setError(null);
       return updated;
     },
-    [incubator, token],
+    [dashboard, demoActive, incubator, token],
   );
 
   const createLot = useCallback(
     async (payload: LotCreate) => {
+      if (demoActive) {
+        const created: Lot = {
+          id: Date.now(), ...payload, origin: payload.origin ?? null,
+          expected_hatch_on: payload.expected_hatch_on ?? null,
+          notes: payload.notes ?? null, status: "active",
+          created_at: new Date().toISOString(), egg_count: 0,
+        };
+        setLots((current) => [created, ...current]);
+        return created;
+      }
       if (!token) throw new Error("No hay una sesión autenticada");
       const created = await api.createLot(payload, token);
       setLots((current) => [created, ...current]);
       return created;
     },
-    [token],
+    [demoActive, token],
   );
 
   const registerEgg = useCallback(
     async (payload: EggCreate) => {
+      if (demoActive) {
+        const created: Egg = {
+          id: Date.now(), code: payload.code, lot_id: payload.lot_id,
+          incubator_id: payload.incubator_id, slot_number: payload.slot_number,
+          registered_at: payload.registered_at ?? new Date().toISOString(),
+          status: "incubating", notes: payload.notes ?? null,
+        };
+        setEggs((current) => [...current, created]);
+        return created;
+      }
       if (!token || !incubator) {
         throw new Error("No hay una incubadora autenticada");
       }
@@ -698,17 +747,27 @@ export function SmartEggProvider({
       );
       return created;
     },
-    [incubator, token],
+    [demoActive, incubator, token],
   );
 
   const createDoorEvent = useCallback(
     async (payload: DoorEventCreate) => {
+      if (demoActive) {
+        return {
+          id: Date.now(), incubator_id: incubator?.id ?? 1,
+          operator_id: technician?.id ?? 1, access_session_id: null,
+          access_method: "password" as const, event_type: payload.event_type,
+          opened_at: new Date().toISOString(), closed_at: null,
+          eggs_added: payload.eggs_added, eggs_removed: payload.eggs_removed,
+          notes: payload.notes ?? null, created_at: new Date().toISOString(),
+        };
+      }
       if (!token || !incubator) {
         throw new Error("No hay una sesión activa para operar la puerta");
       }
       return api.createDoorEvent(incubator.id, payload, token);
     },
-    [incubator, token],
+    [demoActive, incubator, technician, token],
   );
 
   const actions = useMemo<SmartEggActions>(
@@ -736,6 +795,7 @@ export function SmartEggProvider({
       openDoorOperation: () => dispatch({ type: "openDoorOperation" }),
       closeDoorOperation: () => dispatch({ type: "closeDoorOperation" }),
       login,
+      enterDemo,
       logout,
       refresh,
       downloadDailyReport,
@@ -748,6 +808,7 @@ export function SmartEggProvider({
       createLot,
       createDoorEvent,
       downloadDailyReport,
+      enterDemo,
       login,
       logout,
       refresh,
@@ -776,6 +837,7 @@ export function SmartEggProvider({
       config: effectiveConfig,
       critical,
       hydrated,
+      demoActive,
       technician,
       incubator,
       dashboard,
@@ -796,6 +858,7 @@ export function SmartEggProvider({
       effectiveConfig,
       critical,
       hydrated,
+      demoActive,
       technician,
       incubator,
       dashboard,
