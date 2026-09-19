@@ -54,8 +54,14 @@
     cursor: pointer;
   }
 
-  .console :focus-visible {
-    outline: 1px solid var(--color-primary);
-    outline-offset: 3px;
+  /* El foco se ve en toda la aplicación, no sólo en el plano: la pantalla
+     de acceso también se recorre con el tabulador. Dos píxeles y un halo
+     del color del fondo para que el anillo se lea sobre cualquier
+     superficie, clara u oscura. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    /* El halo rellena el hueco del `offset`, no invade lo que hay al lado. */
+    box-shadow: 0 0 0 2px var(--color-background);
   }
 }
