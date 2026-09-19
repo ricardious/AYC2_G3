@@ -21,10 +21,10 @@ export function CriticalAlertBanner() {
         glow={14}
         className="animate-pulse-alert"
       />
-      <div className="font-mono text-[9px] tracking-[0.24em] text-danger-soft">
+      <div className="font-mono text-[11px] tracking-[0.2em] text-danger-soft">
         ALERTA TÉRMICA
       </div>
-      <div className="font-mono text-[8px] tracking-[0.1em] text-danger-text">
+      <div className="font-mono text-[11px] tracking-[0.07em] text-danger-text">
         {detail}
       </div>
     </div>

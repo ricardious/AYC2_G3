@@ -18,7 +18,7 @@ export function EventFeed() {
           <EventRow key={`${event.time}-${event.kind}`} {...event} />
         ))}
         {events.length === 0 ? (
-          <li className="font-mono text-[8px] tracking-[0.15em] text-foreground-fainter">
+          <li className="font-mono text-[11px] tracking-[0.11em] text-foreground-fainter">
             SIN ALARMAS ACTIVAS
           </li>
         ) : null}

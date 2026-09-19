@@ -52,9 +52,9 @@ export function HumidityColumn() {
           <div className="text-[38px] leading-none font-light text-primary-soft">
             {humidity ?? "—"}
           </div>
-          <div className="font-mono text-[11px] text-primary">%</div>
+          <div className="font-mono text-[12px] text-primary">%</div>
         </div>
-        <div className="mt-3.5 font-mono text-[8px] leading-[1.9] tracking-[0.16em] text-foreground-faint">
+        <div className="mt-3.5 font-mono text-[11px] leading-[1.9] tracking-[0.12em] text-foreground-faint">
           <div>RANGO ÓPTIMO</div>
           <div className="text-foreground-muted">50 — 65 %</div>
           <div className="mt-2.5">VAPOR · NEBULIZADOR</div>

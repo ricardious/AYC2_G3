@@ -84,7 +84,7 @@ export function IncubatorChamber() {
           </g>
         </svg>
 
-        <div className="absolute inset-x-0 bottom-[66px] grid origin-[50%_90%] grid-cols-2 place-items-center gap-x-16 gap-y-2 px-[132px] transition-transform duration-[1200ms] ease-[cubic-bezier(.4,0,.2,1)] [transform:rotate(var(--tilt))]">
+        <div className="absolute inset-x-0 bottom-[66px] grid origin-[50%_90%] grid-cols-2 place-items-center gap-x-10 gap-y-2 px-[112px] transition-transform duration-[1200ms] ease-[cubic-bezier(.4,0,.2,1)] [transform:rotate(var(--tilt))]">
           {eggs.map((egg) => (
             <ChamberEgg
               key={egg.id}
@@ -122,7 +122,7 @@ export function IncubatorChamber() {
       </div>
 
       <div className="chamber-plate absolute right-11 bottom-11 left-11 flex h-11 items-center justify-between border border-frame-soft px-3.5">
-        <div className="font-mono text-[8px] tracking-[0.2em] text-foreground-faint">
+        <div className="font-mono text-[11px] tracking-[0.15em] text-foreground-faint">
           SMART EGG · INCUBADORA DIGITAL
         </div>
         <div aria-hidden="true" className="flex gap-1.5">
