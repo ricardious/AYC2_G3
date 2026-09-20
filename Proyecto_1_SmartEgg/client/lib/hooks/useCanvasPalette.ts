@@ -8,6 +8,8 @@ export function useCanvasPalette() {
     foreground: "rgb(140,150,160)",
     warning: "rgb(220,150,60)",
     danger: "rgb(230,70,70)",
+    /** Sobre papel el trazo necesita más cuerpo que sobre la cámara oscura. */
+    light: false,
   });
   useEffect(() => {
     const sync = () => {
@@ -24,11 +26,21 @@ export function useCanvasPalette() {
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
         return `rgb(${r},${g},${b})`;
       };
+      const background = color("background")
+        .slice(4, -1)
+        .split(",")
+        .map(Number);
       setPalette({
         primary: color("primary"),
         foreground: color("foreground"),
         warning: color("warning"),
         danger: color("danger"),
+        light:
+          (0.2126 * background[0] +
+            0.7152 * background[1] +
+            0.0722 * background[2]) /
+            255 >
+          0.5,
       });
       probe.remove();
     };
