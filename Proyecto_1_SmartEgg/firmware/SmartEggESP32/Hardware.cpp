@@ -42,6 +42,10 @@ uint8_t lcdBacklightMask = kLcdBacklight;
 
 portMUX_TYPE interruptMux = portMUX_INITIALIZER_UNLOCKED;
 portMUX_TYPE dhtMux = portMUX_INITIALIZER_UNLOCKED;
+// 3 ticks garantizan 20 ms reales, por encima del minimo de 18 ms del DHT11.
+constexpr uint32_t kDhtStartPulseMs = 30;
+constexpr uint32_t kDhtResponseTimeoutUs = 100;
+constexpr uint32_t kDhtPulseTimeoutUs = 200;
 volatile bool powerSwitchPending = false;
 volatile bool powerSwitchRequestedOn = false;
 volatile bool doorInterruptPending = false;
@@ -261,10 +265,59 @@ void initializeLcd() {
   reportLcdDiagnostics();
 }
 
+// El DHT es mudo cuando falla, asi que cada lectura fallida viaja con la etapa
+// exacta donde murio: 1 = el sensor nunca bajo la linea, 2 = saludo invalido,
+// 3 = se corto a media trama, 4 = checksum. IDLE distingue un bus en corto.
+void reportDhtDiagnostics(uint8_t stage, int idleLevel, int drivenLevel,
+                          uint32_t responseLowUs,
+                          uint32_t responseHighUs, uint8_t bitsRead,
+                          const uint8_t* data) {
+  // Una falla sostenida repetiria el diagnostico cada 2 s, asi que despues de
+  // la primera solo se emite una de cada 30 lecturas (~1 min).
+  static uint32_t failures = 0;
+  const bool verbose = failures == 0 || failures % 30 == 0;
+  ++failures;
+  if (!verbose) {
+    return;
+  }
+  char line[160];
+  const int length = snprintf(
+      line, sizeof(line),
+      "DIAG:DHT,STAGE:%u,IDLE:%d,DRIVEN:%d,RESP_LOW:%u,RESP_HIGH:%u,BITS:%u,"
+      "RAW:%02X%02X%02X%02X%02X\n",
+      static_cast<unsigned>(stage), idleLevel, drivenLevel,
+      static_cast<unsigned>(responseLowUs),
+      static_cast<unsigned>(responseHighUs),
+      static_cast<unsigned>(bitsRead), data[0], data[1], data[2], data[3],
+      data[4]);
+  if (length > 0) {
+    const size_t bounded = static_cast<size_t>(length) < sizeof(line)
+                               ? static_cast<size_t>(length)
+                               : sizeof(line) - 1;
+    uart_write_bytes(UART_NUM_0, line, bounded);
+  }
+}
+
+// Espera a que la linea alcance el nivel indicado. El DHT11 tarda entre 20 y
+// 40 us en responder tras liberarse el bus, de modo que hay que consumir ese
+// tramo antes de empezar a medir el saludo de 80 us + 80 us.
+bool awaitDhtLevel(int level, uint32_t timeoutUs) {
+  const int64_t startUs = esp_timer_get_time();
+  while (gpio_get_level(gpio(config::kDhtPin)) != level) {
+    if (static_cast<uint32_t>(esp_timer_get_time() - startUs) > timeoutUs) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Mide cuanto dura el nivel actual. Devuelve 0 si se agota el tiempo: los
+// pulsos utiles del protocolo van de 26 us a 80 us, asi que 0 solo aparece
+// cuando el sensor dejo de responder.
 uint32_t expectDhtPulse(int level) {
   const int64_t startUs = esp_timer_get_time();
   while (gpio_get_level(gpio(config::kDhtPin)) == level) {
-    if (esp_timer_get_time() - startUs > 120) {
+    if (esp_timer_get_time() - startUs > kDhtPulseTimeoutUs) {
       return 0;
     }
   }
@@ -375,25 +428,53 @@ uint8_t countOccupiedSlots() {
 
 bool readDht(float& temperatureC, float& humidityPct) {
   uint8_t data[5] = {};
-  gpio_set_direction(gpio(config::kDhtPin), GPIO_MODE_OUTPUT);
+  // Nivel en reposo: si no es 1 la linea esta forzada a masa y el sensor nunca
+  // podra emitir, asi que conviene distinguirlo de un fallo de temporizacion.
+  const int idleLevel = gpio_get_level(gpio(config::kDhtPin));
+  uint32_t responseLowUs = 0;
+  uint32_t responseHighUs = 0;
+  uint8_t bitsRead = 0;
+  uint8_t stage = 0;
+  // INPUT_OUTPUT deja la ruta de entrada viva mientras se maneja el pin, lo
+  // que permite releer el pulso de arranque y confirmar que la linea si baja.
+  gpio_set_direction(gpio(config::kDhtPin), GPIO_MODE_INPUT_OUTPUT);
   gpio_set_level(gpio(config::kDhtPin), 0);
-  vTaskDelay(pdMS_TO_TICKS(20));
+  esp_rom_delay_us(5);
+  const int drivenLevel = gpio_get_level(gpio(config::kDhtPin));
+  // El DHT11 exige un pulso de arranque de 18 ms como minimo. vTaskDelay
+  // redondea al tick del planificador (10 ms con CONFIG_FREERTOS_HZ=100), de
+  // modo que pedir 20 ms podia resolverse en 10 ms y dejar al sensor mudo.
+  vTaskDelay(pdMS_TO_TICKS(kDhtStartPulseMs));
+  // La respuesta del sensor dura apenas 160 us, asi que la seccion critica
+  // abre antes de soltar la linea: si el planificador se lleva la CPU entre la
+  // liberacion y la escucha, la trama entera pasa desapercibida.
+  bool valid = true;
+  portENTER_CRITICAL(&dhtMux);
   gpio_set_level(gpio(config::kDhtPin), 1);
   esp_rom_delay_us(30);
   gpio_set_direction(gpio(config::kDhtPin), GPIO_MODE_INPUT);
 
-  bool valid = true;
-  portENTER_CRITICAL(&dhtMux);
-  if (expectDhtPulse(0) == 0 || expectDhtPulse(1) == 0) {
+  if (!awaitDhtLevel(0, kDhtResponseTimeoutUs)) {
     valid = false;
+    stage = 1;
   } else {
+    responseLowUs = expectDhtPulse(0);
+    responseHighUs = expectDhtPulse(1);
+    if (responseLowUs == 0 || responseHighUs == 0) {
+      valid = false;
+      stage = 2;
+    }
+  }
+  if (valid) {
     for (uint8_t bit = 0; bit < 40; ++bit) {
       const uint32_t lowUs = expectDhtPulse(0);
       const uint32_t highUs = expectDhtPulse(1);
       if (lowUs == 0 || highUs == 0) {
         valid = false;
+        stage = 3;
         break;
       }
+      bitsRead = static_cast<uint8_t>(bit + 1);
       data[bit / 8] <<= 1;
       if (highUs > lowUs) {
         data[bit / 8] |= 1;
@@ -401,8 +482,16 @@ bool readDht(float& temperatureC, float& humidityPct) {
     }
   }
   portEXIT_CRITICAL(&dhtMux);
-  if (!valid || data[4] != static_cast<uint8_t>(data[0] + data[1] +
-                                                data[2] + data[3])) {
+  const bool checksumOk =
+      data[4] ==
+      static_cast<uint8_t>(data[0] + data[1] + data[2] + data[3]);
+  if (valid && !checksumOk) {
+    stage = 4;
+  }
+  if (!valid || !checksumOk) {
+    reportDhtDiagnostics(stage, idleLevel, drivenLevel, responseLowUs,
+                         responseHighUs,
+                         bitsRead, data);
     return false;
   }
 
