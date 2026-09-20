@@ -239,7 +239,7 @@
     [ "relayHeater:IN", "esp:26", "orange", [ "h90", "v-265", "*" ] ],
     [ "relayFan:IN", "esp:27", "orange", [ "h100", "v-345", "*" ] ],
     [ "buzzer1:2", "esp:14", "orange", [ "h110", "v-448", "*" ] ],
-    [ "dht1:SDA", "esp:13", "green", [ "h120", "v-509", "*" ] ],
+    [ "dht1:SDA", "esp:15", "green", [ "h120", "v-509", "*" ] ],
     [ "servoLock:GND", "servoTray:GND", "black", [ "h19", "v140", "*" ] ],
     [ "servoTray:GND", "relayHeater:GND", "black", [ "h144", "v95.4" ] ],
     [ "relayHeater:GND", "relayFan:GND", "black", [ "h19", "v90", "*" ] ],
