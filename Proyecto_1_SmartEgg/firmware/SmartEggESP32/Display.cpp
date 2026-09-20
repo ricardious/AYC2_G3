@@ -125,7 +125,7 @@ uint8_t uploadedFanFrame = 0xFF;
 uint8_t uploadedAlarmFrame = 0xFF;
 
 const char kFaultMarquee[] =
-    "Revise DATA en GPIO13, 3.3V y GND comun.   ";
+    "Revise DATA en GPIO15, 3.3V y GND comun.   ";
 constexpr uint8_t kFaultMarqueeLength = sizeof(kFaultMarquee) - 1;
 
 // ------------------------------------------------------------- Compositing
