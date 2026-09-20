@@ -9,7 +9,7 @@ namespace config {
 // external pull-ups documented in firmware/README.md.
 constexpr uint8_t kRfidSsPin = 5;
 constexpr uint8_t kRfidRstPin = 4;
-constexpr uint8_t kDhtPin = 13;
+constexpr uint8_t kDhtPin = 15;
 constexpr uint8_t kHeaterRelayPin = 26;
 constexpr uint8_t kFanRelayPin = 27;
 constexpr uint8_t kBuzzerPin = 14;
