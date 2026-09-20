@@ -56,7 +56,7 @@ Para realizar el cableado físico terminal por terminal, consulte la
 | 23 | RC522 MOSI |
 | 4 | RC522 RST |
 | 21 / 22 | LCD SDA / SCL |
-| 13 | DHT11 |
+| 15 | DHT11 |
 | 26 / 27 | Relé de calefacción / ventilador |
 | 14 | Buzzer activo |
 | 25 | Servo de bandeja |
