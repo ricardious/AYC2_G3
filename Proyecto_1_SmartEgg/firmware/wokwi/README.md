@@ -63,7 +63,7 @@ trazado explícito para rodear en lugar de atravesar.
 | ESP32 DevKit C v4 | — | Wokwi no trae la DevKit V1; los GPIO son los mismos |
 | RC522 | SS 5 · RST 4 · SCK 18 · MISO 19 · MOSI 23 | Clic en el lector para presentar una tarjeta |
 | LCD 1602 I2C | SDA 21 · SCL 22 | Dirección `0x27` |
-| DHT | DATA 13 | Ver la limitación más abajo |
+| DHT | DATA 15 | Ver la limitación más abajo |
 | Servo bandeja | 25 | |
 | Servo cerradura | 33 | |
 | Relés calefacción / ventilador | 26 / 27 | Activos en bajo (`transistor: pnp`) |
