@@ -117,6 +117,8 @@ export type IncubatorConfigUpdate = Omit<
 >;
 
 export interface TelemetryReading {
+  system_enabled?: boolean | null;
+  sensor_ok?: boolean | null;
   id: number;
   incubator_id: number;
   temperature_c: number;
