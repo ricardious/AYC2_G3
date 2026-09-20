@@ -38,7 +38,7 @@ Fuente externa 5 V ──> servos     │
 | RC522 datos desde ESP32 | MOSI | GPIO 23 |
 | LCD I2C datos | SDA | GPIO 21 |
 | LCD I2C reloj | SCL | GPIO 22 |
-| DHT11 datos | DATA/S | GPIO 13 |
+| DHT11 datos | DATA/S | GPIO 15 |
 | Relé calefacción | IN | GPIO 26 |
 | Relé ventilador | IN | GPIO 27 |
 | Buzzer activo | señal/+ | GPIO 14 |
@@ -93,13 +93,13 @@ Con la rejilla azul hacia usted, los pines normalmente son:
 | Pin | Conexión |
 |---:|---|
 | 1 | 3V3 |
-| 2 | GPIO 13 |
+| 2 | GPIO 15 |
 | 3 | Sin conectar |
 | 4 | GND |
 
 Coloque una resistencia de 10 kΩ entre el pin 1 (`3V3`) y el pin 2 (`DATA`).
 Si utiliza un módulo DHT11 de tres pines, conecte `VCC` a 3V3, `DATA/S` a GPIO
-13 y `GND` a GND; normalmente el módulo ya trae la resistencia.
+15 y `GND` a GND; normalmente el módulo ya trae la resistencia.
 
 ## 6. Final de carrera de la puerta
 
