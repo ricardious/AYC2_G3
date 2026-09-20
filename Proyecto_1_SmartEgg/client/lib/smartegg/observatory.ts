@@ -16,6 +16,8 @@ export interface ObservatoryState {
   foreground: string;
   warning: string;
   danger: string;
+  /** El tema claro necesita trazos más opacos para leerse igual. */
+  light: boolean;
 }
 
 /** Perspectiva 2D ilustrativa: no pretende modelar la distribución física del calor. */
@@ -58,14 +60,21 @@ export function observatorySketch(
         : s.layer === "temperature"
           ? thermal
           : s.primary;
+      // Los alfas están calibrados sobre la cámara oscura; sobre papel el
+      // mismo trazo desaparece, así que el tema claro los refuerza.
+      const boost = s.light ? 1.8 : 1;
       const ink = (color: string, alpha: number) => {
         const c = p.color(color);
-        c.setAlpha(alpha);
+        c.setAlpha(Math.min(255, alpha * boost));
         return c;
       };
       p.push();
       p.translate(p.width / 2, p.height * 0.61);
-      p.scale(Math.min(p.width / 690, p.height / 760));
+      // La escena se encoge para caber; los rótulos se dividen por el mismo
+      // factor para que lleguen al ojo siempre al mismo cuerpo.
+      const zoom = Math.min(p.width / 690, p.height / 760);
+      const labelSize = 13 / zoom;
+      p.scale(zoom);
       const project = (x: number, y: number, z: number): [number, number] => [
         x * 0.86 - y * 0.72,
         x * 0.32 + y * 0.42 - z,
@@ -139,9 +148,9 @@ export function observatorySketch(
           p.arc(-4, -46, 31, 60, Math.PI, Math.PI * 1.55);
         }
         p.noStroke();
-        p.fill(ink(s.foreground, 180));
+        p.fill(ink(s.foreground, 225));
         p.textFont("monospace");
-        p.textSize(10);
+        p.textSize(labelSize);
         p.textAlign(p.CENTER);
         p.text(`0${i + 1}`, 0, 25);
         p.pop();
@@ -186,11 +195,11 @@ export function observatorySketch(
       }
       p.pop();
       p.noStroke();
-      p.fill(ink(s.foreground, 150));
-      p.textSize(10);
+      p.fill(ink(s.foreground, 215));
+      p.textSize(labelSize);
       p.textAlign(p.LEFT);
       p.text("SMART EGG / 01", -260, 172);
-      p.fill(ink(accent, 210));
+      p.fill(ink(accent, 235));
       p.text(s.live ? "● SEÑAL ACTIVA" : "○ ÚLTIMA LECTURA", 115, 172);
       p.pop();
     };
