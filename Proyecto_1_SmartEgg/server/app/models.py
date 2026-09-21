@@ -220,6 +220,8 @@ class TelemetryReading(Base):
     )
     temperature_c: Mapped[float] = mapped_column(Float)
     humidity_pct: Mapped[float] = mapped_column(Float)
+    system_enabled: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    sensor_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     door_open: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     occupied_slots: Mapped[int] = mapped_column(Integer)
     available_slots: Mapped[int] = mapped_column(Integer)
