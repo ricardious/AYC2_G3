@@ -87,6 +87,8 @@ def parse_serial_line(line: str, default_incubator_code: str) -> TelemetryCreate
             "FAN": "fan",
             "SERVO": "servo_angle",
             "BUZZER": "buzzer",
+            "POWER": "system_enabled",
+            "SENSOR": "sensor_ok",
             "NODE": "incubator_code",
         }
         for fragment in raw.split(","):
@@ -95,7 +97,14 @@ def parse_serial_line(line: str, default_incubator_code: str) -> TelemetryCreate
                 raise ValueError(f"Invalid serial fragment: {fragment}")
             normalized = aliases.get(key.strip().upper(), key.strip().lower())
             value = value.strip()
-            if normalized in {"door_open", "heater", "fan", "buzzer"}:
+            if normalized in {
+                "door_open",
+                "heater",
+                "fan",
+                "buzzer",
+                "system_enabled",
+                "sensor_ok",
+            }:
                 data[normalized] = value.lower() in {"1", "true", "on", "open"}
             elif normalized == "incubator_code":
                 data[normalized] = value

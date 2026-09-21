@@ -134,6 +134,8 @@ def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
         temperature_c=payload.temperature_c,
         humidity_pct=payload.humidity_pct,
         door_open=payload.door_open,
+        system_enabled=payload.system_enabled,
+        sensor_ok=payload.sensor_ok,
         occupied_slots=occupied_slots,
         available_slots=incubator.capacity - occupied_slots,
         source=payload.source,
