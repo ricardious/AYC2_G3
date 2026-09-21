@@ -197,6 +197,8 @@ class TelemetryCreate(BaseModel):
     incubator_code: str
     temperature_c: float = Field(ge=-40, le=125)
     humidity_pct: float = Field(ge=0, le=100)
+    system_enabled: bool | None = None
+    sensor_ok: bool | None = None
     door_open: bool | None = None
     occupied_slots: int | None = Field(default=None, ge=0)
     heater: bool | None = None
@@ -209,6 +211,8 @@ class TelemetryCreate(BaseModel):
 
 
 class TelemetryRead(ORMModel):
+    system_enabled: bool | None = None
+    sensor_ok: bool | None = None
     id: int
     incubator_id: int
     temperature_c: float
