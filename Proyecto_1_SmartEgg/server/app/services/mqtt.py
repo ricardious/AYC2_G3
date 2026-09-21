@@ -31,6 +31,8 @@ class MqttSnapshot:
     servo_angle: float | None
     buzzer: bool
     critical_alarm: dict[str, object] | None
+    system_enabled: bool | None = None
+    sensor_ok: bool | None = None
 
 
 def build_mqtt_snapshot(
@@ -64,6 +66,8 @@ def build_mqtt_snapshot(
         temperature_c=reading.temperature_c,
         humidity_pct=reading.humidity_pct,
         door_open=reading.door_open,
+        system_enabled=reading.system_enabled,
+        sensor_ok=reading.sensor_ok,
         occupied_slots=reading.occupied_slots,
         available_slots=reading.available_slots,
         recorded_at=reading.recorded_at,
@@ -184,6 +188,8 @@ class MqttPublisher:
                 "temperature_c": snapshot.temperature_c,
                 "humidity_pct": snapshot.humidity_pct,
                 "door_open": snapshot.door_open,
+                "system_enabled": snapshot.system_enabled,
+                "sensor_ok": snapshot.sensor_ok,
                 "occupied_slots": snapshot.occupied_slots,
                 "available_slots": snapshot.available_slots,
                 "recorded_at": recorded_at,
