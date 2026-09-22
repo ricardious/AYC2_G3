@@ -4,7 +4,11 @@ from sqlalchemy import select
 from app.main import create_app
 from app.models import AccessSession, DoorEvent
 from app.services.serial_access import process_serial_access_event
-from app.services.serial_bridge import parse_serial_access_event, parse_serial_line
+from app.services.serial_bridge import (
+    SerialBridge,
+    parse_serial_access_event,
+    parse_serial_line,
+)
 
 
 def test_parse_json_serial_message() -> None:
@@ -28,6 +32,25 @@ def test_parse_key_value_serial_message() -> None:
 def test_reject_invalid_serial_message() -> None:
     with pytest.raises(ValueError):
         parse_serial_line("garbage", "NODE-01")
+
+
+def test_serial_bridge_keeps_freshest_telemetry_when_queue_is_full() -> None:
+    bridge = SerialBridge(
+        enabled=False,
+        port=None,
+        baudrate=115200,
+        timeout=0.1,
+        reconnect_seconds=0.1,
+        default_incubator_code="NODE-01",
+        on_payload=lambda payload: None,
+    )
+    for temperature in range(1, 6):
+        bridge._enqueue_payload(  # noqa: SLF001 - verifies bounded queue policy
+            parse_serial_line(f"TEMP:{temperature},HUM:60", "NODE-01")
+        )
+
+    queued = [bridge._payload_queue.get_nowait() for _ in range(4)]  # noqa: SLF001
+    assert [payload.temperature_c for payload in queued] == [2, 3, 4, 5]
 
 
 def test_parse_rfid_serial_event() -> None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import queue
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -143,6 +144,8 @@ class SerialBridge:
         self._serial: serial.Serial | None = None
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
+        self._payload_thread: threading.Thread | None = None
+        self._payload_queue: queue.Queue[TelemetryCreate] = queue.Queue(maxsize=4)
         self._write_lock = threading.Lock()
 
     def start(self) -> None:
@@ -153,6 +156,12 @@ class SerialBridge:
         ):
             return
         self._stop.clear()
+        self._payload_thread = threading.Thread(
+            target=self._process_payloads,
+            name="smartegg-telemetry",
+            daemon=True,
+        )
+        self._payload_thread.start()
         self._thread = threading.Thread(
             target=self._run, name="smartegg-serial", daemon=True
         )
@@ -164,7 +173,39 @@ class SerialBridge:
             self._serial.close()
         if self._thread:
             self._thread.join(timeout=2)
+        if self._payload_thread:
+            self._payload_thread.join(timeout=2)
         self.connected = False
+
+    def _enqueue_payload(self, payload: TelemetryCreate) -> None:
+        try:
+            self._payload_queue.put_nowait(payload)
+            return
+        except queue.Full:
+            # Keep the freshest sensor state instead of building a backlog that
+            # delays RFID reads when a cloud database is temporarily slow.
+            try:
+                self._payload_queue.get_nowait()
+                self._payload_queue.task_done()
+            except queue.Empty:
+                pass
+        try:
+            self._payload_queue.put_nowait(payload)
+        except queue.Full:
+            pass
+
+    def _process_payloads(self) -> None:
+        while not self._stop.is_set():
+            try:
+                payload = self._payload_queue.get(timeout=0.1)
+            except queue.Empty:
+                continue
+            try:
+                self.on_payload(payload)
+            except Exception as exc:
+                self.last_error = f"Rejected telemetry callback: {exc}"
+            finally:
+                self._payload_queue.task_done()
 
     def _run(self) -> None:
         while not self._stop.is_set():
@@ -199,7 +240,7 @@ class SerialBridge:
                             payload = parse_serial_line(
                                 line, self.default_incubator_code
                             )
-                            self.on_payload(payload)
+                            self._enqueue_payload(payload)
                             self.last_message_at = datetime.now(UTC)
                             self.last_error = None
                         except Exception as exc:
