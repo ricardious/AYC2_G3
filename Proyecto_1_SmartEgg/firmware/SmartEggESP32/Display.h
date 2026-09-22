@@ -7,6 +7,14 @@
 namespace smartegg {
 namespace display {
 
+enum class AccessFeedback : uint8_t {
+  kReading,
+  kGranted,
+  kDenied,
+  kTimeout,
+  kReaderError,
+};
+
 // Loads the CGRAM glyph set and plays the boot animation after LCD startup.
 void initialize();
 
@@ -15,6 +23,11 @@ void initialize();
 // tick it every config::kDisplayFramePeriodMs. When nothing moves on screen it
 // costs zero I2C traffic.
 void render(const SystemState& state);
+
+// Temporarily replaces the operational screen with animated RFID feedback.
+// This function is safe to call from the communication task while render()
+// runs on the sensor/control task.
+void showAccessFeedback(AccessFeedback feedback, uint32_t durationMs);
 
 // Forces the next render to repaint all 32 cells.
 void invalidate();

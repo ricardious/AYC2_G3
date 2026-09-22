@@ -126,3 +126,17 @@ sequenceDiagram
 El servo vuelve a la posición bloqueada si la puerta no se abre durante 15 segundos.
 La telemetría, el UID RFID y los eventos de puerta utilizan exclusivamente UART/USB a
 115200 baud; el ESP32 no usa Wi-Fi ni HTTP.
+
+Durante el flujo RFID, el LCD 16×2 reemplaza temporalmente la pantalla ambiental con
+mensajes animados y luego vuelve por sí solo a la vista anterior:
+
+| Estado | Mensaje en el LCD | Animación |
+|---|---|---|
+| Tarjeta detectada | `TARJETA LEIDA` / `Verificando...` | Indicador giratorio y puntos progresivos |
+| Autorizada | `ACCESO PERMITIDO` / `ABRA LA PUERTA` | Flechas laterales intermitentes |
+| Rechazada | `ACCESO DENEGADO` / `NO AUTORIZADO` | Cruces laterales intermitentes |
+| Backend sin respuesta | `SIN RESPUESTA` / `INTENTE DE NUEVO` | Indicador giratorio |
+| RC522 no inicializado | `ERROR LECTOR` / `REVISE RC522` | Signos de alerta intermitentes |
+
+Las animaciones no introducen esperas bloqueantes: avanzan con el ciclo normal de
+refresco del LCD mientras las tareas de control y comunicación continúan ejecutándose.
