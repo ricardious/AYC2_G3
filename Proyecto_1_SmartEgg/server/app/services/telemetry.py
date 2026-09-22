@@ -247,6 +247,7 @@ def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
     _upsert_actuator(db, incubator.id, "fan", fan)
     _upsert_actuator(db, incubator.id, "buzzer", buzzer)
     if payload.servo_angle is not None:
+        rotation_angle = round(abs(payload.servo_angle))
         previous_servo = db.scalar(
             select(ActuatorState).where(
                 ActuatorState.incubator_id == incubator.id,
@@ -255,11 +256,14 @@ def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
         )
         previous_angle = previous_servo.value if previous_servo else None
         _upsert_actuator(db, incubator.id, "servo", True, payload.servo_angle)
-        if previous_angle is None or previous_angle != payload.servo_angle:
+        if (
+            1 <= rotation_angle <= 90
+            and (previous_angle is None or previous_angle != payload.servo_angle)
+        ):
             db.add(
                 RotationEvent(
                     incubator_id=incubator.id,
-                    angle_degrees=round(abs(payload.servo_angle)),
+                    angle_degrees=rotation_angle,
                     direction="right" if payload.servo_angle >= 0 else "left",
                     source="automatic"
                     if payload.source == "serial"

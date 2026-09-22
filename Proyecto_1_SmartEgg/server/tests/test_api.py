@@ -348,6 +348,19 @@ def test_configuration_commands_and_additional_technician(
 def test_websocket_receives_live_telemetry(
     client: TestClient, auth_headers: dict[str, str], incubator: dict
 ) -> None:
+    initial_position = client.post(
+        "/api/v1/telemetry",
+        headers=auth_headers,
+        json={
+            "incubator_code": incubator["code"],
+            "temperature_c": 37.5,
+            "humidity_pct": 56,
+            "servo_angle": 0,
+            "source": "simulator",
+        },
+    )
+    assert initial_position.status_code == 201
+
     token = auth_headers["Authorization"].removeprefix("Bearer ")
     websocket_url = f"/api/v1/ws/incubators/{incubator['id']}?token={token}"
     with client.websocket_connect(websocket_url) as websocket:
@@ -374,5 +387,6 @@ def test_websocket_receives_live_telemetry(
     rotations = client.get(
         f"/api/v1/incubators/{incubator['id']}/rotations", headers=auth_headers
     ).json()
+    assert len(rotations) == 1
     assert rotations[0]["angle_degrees"] == 45
     assert rotations[0]["direction"] == "left"
