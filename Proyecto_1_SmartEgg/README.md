@@ -315,6 +315,14 @@ Luego iniciamos los servicios:
 docker compose -f docker-compose.yml -f docker-compose.serial.yml up -d --build
 ```
 
+Después de reiniciar Linux o reconectar la ESP32, Docker puede conservar el número
+interno anterior del dispositivo USB. Este comando espera al CP2102 y recrea solo el
+backend con el dispositivo actual:
+
+```bash
+./scripts/start-hardware.sh
+```
+
 ### Base de datos
 
 El backend usa PostgreSQL local cuando `DATABASE_URL` está vacía:
