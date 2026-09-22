@@ -1,3 +1,15 @@
-# Rules shared by authenticated SmartEgg clients.
-pattern read $SYS/#
-pattern readwrite smartegg/#
+# Backend publisher. It is the only account allowed to write application topics.
+user smartegg
+topic read $SYS/#
+topic readwrite smartegg/#
+
+# Browser client. Only the three real-time channels consumed by the console.
+user smartegg-frontend
+topic read smartegg/+/alarmas/critica
+topic read smartegg/+/status
+topic read smartegg/+/actuadores/estado
+
+# Grafana datasource. Read-only access to every SmartEgg measurement.
+user smartegg-grafana
+topic read $SYS/#
+topic read smartegg/#

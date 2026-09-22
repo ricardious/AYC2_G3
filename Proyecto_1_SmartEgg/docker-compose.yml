@@ -8,17 +8,18 @@ services:
       - |
         set -eu
         umask 077
-        if [ -f /mosquitto/secrets/passwords ]; then
-          mosquitto_passwd -b /mosquitto/secrets/passwords \
-            "$$MQTT_USERNAME" "$$MQTT_PASSWORD"
-        else
-          mosquitto_passwd -b -c /mosquitto/secrets/passwords \
-            "$$MQTT_USERNAME" "$$MQTT_PASSWORD"
-        fi
+        rm -f /mosquitto/secrets/passwords
+        mosquitto_passwd -b -c /mosquitto/secrets/passwords \
+          smartegg "$$MQTT_PASSWORD"
+        mosquitto_passwd -b /mosquitto/secrets/passwords \
+          smartegg-frontend "$$MQTT_FRONTEND_PASSWORD"
+        mosquitto_passwd -b /mosquitto/secrets/passwords \
+          smartegg-grafana "$$MQTT_GRAFANA_PASSWORD"
         chown 1883:1883 /mosquitto/secrets/passwords
     environment:
-      MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
       MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+      MQTT_FRONTEND_PASSWORD: ${MQTT_FRONTEND_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
+      MQTT_GRAFANA_PASSWORD: ${MQTT_GRAFANA_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
     volumes:
       - mosquitto_secrets:/mosquitto/secrets
 
@@ -29,7 +30,7 @@ services:
       mqtt-password-init:
         condition: service_completed_successfully
     environment:
-      MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
+      MQTT_USERNAME: smartegg
       MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
     ports:
       - "${MQTT_PORT:-1883}:1883"
@@ -105,7 +106,7 @@ services:
       SMARTEGG_MQTT_ENABLED: "true"
       SMARTEGG_MQTT_HOST: broker
       SMARTEGG_MQTT_PORT: 1883
-      SMARTEGG_MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
+      SMARTEGG_MQTT_USERNAME: smartegg
       SMARTEGG_MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
       SMARTEGG_MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-smartegg-backend}
     ports:
@@ -146,8 +147,8 @@ services:
       GRAFANA_POSTGRES_USER: ${GRAFANA_DB_USER:-grafana_reader}
       GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_DB_PASSWORD:?Define GRAFANA_DB_PASSWORD in .env}
       GRAFANA_MQTT_URI: ${GRAFANA_MQTT_URI:-tcp://broker:1883}
-      GRAFANA_MQTT_USERNAME: ${MQTT_USERNAME:-smartegg}
-      GRAFANA_MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+      GRAFANA_MQTT_USERNAME: smartegg-grafana
+      GRAFANA_MQTT_PASSWORD: ${MQTT_GRAFANA_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
     ports:
       - "${GRAFANA_PORT:-3001}:3000"
     volumes:
