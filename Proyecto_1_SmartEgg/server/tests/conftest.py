@@ -61,7 +61,7 @@ def operator_headers(
         json={
             "username": "operador1",
             "full_name": "Operador de Prueba",
-            "role": "operator_1",
+            "role": "operator",
             "rfid_uid": "A1:B2:C3:D4",
             "password": "operador-seguro",
         },

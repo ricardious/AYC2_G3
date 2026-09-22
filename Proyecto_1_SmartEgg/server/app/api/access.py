@@ -100,7 +100,7 @@ async def authorize_rfid(
     if (
         technician is None
         or not technician.is_active
-        or technician.role not in {"operator_1", "operator_2"}
+        or technician.role != "operator"
         or db.get(TechnicianIncubator, (technician.id, incubator.id)) is None
     ):
         raise HTTPException(status_code=401, detail="RFID card is not authorized")

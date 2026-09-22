@@ -19,7 +19,7 @@ export function createDemoState() {
     full_name: "Operador de demostración",
     age: null,
     gender: null,
-    role: "operator_1",
+    role: "operator",
     rfid_uid: null,
     is_active: true,
     created_at: recordedAt,

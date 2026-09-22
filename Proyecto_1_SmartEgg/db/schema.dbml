@@ -4,7 +4,7 @@ Table technicians {
   full_name varchar(120) [not null]
   age integer
   gender varchar(30)
-  role varchar(20) [not null, note: 'operator_1, operator_2, admin']
+  role varchar(20) [not null, note: 'operator, admin']
   rfid_uid varchar(20) [unique, note: 'UID hexadecimal normalizado']
   password_hash varchar(255) [not null]
   is_active boolean [not null]

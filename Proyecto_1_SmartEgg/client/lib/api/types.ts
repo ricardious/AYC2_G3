@@ -4,7 +4,7 @@ export interface Technician {
   full_name: string;
   age: number | null;
   gender: string | null;
-  role: "operator_1" | "operator_2" | "admin";
+  role: "operator" | "admin";
   rfid_uid: string | null;
   is_active: boolean;
   created_at: string;
@@ -19,7 +19,7 @@ export interface TechnicianCreate {
   full_name: string;
   age?: number | null;
   gender?: string | null;
-  role: "operator_1" | "operator_2" | "admin";
+  role: "operator" | "admin";
   rfid_uid?: string | null;
   password: string;
 }

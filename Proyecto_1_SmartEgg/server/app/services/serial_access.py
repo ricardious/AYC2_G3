@@ -70,7 +70,7 @@ def _authorize_rfid(
     if (
         technician is None
         or not technician.is_active
-        or technician.role not in {"operator_1", "operator_2"}
+        or technician.role != "operator"
         or db.get(TechnicianIncubator, (technician.id, incubator.id)) is None
     ):
         denied = _deny(event, "card_not_authorized", settings)

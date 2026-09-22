@@ -13,7 +13,7 @@ class InitialTechnician(BaseModel):
     full_name: str = Field(min_length=3, max_length=120)
     age: int | None = Field(default=None, ge=1, le=120)
     gender: str | None = Field(default=None, min_length=1, max_length=30)
-    role: str = Field(default="operator_1", pattern=r"^(operator_1|operator_2|admin)$")
+    role: str = Field(default="operator", pattern=r"^(operator|admin)$")
     rfid_uid: str | None = Field(default=None, min_length=8, max_length=29)
     password: str = Field(min_length=8, max_length=128)
 
