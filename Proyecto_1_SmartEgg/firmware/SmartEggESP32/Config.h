@@ -59,7 +59,9 @@ constexpr uint8_t kMarqueeFrameDivider = 2;
 constexpr uint16_t kTelemetryPeriodMs = 2000;
 constexpr uint16_t kPowerSwitchDebounceMs = 250;
 constexpr uint32_t kRfidCooldownMs = 2000UL;
-constexpr uint32_t kAccessAuthorizationTimeoutMs = 5000UL;
+// Neon may need a few seconds to resume after being idle. Keep the RFID request
+// alive long enough for a cold database response without blocking other tasks.
+constexpr uint32_t kAccessAuthorizationTimeoutMs = 15000UL;
 constexpr uint32_t kUnlockTimeoutMs = 15000UL;
 
 constexpr uint8_t kSplashLetterMs = 40;
