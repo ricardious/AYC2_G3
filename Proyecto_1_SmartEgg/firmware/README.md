@@ -123,7 +123,9 @@ sequenceDiagram
     E->>E: Servo bloquea
 ```
 
-El servo vuelve a la posición bloqueada si la puerta no se abre durante 15 segundos.
+El ESP32 espera hasta 15 segundos la autorización del backend para tolerar el arranque
+en frío de la base de datos Neon. El servo vuelve a la posición bloqueada si la puerta
+no se abre durante 15 segundos después de recibir la autorización.
 La telemetría, el UID RFID y los eventos de puerta utilizan exclusivamente UART/USB a
 115200 baud; el ESP32 no usa Wi-Fi ni HTTP.
 
