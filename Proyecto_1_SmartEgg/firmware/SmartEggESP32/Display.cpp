@@ -1,5 +1,6 @@
 #include "Display.h"
 
+#include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <stdlib.h>
@@ -112,11 +113,20 @@ bool displayHardwareReady = false;
 uint8_t composingRow = 0;
 uint8_t forcedRowsMask = (1U << config::kLcdRows) - 1U;
 
-enum class Screen : uint8_t { kBoot, kRunning, kDisabled, kSensorFault };
+enum class Screen : uint8_t {
+  kBoot,
+  kRunning,
+  kDisabled,
+  kSensorFault,
+  kAccess,
+};
 
 Screen currentScreen = Screen::kBoot;
 uint8_t animationFrame = 0;
 uint8_t marqueeOffset = 0;
+portMUX_TYPE accessFeedbackMux = portMUX_INITIALIZER_UNLOCKED;
+AccessFeedback activeAccessFeedback = AccessFeedback::kReading;
+int64_t accessFeedbackExpiresAtUs = 0;
 
 // Last bitmap pushed to CGRAM for each animated slot; 0xFF means "unknown", so
 // the next visible frame is uploaded even if its index happens to match.
@@ -277,6 +287,65 @@ void composeSensorFault(const SystemState& state) {
   }
 }
 
+void composeAccessFeedback(AccessFeedback feedback) {
+  static const char kSpinner[] = {'|', '/', '-', '\\'};
+  const uint8_t phase = animationFrame % 4;
+
+  switch (feedback) {
+    case AccessFeedback::kReading: {
+      putText(0, 1, "TARJETA LEIDA");
+      put(1, 0, kSpinner[phase]);
+      putText(1, 2, "Verificando");
+      const uint8_t dots = static_cast<uint8_t>((phase % 3) + 1);
+      for (uint8_t index = 0; index < dots; ++index) {
+        put(1, static_cast<uint8_t>(13 + index), '.');
+      }
+      break;
+    }
+    case AccessFeedback::kGranted:
+      putText(0, 0, "ACCESO PERMITIDO");
+      putText(1, 1, "ABRA LA PUERTA");
+      put(1, 0, (phase & 1U) == 0 ? '>' : ' ');
+      put(1, 15, (phase & 1U) == 0 ? '<' : ' ');
+      break;
+    case AccessFeedback::kDenied:
+      putText(0, 0, "ACCESO DENEGADO");
+      putText(1, 1, "NO AUTORIZADO");
+      if ((phase & 1U) == 0) {
+        put(1, 0, 'X');
+        put(1, 15, 'X');
+      }
+      break;
+    case AccessFeedback::kTimeout:
+      putText(0, 1, "SIN RESPUESTA");
+      putText(1, 0, "INTENTE DE NUEVO");
+      put(0, 14, kSpinner[phase]);
+      break;
+    case AccessFeedback::kReaderError:
+      putText(0, 2, "ERROR LECTOR");
+      putText(1, 2, "REVISE RC522");
+      if ((phase & 1U) == 0) {
+        put(0, 0, '!');
+        put(0, 15, '!');
+      }
+      break;
+  }
+}
+
+bool copyActiveAccessFeedback(AccessFeedback& feedback) {
+  const int64_t nowUs = esp_timer_get_time();
+  bool active = false;
+  portENTER_CRITICAL(&accessFeedbackMux);
+  if (accessFeedbackExpiresAtUs > nowUs) {
+    feedback = activeAccessFeedback;
+    active = true;
+  } else {
+    accessFeedbackExpiresAtUs = 0;
+  }
+  portEXIT_CRITICAL(&accessFeedbackMux);
+  return active;
+}
+
 // ------------------------------------------------------------------- Output
 bool backBufferShows(uint8_t glyph) {
   for (uint8_t column = 0; column < config::kLcdColumns; ++column) {
@@ -433,6 +502,15 @@ void initialize() {
   currentScreen = Screen::kBoot;
 }
 
+void showAccessFeedback(AccessFeedback feedback, uint32_t durationMs) {
+  const int64_t expiresAtUs =
+      esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000LL;
+  portENTER_CRITICAL(&accessFeedbackMux);
+  activeAccessFeedback = feedback;
+  accessFeedbackExpiresAtUs = expiresAtUs;
+  portEXIT_CRITICAL(&accessFeedbackMux);
+}
+
 void render(const SystemState& state) {
   if (!displayHardwareReady) {
     return;
@@ -440,8 +518,13 @@ void render(const SystemState& state) {
 
   ++animationFrame;
 
+  AccessFeedback accessFeedback = AccessFeedback::kReading;
+  const bool accessFeedbackActive = copyActiveAccessFeedback(accessFeedback);
+
   Screen screen;
-  if (!state.systemEnabled) {
+  if (accessFeedbackActive) {
+    screen = Screen::kAccess;
+  } else if (!state.systemEnabled) {
     screen = Screen::kDisabled;
   } else if (!state.sensorOk) {
     screen = Screen::kSensorFault;
@@ -471,6 +554,9 @@ void render(const SystemState& state) {
         break;
       case Screen::kSensorFault:
         composeSensorFault(state);
+        break;
+      case Screen::kAccess:
+        composeAccessFeedback(accessFeedback);
         break;
       default:
         composeRunning(state);

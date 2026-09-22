@@ -3,6 +3,7 @@
 #include <esp_timer.h>
 
 #include "Config.h"
+#include "Display.h"
 #include "Hardware.h"
 #include "RfidReader.h"
 #include "SerialProtocol.h"
@@ -33,6 +34,8 @@ void pollRfid(uint32_t now) {
   lastRfidAtMs = now;
   authorizationPending = true;
   authorizationRequestedAtMs = now;
+  display::showAccessFeedback(display::AccessFeedback::kReading,
+                              config::kAccessAuthorizationTimeoutMs);
   emitRfidAccessRequest(uid);
 }
 
@@ -44,6 +47,7 @@ void expirePendingAuthorization(uint32_t now) {
   }
   authorizationPending = false;
   setAccessAngle(config::kAccessLockedDegrees);
+  display::showAccessFeedback(display::AccessFeedback::kTimeout, 2500);
 }
 
 void pollDoorSession(uint32_t now) {
@@ -74,7 +78,11 @@ void pollDoorSession(uint32_t now) {
 
 }  // namespace
 
-void initializeAccessControl() { initializeRfidReader(); }
+void initializeAccessControl() {
+  if (!initializeRfidReader()) {
+    display::showAccessFeedback(display::AccessFeedback::kReaderError, 5000);
+  }
+}
 
 void pollAccessControl() {
   const uint32_t now = milliseconds();
@@ -91,6 +99,7 @@ void handleAccessAuthorization(bool authorized, int sessionId,
   authorizationPending = false;
   if (!authorized || sessionId <= 0) {
     setAccessAngle(config::kAccessLockedDegrees);
+    display::showAccessFeedback(display::AccessFeedback::kDenied, 2500);
     return;
   }
 
@@ -98,6 +107,7 @@ void handleAccessAuthorization(bool authorized, int sessionId,
   doorWasOpened = false;
   unlockedAtMs = milliseconds();
   setAccessAngle(servoAngle);
+  display::showAccessFeedback(display::AccessFeedback::kGranted, 3000);
 }
 
 void handleAccessLock() {
