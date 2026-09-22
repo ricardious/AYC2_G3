@@ -51,6 +51,29 @@ class Technician(Base):
         DateTime(timezone=True), default=utcnow
     )
 
+    incubator_assignments: Mapped[list[TechnicianIncubator]] = relationship(
+        back_populates="technician", cascade="all, delete-orphan"
+    )
+
+
+class TechnicianIncubator(Base):
+    __tablename__ = "technician_incubators"
+
+    technician_id: Mapped[int] = mapped_column(
+        ForeignKey("technicians.id", ondelete="CASCADE"), primary_key=True
+    )
+    incubator_id: Mapped[int] = mapped_column(
+        ForeignKey("incubators.id", ondelete="CASCADE"), primary_key=True
+    )
+    assigned_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow
+    )
+
+    technician: Mapped[Technician] = relationship(
+        back_populates="incubator_assignments"
+    )
+    incubator: Mapped[Incubator] = relationship(back_populates="technician_assignments")
+
 
 class Incubator(Base):
     __tablename__ = "incubators"
@@ -70,6 +93,9 @@ class Incubator(Base):
     )
 
     config: Mapped[IncubatorConfig] = relationship(
+        back_populates="incubator", cascade="all, delete-orphan"
+    )
+    technician_assignments: Mapped[list[TechnicianIncubator]] = relationship(
         back_populates="incubator", cascade="all, delete-orphan"
     )
 
@@ -137,11 +163,15 @@ class Lot(Base):
     expected_hatch_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(30), default="active", index=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by_id: Mapped[int | None] = mapped_column(
+        ForeignKey("technicians.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
     )
 
     eggs: Mapped[list[Egg]] = relationship(back_populates="lot")
+    created_by: Mapped[Technician | None] = relationship()
 
 
 class Egg(Base):
@@ -174,9 +204,13 @@ class Egg(Base):
     )
     status: Mapped[str] = mapped_column(String(30), default="incubating", index=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    registered_by_id: Mapped[int | None] = mapped_column(
+        ForeignKey("technicians.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     lot: Mapped[Lot] = relationship(back_populates="eggs")
     incubator: Mapped[Incubator] = relationship()
+    registered_by: Mapped[Technician | None] = relationship()
 
 
 class Sensor(Base):
@@ -421,4 +455,36 @@ class RotationEvent(Base):
     source: Mapped[str] = mapped_column(String(20), default="automatic")
     performed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
+    )
+
+
+class ReportExport(Base):
+    __tablename__ = "report_exports"
+    __table_args__ = (
+        CheckConstraint(
+            "scope IN ('personal', 'operator', 'global')", name="ck_report_export_scope"
+        ),
+        Index("ix_report_export_generated_by_at", "generated_by_id", "generated_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    incubator_id: Mapped[int] = mapped_column(
+        ForeignKey("incubators.id", ondelete="CASCADE"), index=True
+    )
+    generated_by_id: Mapped[int] = mapped_column(
+        ForeignKey("technicians.id", ondelete="RESTRICT"), index=True
+    )
+    subject_operator_id: Mapped[int | None] = mapped_column(
+        ForeignKey("technicians.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    scope: Mapped[str] = mapped_column(String(20))
+    report_day: Mapped[date] = mapped_column(Date, index=True)
+    generated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+    incubator: Mapped[Incubator] = relationship()
+    generated_by: Mapped[Technician] = relationship(foreign_keys=[generated_by_id])
+    subject_operator: Mapped[Technician | None] = relationship(
+        foreign_keys=[subject_operator_id]
     )

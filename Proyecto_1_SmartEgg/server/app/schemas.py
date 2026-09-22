@@ -49,6 +49,28 @@ class TechnicianRead(ORMModel):
     created_at: datetime
 
 
+class TechnicianUpdate(BaseModel):
+    full_name: str | None = Field(default=None, min_length=3, max_length=120)
+    age: int | None = Field(default=None, ge=1, le=120)
+    gender: str | None = Field(default=None, min_length=1, max_length=30)
+    rfid_uid: str | None = None
+    is_active: bool | None = None
+
+    _normalize_rfid_uid = field_validator("rfid_uid", mode="before")(normalize_rfid_uid)
+
+
+class TechnicianAssignments(BaseModel):
+    incubator_ids: list[int] = Field(default_factory=list, max_length=100)
+
+
+class TechnicianWithAssignments(TechnicianRead):
+    incubator_ids: list[int] = Field(default_factory=list)
+
+
+class AdminStatus(BaseModel):
+    exists: bool
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -144,6 +166,7 @@ class LotRead(ORMModel):
     notes: str | None
     created_at: datetime
     egg_count: int = 0
+    created_by_id: int | None = None
 
 
 class EggCreate(BaseModel):
@@ -170,6 +193,7 @@ class EggRead(ORMModel):
     ended_at: datetime | None
     status: str
     notes: str | None
+    registered_by_id: int | None = None
 
 
 class Occupancy(BaseModel):
@@ -414,3 +438,36 @@ class AccessSessionCommandResult(BaseModel):
     session: AccessSessionRead
     servo_action: Literal["lock"] = "lock"
     servo_angle: int
+
+
+class ReportExportRead(ORMModel):
+    id: int
+    incubator_id: int
+    generated_by_id: int
+    subject_operator_id: int | None
+    scope: str
+    report_day: date
+    generated_at: datetime
+
+
+class DiagnosticSummary(BaseModel):
+    operator_id: int | None
+    operator_name: str
+    role: str
+    from_at: datetime
+    to_at: datetime
+    incubator_ids: list[int]
+    telemetry_samples: int
+    temperature_min_c: float | None
+    temperature_max_c: float | None
+    temperature_avg_c: float | None
+    humidity_min_pct: float | None
+    humidity_max_pct: float | None
+    humidity_avg_pct: float | None
+    access_sessions: int
+    door_events: int
+    eggs_added: int
+    eggs_removed: int
+    registered_eggs: int
+    acknowledged_alarms: int
+    generated_reports: int

@@ -28,8 +28,7 @@ def auth_headers(client: TestClient) -> dict[str, str]:
         json={
             "username": "tecnico1",
             "full_name": "Técnico de Prueba",
-            "role": "operator_1",
-            "rfid_uid": "A1:B2:C3:D4",
+            "role": "admin",
             "password": "segura123",
         },
     )
@@ -50,3 +49,33 @@ def incubator(client: TestClient, auth_headers: dict[str, str]) -> dict:
     )
     assert response.status_code == 201, response.text
     return response.json()
+
+
+@pytest.fixture
+def operator_headers(
+    client: TestClient, auth_headers: dict[str, str], incubator: dict
+) -> dict[str, str]:
+    created = client.post(
+        "/api/v1/auth/technicians",
+        headers=auth_headers,
+        json={
+            "username": "operador1",
+            "full_name": "Operador de Prueba",
+            "role": "operator_1",
+            "rfid_uid": "A1:B2:C3:D4",
+            "password": "operador-seguro",
+        },
+    )
+    assert created.status_code == 201, created.text
+    assigned = client.put(
+        f"/api/v1/auth/technicians/{created.json()['id']}/incubators",
+        headers=auth_headers,
+        json={"incubator_ids": [incubator["id"]]},
+    )
+    assert assigned.status_code == 200, assigned.text
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"username": "operador1", "password": "operador-seguro"},
+    )
+    assert login.status_code == 200
+    return {"Authorization": f"Bearer {login.json()['access_token']}"}

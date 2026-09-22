@@ -8,7 +8,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..config import Settings
-from ..models import AccessSession, DoorEvent, Incubator, Technician
+from ..models import (
+    AccessSession,
+    DoorEvent,
+    Incubator,
+    Technician,
+    TechnicianIncubator,
+)
 from ..security import create_access_token_for_settings
 from .serial_bridge import SerialAccessEvent
 
@@ -65,6 +71,7 @@ def _authorize_rfid(
         technician is None
         or not technician.is_active
         or technician.role not in {"operator_1", "operator_2"}
+        or db.get(TechnicianIncubator, (technician.id, incubator.id)) is None
     ):
         denied = _deny(event, "card_not_authorized", settings)
         return replace(denied, incubator_id=incubator.id)

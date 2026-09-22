@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -12,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from .config import Settings
 from .database import get_db
-from .models import AccessSession, Technician
+from .models import AccessSession, Technician, TechnicianIncubator
 
 password_hash = PasswordHash.recommended()
 bearer = HTTPBearer(auto_error=False)
@@ -87,6 +88,59 @@ def get_current_technician(
     technician = resolve_token_technician(db, payload)
     technician._access_session_id = payload.get("sid")
     return technician
+
+
+def require_roles(*roles: str) -> Callable[..., Technician]:
+    def dependency(
+        technician: Technician = Depends(get_current_technician),
+    ) -> Technician:
+        if technician.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions for this operation",
+            )
+        return technician
+
+    return dependency
+
+
+require_admin = require_roles("admin")
+require_operator = require_roles("operator_1", "operator_2")
+
+
+def technician_incubator_ids(db: Session, technician: Technician) -> list[int]:
+    if technician.role == "admin":
+        from .models import Incubator
+
+        return list(db.scalars(select(Incubator.id).order_by(Incubator.id)))
+    return list(
+        db.scalars(
+            select(TechnicianIncubator.incubator_id)
+            .where(TechnicianIncubator.technician_id == technician.id)
+            .order_by(TechnicianIncubator.incubator_id)
+        )
+    )
+
+
+def ensure_incubator_access(
+    db: Session, technician: Technician, incubator_id: int
+) -> None:
+    if technician.role == "admin":
+        return
+    assignment = db.get(TechnicianIncubator, (technician.id, incubator_id))
+    if assignment is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Technician is not assigned to this incubator",
+        )
+
+
+def ensure_owner_or_admin(technician: Technician, owner_id: int | None) -> None:
+    if technician.role != "admin" and owner_id != technician.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This resource belongs to another operator",
+        )
 
 
 def resolve_token_technician(db: Session, payload: dict[str, object]) -> Technician:

@@ -51,8 +51,8 @@ def test_reject_invalid_rfid_serial_event() -> None:
         parse_serial_access_event("RFID:not-a-card", "NODE-01")
 
 
-def test_rfid_serial_access_lifecycle(client, auth_headers, incubator) -> None:
-    del auth_headers, incubator
+def test_rfid_serial_access_lifecycle(client, operator_headers, incubator) -> None:
+    del operator_headers, incubator
     settings = client.app.state.settings
     session_factory = client.app.state.session_factory
 

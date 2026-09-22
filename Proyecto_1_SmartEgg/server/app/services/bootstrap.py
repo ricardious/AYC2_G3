@@ -6,7 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from ..config import InitialIncubator, InitialTechnician
-from ..models import ActuatorState, Incubator, IncubatorConfig, Technician
+from ..models import (
+    ActuatorState,
+    Incubator,
+    IncubatorConfig,
+    Technician,
+)
 from ..security import hash_password
 
 logger = logging.getLogger(__name__)

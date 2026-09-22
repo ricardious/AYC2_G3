@@ -6,7 +6,13 @@ from sqlalchemy import select
 
 from app.api.door_events import close_door_event, create_door_event
 from app.database import Base, build_session_factory, create_engine
-from app.models import DoorEvent, Incubator, IncubatorConfig, Technician
+from app.models import (
+    DoorEvent,
+    Incubator,
+    IncubatorConfig,
+    Technician,
+    TechnicianIncubator,
+)
 from app.schemas import DoorEventClose, DoorEventCreate, TelemetryCreate
 from app.services.telemetry import ingest_telemetry
 
@@ -30,6 +36,10 @@ def test_door_event_records_operator_and_egg_movement(tmp_path) -> None:
         db.commit()
         db.refresh(operator)
         db.refresh(incubator)
+        db.add(
+            TechnicianIncubator(technician_id=operator.id, incubator_id=incubator.id)
+        )
+        db.commit()
 
         event = create_door_event(
             incubator_id=incubator.id,
@@ -55,6 +65,7 @@ def test_door_event_records_operator_and_egg_movement(tmp_path) -> None:
             event_id=event.id,
             payload=DoorEventClose(closed_at=datetime.now(UTC)),
             db=db,
+            technician=operator,
         )
         assert closed.closed_at is not None
         assert db.scalar(select(DoorEvent).where(DoorEvent.id == event.id)) is closed

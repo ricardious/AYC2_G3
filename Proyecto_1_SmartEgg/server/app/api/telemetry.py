@@ -16,9 +16,15 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Incubator, TelemetryReading
+from ..models import Incubator, Technician, TelemetryReading
 from ..schemas import SerialStatus, TelemetryCreate, TelemetryRead, TelemetryStats
-from ..security import decode_token, get_current_technician, resolve_token_technician
+from ..security import (
+    decode_token,
+    ensure_incubator_access,
+    get_current_technician,
+    require_admin,
+    resolve_token_technician,
+)
 from ..services.mqtt import build_mqtt_snapshot
 from ..services.telemetry import ingest_telemetry
 
@@ -28,7 +34,7 @@ router = APIRouter(tags=["telemetry"])
 @router.get(
     "/serial/status",
     response_model=SerialStatus,
-    dependencies=[Depends(get_current_technician)],
+    dependencies=[Depends(require_admin)],
 )
 def serial_status(request: Request) -> SerialStatus:
     bridge = request.app.state.serial_bridge
@@ -71,8 +77,11 @@ async def create_reading(
     dependencies=[Depends(get_current_technician)],
 )
 def latest_reading(
-    incubator_id: int, db: Session = Depends(get_db)
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
 ) -> TelemetryReading:
+    ensure_incubator_access(db, technician, incubator_id)
     reading = db.scalar(
         select(TelemetryReading)
         .where(TelemetryReading.incubator_id == incubator_id)
@@ -94,9 +103,11 @@ def telemetry_history(
     to_at: datetime | None = None,
     limit: int = Query(default=500, ge=1, le=5000),
     db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
 ) -> list[TelemetryReading]:
     if db.get(Incubator, incubator_id) is None:
         raise HTTPException(status_code=404, detail="Incubator not found")
+    ensure_incubator_access(db, technician, incubator_id)
     query = select(TelemetryReading).where(
         TelemetryReading.incubator_id == incubator_id
     )
@@ -119,9 +130,11 @@ def telemetry_stats(
     from_at: datetime | None = None,
     to_at: datetime | None = None,
     db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
 ) -> TelemetryStats:
     if db.get(Incubator, incubator_id) is None:
         raise HTTPException(status_code=404, detail="Incubator not found")
+    ensure_incubator_access(db, technician, incubator_id)
     end = to_at or datetime.now(UTC)
     start = from_at or end - timedelta(hours=24)
     if start >= end:
@@ -165,13 +178,18 @@ async def live_telemetry(
         return
     with websocket.app.state.session_factory() as db:
         try:
-            resolve_token_technician(db, payload)
+            technician = resolve_token_technician(db, payload)
         except HTTPException:
             await websocket.close(code=4401, reason="Inactive access session")
             return
         incubator = db.get(Incubator, incubator_id)
         if incubator is None:
             await websocket.close(code=4404, reason="Incubator not found")
+            return
+        try:
+            ensure_incubator_access(db, technician, incubator_id)
+        except HTTPException:
+            await websocket.close(code=4403, reason="Incubator access denied")
             return
     manager = websocket.app.state.broadcast
     await manager.connect(incubator_id, websocket)

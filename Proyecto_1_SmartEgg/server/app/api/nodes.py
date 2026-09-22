@@ -29,7 +29,12 @@ from ..schemas import (
     SensorRead,
     SensorUpdate,
 )
-from ..security import get_current_technician
+from ..security import (
+    ensure_incubator_access,
+    get_current_technician,
+    require_admin,
+    technician_incubator_ids,
+)
 
 router = APIRouter(
     prefix="/incubators",
@@ -47,7 +52,9 @@ def get_incubator_or_404(db: Session, incubator_id: int) -> Incubator:
 
 @router.post("", response_model=IncubatorRead, status_code=status.HTTP_201_CREATED)
 def create_incubator(
-    payload: IncubatorCreate, db: Session = Depends(get_db)
+    payload: IncubatorCreate,
+    db: Session = Depends(get_db),
+    _admin: Technician = Depends(require_admin),
 ) -> Incubator:
     incubator = Incubator(**payload.model_dump())
     incubator.config = IncubatorConfig()
@@ -67,17 +74,33 @@ def create_incubator(
 
 
 @router.get("", response_model=list[IncubatorRead])
-def list_incubators(db: Session = Depends(get_db)) -> list[Incubator]:
-    return list(db.scalars(select(Incubator).order_by(Incubator.code)))
+def list_incubators(
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> list[Incubator]:
+    query = select(Incubator)
+    if technician.role != "admin":
+        query = query.where(Incubator.id.in_(technician_incubator_ids(db, technician)))
+    return list(db.scalars(query.order_by(Incubator.code)))
 
 
 @router.get("/{incubator_id}", response_model=IncubatorRead)
-def get_incubator(incubator_id: int, db: Session = Depends(get_db)) -> Incubator:
+def get_incubator(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> Incubator:
+    ensure_incubator_access(db, technician, incubator_id)
     return get_incubator_or_404(db, incubator_id)
 
 
 @router.get("/{incubator_id}/config", response_model=IncubatorConfigRead)
-def get_config(incubator_id: int, db: Session = Depends(get_db)) -> IncubatorConfig:
+def get_config(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> IncubatorConfig:
+    ensure_incubator_access(db, technician, incubator_id)
     return get_incubator_or_404(db, incubator_id).config
 
 
@@ -87,6 +110,7 @@ def update_config(
     incubator_id: int,
     request: Request,
     db: Session = Depends(get_db),
+    _admin: Technician = Depends(require_admin),
 ) -> IncubatorConfig:
     config = get_incubator_or_404(db, incubator_id).config
     for key, value in payload.model_dump().items():
@@ -104,7 +128,12 @@ def update_config(
 
 
 @router.get("/{incubator_id}/sensors", response_model=list[SensorRead])
-def list_sensors(incubator_id: int, db: Session = Depends(get_db)) -> list[Sensor]:
+def list_sensors(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> list[Sensor]:
+    ensure_incubator_access(db, technician, incubator_id)
     get_incubator_or_404(db, incubator_id)
     return list(
         db.scalars(
@@ -121,6 +150,7 @@ def update_sensor(
     incubator_id: int,
     sensor_id: int,
     db: Session = Depends(get_db),
+    _admin: Technician = Depends(require_admin),
 ) -> Sensor:
     sensor = db.scalar(
         select(Sensor).where(
@@ -137,8 +167,11 @@ def update_sensor(
 
 @router.get("/{incubator_id}/actuators", response_model=list[ActuatorRead])
 def list_actuators(
-    incubator_id: int, db: Session = Depends(get_db)
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
 ) -> list[ActuatorState]:
+    ensure_incubator_access(db, technician, incubator_id)
     get_incubator_or_404(db, incubator_id)
     return list(
         db.scalars(
@@ -156,6 +189,7 @@ def command_actuator(
     kind: str,
     request: Request,
     db: Session = Depends(get_db),
+    _admin: Technician = Depends(require_admin),
 ) -> ActuatorState:
     if kind not in {"heater", "fan", "servo", "buzzer"}:
         raise HTTPException(status_code=422, detail="Unknown actuator kind")
@@ -191,7 +225,9 @@ def list_alarms(
     active_only: bool = False,
     limit: int = 100,
     db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
 ) -> list[Alarm]:
+    ensure_incubator_access(db, technician, incubator_id)
     get_incubator_or_404(db, incubator_id)
     query = select(Alarm).where(Alarm.incubator_id == incubator_id)
     if active_only:
@@ -210,6 +246,7 @@ def acknowledge_alarm(
     db: Session = Depends(get_db),
     technician: Technician = Depends(get_current_technician),
 ) -> Alarm:
+    ensure_incubator_access(db, technician, incubator_id)
     alarm = db.scalar(
         select(Alarm).where(Alarm.id == alarm_id, Alarm.incubator_id == incubator_id)
     )
@@ -223,7 +260,12 @@ def acknowledge_alarm(
 
 
 @router.get("/{incubator_id}/state", response_model=DashboardState)
-def dashboard_state(incubator_id: int, db: Session = Depends(get_db)) -> DashboardState:
+def dashboard_state(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> DashboardState:
+    ensure_incubator_access(db, technician, incubator_id)
     incubator = get_incubator_or_404(db, incubator_id)
     latest = db.scalar(
         select(TelemetryReading)

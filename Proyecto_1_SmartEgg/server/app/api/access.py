@@ -18,7 +18,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import AccessSession, DoorEvent, Incubator, Technician
+from ..models import (
+    AccessSession,
+    DoorEvent,
+    Incubator,
+    Technician,
+    TechnicianIncubator,
+)
 from ..schemas import (
     AccessSessionCommandResult,
     AccessSessionRead,
@@ -95,6 +101,7 @@ async def authorize_rfid(
         technician is None
         or not technician.is_active
         or technician.role not in {"operator_1", "operator_2"}
+        or db.get(TechnicianIncubator, (technician.id, incubator.id)) is None
     ):
         raise HTTPException(status_code=401, detail="RFID card is not authorized")
 

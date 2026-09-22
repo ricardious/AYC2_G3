@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from ..models import (
     Alarm,
+    DoorEvent,
     Egg,
     Incubator,
     Lot,
@@ -49,6 +50,7 @@ def build_daily_report(
     day: date,
     logo_path: Path | None,
     timezone_name: str,
+    subject_operator: Technician | None = None,
 ) -> bytes:
     start, end = _day_bounds(day, timezone_name)
     readings = list(
@@ -62,7 +64,7 @@ def build_daily_report(
             .order_by(TelemetryReading.recorded_at)
         ).all()
     )
-    lots = db.execute(
+    lots_query = (
         select(Lot.code, Lot.species, Lot.started_on, func.count(Egg.id))
         .join(Egg, Egg.lot_id == Lot.id)
         .where(
@@ -72,18 +74,18 @@ def build_daily_report(
         )
         .group_by(Lot.id)
         .order_by(Lot.code)
-    ).all()
-    alarms = list(
-        db.scalars(
-            select(Alarm)
-            .where(
-                Alarm.incubator_id == incubator.id,
-                Alarm.occurred_at >= start,
-                Alarm.occurred_at < end,
-            )
-            .order_by(Alarm.occurred_at)
-        ).all()
     )
+    if subject_operator is not None:
+        lots_query = lots_query.where(Lot.created_by_id == subject_operator.id)
+    lots = db.execute(lots_query).all()
+    alarm_query = select(Alarm).where(
+        Alarm.incubator_id == incubator.id,
+        Alarm.occurred_at >= start,
+        Alarm.occurred_at < end,
+    )
+    if subject_operator is not None:
+        alarm_query = alarm_query.where(Alarm.acknowledged_by_id == subject_operator.id)
+    alarms = list(db.scalars(alarm_query.order_by(Alarm.occurred_at)).all())
     rotations = int(
         db.scalar(
             select(func.count(RotationEvent.id)).where(
@@ -94,6 +96,17 @@ def build_daily_report(
         )
         or 0
     )
+    operation_filters = [
+        DoorEvent.incubator_id == incubator.id,
+        DoorEvent.opened_at >= start,
+        DoorEvent.opened_at < end,
+    ]
+    if subject_operator is not None:
+        operation_filters.append(DoorEvent.operator_id == subject_operator.id)
+    operations = int(
+        db.scalar(select(func.count(DoorEvent.id)).where(*operation_filters)) or 0
+    )
+    report_technician = subject_operator or technician
 
     output = BytesIO()
     pdf = canvas.Canvas(output, pagesize=A4)
@@ -102,7 +115,7 @@ def build_daily_report(
     _draw_overview(
         pdf,
         incubator=incubator,
-        technician=technician,
+        technician=report_technician,
         day=day,
         logo_path=logo_path,
         timezone_name=timezone_name,
@@ -110,13 +123,14 @@ def build_daily_report(
         lots=lots,
         alarms=alarms,
         rotations=rotations,
+        operations=operations,
     )
 
     if len(lots) > 4 or len(alarms) > 5:
         _draw_appendix(
             pdf,
             incubator=incubator,
-            technician=technician,
+            technician=report_technician,
             day=day,
             timezone_name=timezone_name,
             lots=lots,
@@ -139,6 +153,7 @@ def _draw_overview(
     lots: list,
     alarms: list[Alarm],
     rotations: int,
+    operations: int,
 ) -> None:
     _page_background(pdf)
     _draw_brand(pdf, logo_path)
@@ -169,7 +184,7 @@ def _draw_overview(
             ("FECHA", day.strftime("%d / %m / %Y")),
             ("TÉCNICO", _ellipsize(technician.full_name.upper(), 22)),
             ("OCUPACIÓN", f"{occupied} / {incubator.capacity} HUEVOS"),
-            ("ROTACIONES", str(rotations)),
+            ("OPERACIONES", str(operations)),
         ],
     )
 

@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import AccessSession, DoorEvent, Incubator, Technician
 from ..schemas import DoorEventClose, DoorEventCreate, DoorEventRead
-from ..security import get_current_technician
+from ..security import (
+    ensure_incubator_access,
+    ensure_owner_or_admin,
+    get_current_technician,
+    require_operator,
+)
 
 router = APIRouter(
     prefix="/incubators/{incubator_id}/door-events",
@@ -34,9 +39,10 @@ def create_door_event(
     incubator_id: int,
     payload: DoorEventCreate,
     db: Session = Depends(get_db),
-    operator: Technician = Depends(get_current_technician),
+    operator: Technician = Depends(require_operator),
 ) -> DoorEvent:
     get_incubator_or_404(db, incubator_id)
+    ensure_incubator_access(db, operator, incubator_id)
     if payload.closed_at is None:
         active = db.scalar(
             select(DoorEvent).where(
@@ -90,9 +96,13 @@ def list_door_events(
     event_type: str | None = None,
     limit: int = Query(default=500, ge=1, le=5000),
     db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
 ) -> list[DoorEvent]:
     get_incubator_or_404(db, incubator_id)
+    ensure_incubator_access(db, technician, incubator_id)
     query = select(DoorEvent).where(DoorEvent.incubator_id == incubator_id)
+    if technician.role != "admin":
+        query = query.where(DoorEvent.operator_id == technician.id)
     if from_at is not None:
         query = query.where(DoorEvent.opened_at >= from_at)
     if to_at is not None:
@@ -110,6 +120,7 @@ def close_door_event(
     event_id: int,
     payload: DoorEventClose,
     db: Session = Depends(get_db),
+    technician: Technician = Depends(require_operator),
 ) -> DoorEvent:
     event = db.scalar(
         select(DoorEvent).where(
@@ -119,6 +130,8 @@ def close_door_event(
     )
     if event is None:
         raise HTTPException(status_code=404, detail="Door event not found")
+    ensure_incubator_access(db, technician, incubator_id)
+    ensure_owner_or_admin(technician, event.operator_id)
     if event.closed_at is not None:
         raise HTTPException(status_code=409, detail="Door event is already closed")
     closed_at = as_utc(payload.closed_at or datetime.now(UTC))

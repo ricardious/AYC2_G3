@@ -153,11 +153,11 @@ def test_telemetry_updates_state_and_alarm(
 
 
 def test_door_events_are_audited(
-    client: TestClient, auth_headers: dict[str, str], incubator: dict
+    client: TestClient, operator_headers: dict[str, str], incubator: dict
 ) -> None:
     created = client.post(
         f"/api/v1/incubators/{incubator['id']}/door-events",
-        headers=auth_headers,
+        headers=operator_headers,
         json={
             "event_type": "egg_entry",
             "eggs_added": 2,
@@ -171,14 +171,14 @@ def test_door_events_are_audited(
 
     duplicate = client.post(
         f"/api/v1/incubators/{incubator['id']}/door-events",
-        headers=auth_headers,
+        headers=operator_headers,
         json={"event_type": "inspection"},
     )
     assert duplicate.status_code == 409
 
     closed = client.patch(
         f"/api/v1/incubators/{incubator['id']}/door-events/{event['id']}/close",
-        headers=auth_headers,
+        headers=operator_headers,
         json={},
     )
     assert closed.status_code == 200, closed.text
@@ -186,15 +186,16 @@ def test_door_events_are_audited(
 
     history = client.get(
         f"/api/v1/incubators/{incubator['id']}/door-events",
-        headers=auth_headers,
+        headers=operator_headers,
     )
     assert history.status_code == 200
     assert history.json()[0]["eggs_added"] == 2
 
 
 def test_rfid_access_locks_servo_and_invalidates_session_when_door_closes(
-    client: TestClient, incubator: dict
+    client: TestClient, incubator: dict, operator_headers: dict[str, str]
 ) -> None:
+    del operator_headers
     device_headers = {"X-Device-Key": "esp32-test-key"}
     denied = client.post(
         "/api/v1/access/rfid/authorize",
