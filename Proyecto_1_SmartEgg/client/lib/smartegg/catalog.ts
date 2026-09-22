@@ -45,6 +45,7 @@ export const NAV_ITEMS: readonly { id: ScreenId; label: string }[] = [
   { id: "historial", label: "HISTORIAL" },
   { id: "reportes", label: "REPORTES" },
   { id: "config", label: "CONFIGURACIÓN" },
+  { id: "roles", label: "PERFILES" },
 ];
 
 /** `[kicker, title]` shown in the screen header. */
@@ -55,6 +56,7 @@ export const SCREEN_TITLES: Record<ScreenId, readonly [string, string]> = {
   historial: ["LABORATORIO DE TELEMETRÍA", "HISTORIAL"],
   reportes: ["DOCUMENTACIÓN DE CICLO", "REPORTES"],
   config: ["PARÁMETROS DEL NODO", "CONFIGURACIÓN"],
+  roles: ["ACCESO Y AUDITORÍA", "PERFILES"],
 };
 
 const TIMELINE_LABELS = [

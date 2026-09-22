@@ -4,6 +4,7 @@ import { SmartEggLogo } from "@/components/atoms/SmartEggLogo";
 import { NavItem } from "@/components/molecules/NavItem";
 import { ThemeSwitcher } from "@/components/molecules/ThemeSwitcher";
 import { NAV_ITEMS } from "@/lib/smartegg/catalog";
+import { canOpenDoor, screensForRole } from "@/lib/auth/permissions";
 import { nodeStatus } from "@/lib/smartegg/derive";
 import type { CSSVars } from "@/lib/smartegg/types";
 import { useSmartEgg } from "@/lib/state/hooks";
@@ -16,7 +17,7 @@ import { useSmartEgg } from "@/lib/state/hooks";
  * así que `h-[1000px]` le sumaba el relleno y sobresalía 34 px.
  */
 export function SideNav() {
-  const { screen, critical, actions } = useSmartEgg();
+  const { screen, critical, technician, actions } = useSmartEgg();
   const status = nodeStatus(critical);
   const statusStyle: CSSVars = { "--status": status.color };
 
@@ -48,7 +49,9 @@ export function SideNav() {
           ancho de un teléfono y desplazarlas dejaba las dos últimas fuera de
           alcance, sin nada que indicara que seguían ahí. */}
       <div className="flex flex-wrap gap-x-1 gap-y-0.5 px-5 console:mt-[54px] console:flex-col console:flex-nowrap console:gap-0.5 console:px-0">
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS.filter(
+          (item) => !technician || screensForRole(technician.role).includes(item.id),
+        ).map((item) => (
           <NavItem
             key={item.id}
             label={item.label}
@@ -59,13 +62,15 @@ export function SideNav() {
       </div>
 
       <div className="px-5 py-3 console:mt-auto console:px-[22px] console:pt-0 console:pb-3">
-        <button
-          type="button"
-          onClick={actions.openDoorOperation}
-          className="mb-3 w-full border border-primary/35 bg-primary/[0.07] px-2 py-2.5 font-mono text-[11px] tracking-[0.12em] text-primary-soft transition hover:border-primary/70 hover:bg-primary/15"
-        >
-          ◇ PUERTA
-        </button>
+        {technician && canOpenDoor(technician.role) ? (
+          <button
+            type="button"
+            onClick={actions.openDoorOperation}
+            className="mb-3 w-full border border-primary/35 bg-primary/[0.07] px-2 py-2.5 font-mono text-[11px] tracking-[0.12em] text-primary-soft transition hover:border-primary/70 hover:bg-primary/15"
+          >
+            ◇ PUERTA
+          </button>
+        ) : null}
         <ThemeSwitcher />
       </div>
     </nav>

@@ -10,6 +10,57 @@ export interface Technician {
   created_at: string;
 }
 
+export interface TechnicianWithAssignments extends Technician {
+  incubator_ids: number[];
+}
+
+export interface TechnicianCreate {
+  username: string;
+  full_name: string;
+  age?: number | null;
+  gender?: string | null;
+  role: "operator_1" | "operator_2" | "admin";
+  rfid_uid?: string | null;
+  password: string;
+}
+
+export interface AdminStatus {
+  exists: boolean;
+}
+
+export interface DiagnosticSummary {
+  operator_id: number | null;
+  operator_name: string;
+  role: string;
+  from_at: string;
+  to_at: string;
+  incubator_ids: number[];
+  telemetry_samples: number;
+  temperature_min_c: number | null;
+  temperature_max_c: number | null;
+  temperature_avg_c: number | null;
+  humidity_min_pct: number | null;
+  humidity_max_pct: number | null;
+  humidity_avg_pct: number | null;
+  access_sessions: number;
+  door_events: number;
+  eggs_added: number;
+  eggs_removed: number;
+  registered_eggs: number;
+  acknowledged_alarms: number;
+  generated_reports: number;
+}
+
+export interface ReportExport {
+  id: number;
+  incubator_id: number;
+  generated_by_id: number;
+  subject_operator_id: number | null;
+  scope: "personal" | "operator" | "global";
+  report_day: string;
+  generated_at: string;
+}
+
 export interface AuthToken {
   access_token: string;
   token_type: "bearer";
@@ -40,6 +91,7 @@ export interface Lot {
   notes: string | null;
   created_at: string;
   egg_count: number;
+  created_by_id?: number | null;
 }
 
 export interface LotCreate {
@@ -60,6 +112,7 @@ export interface Egg {
   registered_at: string;
   status: "incubating" | "hatched" | "removed" | "discarded";
   notes: string | null;
+  registered_by_id?: number | null;
 }
 
 export interface EggCreate {

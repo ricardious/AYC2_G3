@@ -17,11 +17,17 @@ import { ReportsScreen } from "./ReportsScreen";
 import { SettingsScreen } from "./SettingsScreen";
 import { ConnectionGate } from "./ConnectionGate";
 import { ObservatoryScreen } from "./ObservatoryScreen";
+import { RolesScreen } from "./RolesScreen";
+import { canNavigate, canOpenDoor } from "@/lib/auth/permissions";
 
 export type SmartEggDashboardProps = Partial<SmartEggConfig>;
 
 function ActiveScreen() {
-  const { screen } = useSmartEgg();
+  const { screen, technician } = useSmartEgg();
+
+  if (technician && !canNavigate(technician.role, screen)) {
+    return <ControlCoreScreen />;
+  }
 
   switch (screen) {
     case "observatorio":
@@ -34,6 +40,8 @@ function ActiveScreen() {
       return <ReportsScreen />;
     case "config":
       return <SettingsScreen />;
+    case "roles":
+      return <RolesScreen />;
     case "control":
     default:
       return <ControlCoreScreen />;
@@ -41,7 +49,7 @@ function ActiveScreen() {
 }
 
 function DashboardContent() {
-  const { registrationSlot, doorOperationOpen } = useSmartEgg();
+  const { registrationSlot, doorOperationOpen, technician } = useSmartEgg();
 
   return (
     <ConnectionGate>
@@ -51,7 +59,9 @@ function DashboardContent() {
       {registrationSlot !== null ? (
         <EggRegistrationDialog key={registrationSlot} slot={registrationSlot} />
       ) : null}
-      {doorOperationOpen ? <DoorOperationDialog /> : null}
+      {doorOperationOpen && technician && canOpenDoor(technician.role) ? (
+        <DoorOperationDialog />
+      ) : null}
     </ConnectionGate>
   );
 }

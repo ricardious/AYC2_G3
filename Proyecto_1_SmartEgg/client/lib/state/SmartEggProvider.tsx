@@ -21,6 +21,7 @@ import {
 import type {
   AuthToken,
   DashboardState,
+  DiagnosticSummary,
   DoorEvent,
   DoorEventCreate,
   Egg,
@@ -30,8 +31,11 @@ import type {
   IncubatorConfigUpdate,
   Lot,
   LotCreate,
+  ReportExport,
   RfidAccessMessage,
   Technician,
+  TechnicianCreate,
+  TechnicianWithAssignments,
   TelemetryReading,
   WebSocketMessage,
 } from "@/lib/api/types";
@@ -41,6 +45,7 @@ import {
   type MqttCriticalAlarm,
 } from "@/lib/mqtt/messages";
 import { mqttWebSocketUrl } from "@/lib/mqtt/url";
+import { canNavigate, canOpenDoor } from "@/lib/auth/permissions";
 import { createDemoState, DEMO_AVAILABLE } from "./demo";
 import type {
   ComponentId,
@@ -132,7 +137,14 @@ export interface SmartEggActions {
   enterDemo: () => void;
   logout: () => void;
   refresh: () => Promise<void>;
-  downloadDailyReport: (day?: string) => Promise<string>;
+  downloadDailyReport: (day?: string, operatorId?: number) => Promise<string>;
+  refreshRoleData: (operatorId?: number) => Promise<void>;
+  createTechnician: (
+    payload: TechnicianCreate,
+    incubatorIds: number[],
+  ) => Promise<void>;
+  setTechnicianActive: (technicianId: number, active: boolean) => Promise<void>;
+  assignTechnician: (technicianId: number, incubatorIds: number[]) => Promise<void>;
   updateIncubatorConfig: (
     payload: IncubatorConfigUpdate,
   ) => Promise<IncubatorConfig>;
@@ -151,6 +163,10 @@ export interface SmartEggContextValue extends ConsoleState {
   dashboard: DashboardState | null;
   lots: Lot[];
   eggs: Egg[];
+  diagnostic: DiagnosticSummary | null;
+  technicians: TechnicianWithAssignments[];
+  reportExports: ReportExport[];
+  adminExists: boolean;
   connection: ConnectionStatus;
   mqttConnected: boolean;
   nodeOnline: boolean | null;
@@ -233,6 +249,10 @@ export function SmartEggProvider({
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [lots, setLots] = useState<Lot[]>([]);
   const [eggs, setEggs] = useState<Egg[]>([]);
+  const [diagnostic, setDiagnostic] = useState<DiagnosticSummary | null>(null);
+  const [technicians, setTechnicians] = useState<TechnicianWithAssignments[]>([]);
+  const [reportExports, setReportExports] = useState<ReportExport[]>([]);
+  const [adminExists, setAdminExists] = useState(true);
   const [series, setSeries] = useState<SeriesPoint[]>([]);
   const [connection, setConnection] =
     useState<ConnectionStatus>("connecting");
@@ -282,6 +302,10 @@ export function SmartEggProvider({
     setDashboard(null);
     setLots([]);
     setEggs([]);
+    setDiagnostic(null);
+    setTechnicians([]);
+    setReportExports([]);
+    setAdminExists(true);
     setSeries([]);
     setMqttConnected(false);
     setNodeOnline(null);
@@ -644,8 +668,41 @@ export function SmartEggProvider({
     }
   }, [acceptAuthentication]);
 
+  const refreshRoleData = useCallback(
+    async (operatorId?: number) => {
+      if (demoActive || !token || !technician) return;
+      const [nextDiagnostic, nextReports, nextTechnicians, nextAdminStatus] =
+        await Promise.all([
+        technician.role === "admin"
+          ? api.adminDiagnostics(token, operatorId)
+          : api.diagnostics(token),
+        api.reportExports(token),
+        technician.role === "admin" ? api.technicians(token) : Promise.resolve([]),
+        api.adminStatus(token),
+      ]);
+      setDiagnostic(nextDiagnostic);
+      setReportExports(nextReports);
+      setTechnicians(nextTechnicians);
+      setAdminExists(nextAdminStatus.exists);
+    },
+    [demoActive, technician, token],
+  );
+
+  useEffect(() => {
+    if (!technician || !token || demoActive) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      void refreshRoleData().catch((reason: unknown) => {
+        if (!cancelled) setError(errorMessage(reason));
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [demoActive, refreshRoleData, technician, token]);
+
   const downloadDailyReport = useCallback(
-    async (day?: string) => {
+    async (day?: string, operatorId?: number) => {
       if (demoActive) {
         throw new Error("El PDF real requiere backend; estás en modo demo.");
       }
@@ -656,7 +713,9 @@ export function SmartEggProvider({
         incubator.id,
         token,
         day,
+        operatorId,
       );
+      await refreshRoleData(operatorId);
       const url = window.URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
@@ -667,7 +726,51 @@ export function SmartEggProvider({
       window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
       return filename;
     },
-    [demoActive, incubator, token],
+    [demoActive, incubator, refreshRoleData, token],
+  );
+
+  const createTechnician = useCallback(
+    async (payload: TechnicianCreate, incubatorIds: number[]) => {
+      if (
+        !token ||
+        !technician ||
+        (technician.role !== "admin" && payload.role !== "admin")
+      ) {
+        throw new Error("Solo el administrador puede crear perfiles");
+      }
+      const created = await api.createTechnician(payload, token);
+      if (technician.role !== "admin") {
+        setAdminExists(true);
+        return;
+      }
+      if (created.role !== "admin") {
+        await api.assignTechnician(created.id, incubatorIds, token);
+      }
+      await refreshRoleData();
+    },
+    [refreshRoleData, technician, token],
+  );
+
+  const setTechnicianActive = useCallback(
+    async (technicianId: number, active: boolean) => {
+      if (!token || technician?.role !== "admin") {
+        throw new Error("Solo el administrador puede modificar perfiles");
+      }
+      await api.updateTechnician(technicianId, { is_active: active }, token);
+      await refreshRoleData();
+    },
+    [refreshRoleData, technician, token],
+  );
+
+  const assignTechnician = useCallback(
+    async (technicianId: number, incubatorIds: number[]) => {
+      if (!token || technician?.role !== "admin") {
+        throw new Error("Solo el administrador puede asignar incubadoras");
+      }
+      await api.assignTechnician(technicianId, incubatorIds, token);
+      await refreshRoleData();
+    },
+    [refreshRoleData, technician, token],
   );
 
   const updateIncubatorConfig = useCallback(
@@ -772,7 +875,11 @@ export function SmartEggProvider({
 
   const actions = useMemo<SmartEggActions>(
     () => ({
-      navigate: (screen) => dispatch({ type: "navigate", screen }),
+      navigate: (screen) => {
+        if (!technician || canNavigate(technician.role, screen)) {
+          dispatch({ type: "navigate", screen });
+        }
+      },
       selectComponent: (id) =>
         dispatch({ type: "select", selection: { type: "component", id } }),
       pickEgg: (egg) =>
@@ -792,13 +899,21 @@ export function SmartEggProvider({
       openEggRegistration: (slot) =>
         dispatch({ type: "openRegistration", slot }),
       closeEggRegistration: () => dispatch({ type: "closeRegistration" }),
-      openDoorOperation: () => dispatch({ type: "openDoorOperation" }),
+      openDoorOperation: () => {
+        if (technician && canOpenDoor(technician.role)) {
+          dispatch({ type: "openDoorOperation" });
+        }
+      },
       closeDoorOperation: () => dispatch({ type: "closeDoorOperation" }),
       login,
       enterDemo,
       logout,
       refresh,
       downloadDailyReport,
+      refreshRoleData,
+      createTechnician,
+      setTechnicianActive,
+      assignTechnician,
       updateIncubatorConfig,
       createLot,
       registerEgg,
@@ -807,13 +922,18 @@ export function SmartEggProvider({
     [
       createLot,
       createDoorEvent,
+      createTechnician,
       downloadDailyReport,
       enterDemo,
       login,
       logout,
       refresh,
+      refreshRoleData,
       registerEgg,
       updateIncubatorConfig,
+      assignTechnician,
+      setTechnicianActive,
+      technician,
     ],
   );
 
@@ -843,6 +963,10 @@ export function SmartEggProvider({
       dashboard,
       lots,
       eggs,
+      diagnostic,
+      technicians,
+      reportExports,
+      adminExists,
       connection,
       mqttConnected,
       nodeOnline,
@@ -864,6 +988,10 @@ export function SmartEggProvider({
       dashboard,
       lots,
       eggs,
+      diagnostic,
+      technicians,
+      reportExports,
+      adminExists,
       connection,
       mqttConnected,
       nodeOnline,

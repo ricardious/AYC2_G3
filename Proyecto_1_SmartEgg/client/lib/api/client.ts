@@ -1,6 +1,8 @@
 import type {
+  AdminStatus,
   AuthToken,
   DashboardState,
+  DiagnosticSummary,
   DoorEvent,
   DoorEventCreate,
   Egg,
@@ -10,7 +12,10 @@ import type {
   IncubatorConfigUpdate,
   Lot,
   LotCreate,
+  ReportExport,
   Technician,
+  TechnicianCreate,
+  TechnicianWithAssignments,
   TelemetryReading,
 } from "./types";
 
@@ -114,6 +119,54 @@ export const api = {
 
   me: (token: string) => request<Technician>("/auth/me", {}, token),
 
+  adminStatus: (token: string) =>
+    request<AdminStatus>("/auth/admin-status", {}, token),
+
+  technicians: (token: string) =>
+    request<TechnicianWithAssignments[]>("/auth/technicians", {}, token),
+
+  createTechnician: (payload: TechnicianCreate, token: string) =>
+    request<Technician>(
+      "/auth/technicians",
+      { method: "POST", body: JSON.stringify(payload) },
+      token,
+    ),
+
+  updateTechnician: (
+    technicianId: number,
+    payload: { is_active?: boolean; rfid_uid?: string | null },
+    token: string,
+  ) =>
+    request<TechnicianWithAssignments>(
+      `/auth/technicians/${technicianId}`,
+      { method: "PATCH", body: JSON.stringify(payload) },
+      token,
+    ),
+
+  assignTechnician: (
+    technicianId: number,
+    incubatorIds: number[],
+    token: string,
+  ) =>
+    request<TechnicianWithAssignments>(
+      `/auth/technicians/${technicianId}/incubators`,
+      { method: "PUT", body: JSON.stringify({ incubator_ids: incubatorIds }) },
+      token,
+    ),
+
+  diagnostics: (token: string) =>
+    request<DiagnosticSummary>("/me/diagnostics", {}, token),
+
+  adminDiagnostics: (token: string, operatorId?: number) =>
+    request<DiagnosticSummary>(
+      `/admin/diagnostics${operatorId ? `?operator_id=${operatorId}` : ""}`,
+      {},
+      token,
+    ),
+
+  reportExports: (token: string) =>
+    request<ReportExport[]>("/reports", {}, token),
+
   incubators: (token: string) =>
     request<Incubator[]>("/incubators", {}, token),
 
@@ -176,8 +229,16 @@ export const api = {
       token,
     ),
 
-  dailyReport: (incubatorId: number, token: string, day?: string) => {
-    const query = day ? `?day=${encodeURIComponent(day)}` : "";
+  dailyReport: (
+    incubatorId: number,
+    token: string,
+    day?: string,
+    operatorId?: number,
+  ) => {
+    const parameters = new URLSearchParams();
+    if (day) parameters.set("day", day);
+    if (operatorId) parameters.set("operator_id", String(operatorId));
+    const query = parameters.size ? `?${parameters.toString()}` : "";
     return download(
       `/reports/incubators/${incubatorId}/daily.pdf${query}`,
       token,

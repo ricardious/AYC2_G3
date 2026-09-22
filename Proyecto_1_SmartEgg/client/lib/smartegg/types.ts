@@ -14,7 +14,8 @@ export type ScreenId =
   | "incubacion"
   | "historial"
   | "reportes"
-  | "config";
+  | "config"
+  | "roles";
 
 export type ComponentId =
   | "ventilador"
