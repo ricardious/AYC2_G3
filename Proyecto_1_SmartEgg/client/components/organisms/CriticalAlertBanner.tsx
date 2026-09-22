@@ -2,7 +2,7 @@ import { StatusDot } from "@/components/atoms/StatusDot";
 import { DANGER } from "@/lib/smartegg/theme";
 import { useSmartEgg } from "@/lib/state/hooks";
 
-/** Franja de alarma térmica sobre la cámara mientras el nodo está crítico. */
+/** Franja de alarma crítica sobre la cámara mientras el nodo está fuera de rango. */
 export function CriticalAlertBanner() {
   const { criticalAlarm } = useSmartEgg();
   const detail = criticalAlarm
@@ -22,7 +22,7 @@ export function CriticalAlertBanner() {
         className="animate-pulse-alert"
       />
       <div className="font-mono text-[11px] tracking-[0.2em] text-danger-soft">
-        ALERTA TÉRMICA
+        ALERTA CRÍTICA
       </div>
       <div className="font-mono text-[11px] tracking-[0.07em] text-danger-text">
         {detail}

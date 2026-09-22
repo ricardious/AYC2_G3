@@ -31,6 +31,11 @@ credenciales del técnico y carga el estado y las últimas 240 lecturas por REST
 de FastAPI para la telemetría y nos conectamos directamente a Mosquitto con MQTT.js para
 recibir alarmas, disponibilidad y actuadores sin recargar la página.
 
+Cuando MQTT entrega una alarma crítica, la consola reproduce
+`public/sounds/critical-alarm.mp3` una vez por evento. El riel lateral permite
+silenciar, reactivar y probar el audio; si el navegador bloquea la reproducción
+automática, el mismo control la habilita mediante una interacción explícita.
+
 Si el WebSocket de FastAPI se interrumpe, consultamos `/state` cada 2 segundos. MQTT.js
 reintenta la conexión al broker cada 2 segundos y restaura las suscripciones.
 

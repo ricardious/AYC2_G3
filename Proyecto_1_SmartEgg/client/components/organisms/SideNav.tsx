@@ -17,7 +17,14 @@ import { useSmartEgg } from "@/lib/state/hooks";
  * así que `h-[1000px]` le sumaba el relleno y sobresalía 34 px.
  */
 export function SideNav() {
-  const { screen, critical, technician, actions } = useSmartEgg();
+  const {
+    screen,
+    critical,
+    technician,
+    alarmSoundEnabled,
+    alarmSoundBlocked,
+    actions,
+  } = useSmartEgg();
   const status = nodeStatus(critical);
   const statusStyle: CSSVars = { "--status": status.color };
 
@@ -62,6 +69,31 @@ export function SideNav() {
       </div>
 
       <div className="px-5 py-3 console:mt-auto console:px-[22px] console:pt-0 console:pb-3">
+        {technician ? (
+          <div className="mb-3 grid grid-cols-[1fr_auto] gap-1">
+            <button
+              type="button"
+              onClick={actions.toggleAlarmSound}
+              aria-pressed={alarmSoundEnabled && !alarmSoundBlocked}
+              className="border border-frame-soft px-2 py-2 font-mono text-[9px] tracking-[0.1em] text-foreground-muted transition hover:border-primary/60 hover:text-primary"
+            >
+              {alarmSoundBlocked
+                ? "♫ ACTIVAR"
+                : alarmSoundEnabled
+                  ? "♫ SONIDO ON"
+                  : "♫ SILENCIADO"}
+            </button>
+            <button
+              type="button"
+              onClick={actions.testAlarmSound}
+              aria-label="Probar sonido de alarma"
+              title="Probar sonido de alarma"
+              className="border border-frame-soft px-2 py-2 font-mono text-[9px] text-foreground-muted transition hover:border-primary/60 hover:text-primary"
+            >
+              TEST
+            </button>
+          </div>
+        ) : null}
         {technician && canOpenDoor(technician.role) ? (
           <button
             type="button"
