@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from time import perf_counter
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,12 +62,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
 
     def serial_access_handler(event) -> None:  # type: ignore[no-untyped-def]
+        started_at = perf_counter()
         with session_factory() as db:
             try:
                 outcome = process_serial_access_event(db, event, configured)
             except Exception:
                 logger.exception("Rejected serial access event")
                 return
+        logger.info(
+            "Processed serial access event kind=%s result=%s in %.0f ms",
+            event.kind,
+            outcome.mqtt_payload.get("event", "unknown"),
+            (perf_counter() - started_at) * 1000,
+        )
         if outcome.command is not None:
             try:
                 serial_bridge.send_command(outcome.command)
