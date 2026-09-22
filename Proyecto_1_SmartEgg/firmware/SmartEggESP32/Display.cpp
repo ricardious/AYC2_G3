@@ -288,7 +288,10 @@ void composeSensorFault(const SystemState& state) {
 }
 
 void composeAccessFeedback(AccessFeedback feedback) {
-  static const char kSpinner[] = {'|', '/', '-', '\\'};
+  // Keep the animation inside the character subset shared by HD44780 ROM
+  // variants. In particular, code point 0x5C (ASCII backslash) is rendered as
+  // a Yen sign or another regional glyph by many LCD modules.
+  static const char kSpinner[] = {'.', 'o', 'O', 'o'};
   const uint8_t phase = animationFrame % 4;
 
   switch (feedback) {
