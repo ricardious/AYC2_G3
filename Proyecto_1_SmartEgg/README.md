@@ -307,10 +307,30 @@ docker compose -f docker-compose.yml -f docker-compose.serial.yml up -d --build
 
 ### Base de datos
 
+El backend usa PostgreSQL local cuando `DATABASE_URL` está vacía:
+
 ```bash
 cp .env.example .env
 docker compose up -d database
 ```
+
+Para usar la rama enlazada de Neon sin guardar credenciales en Git:
+
+```bash
+neon auth
+neon link --project-id icy-sky-83296816 --branch production -y
+neon env pull
+cd server
+SMARTEGG_DATABASE_URL="$(neon connection-string production)" uv run alembic upgrade head
+cd ..
+docker compose up -d --build backend
+```
+
+`neon env pull` mantiene `DATABASE_URL` exclusivamente en el `.env` ignorado por
+Git. Docker Compose prioriza esa URL y conserva el contenedor local como respaldo si
+la variable se elimina. FastAPI normaliza las URLs `postgresql://` de Neon al driver
+SQLAlchemy `postgresql+psycopg://`; no se requiere código TypeScript para acceder a
+la base. `neon.ts` describe solamente la política de infraestructura de Neon.
 
 ### Broker MQTT
 
