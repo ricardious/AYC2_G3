@@ -57,6 +57,7 @@ import type {
 } from "@/lib/smartegg/types";
 
 const TOKEN_KEY = "smartegg.access-token";
+const ALARM_SOUND_PATH = "/sounds/critical-alarm.mp3";
 const SERIES_LIMIT = 240;
 const FALLBACK_POLL_MS = 2_000;
 const LIVE_REFRESH_MS = 10_000;
@@ -133,6 +134,8 @@ export interface SmartEggActions {
   closeEggRegistration: () => void;
   openDoorOperation: () => void;
   closeDoorOperation: () => void;
+  toggleAlarmSound: () => void;
+  testAlarmSound: () => void;
   login: (username: string, password: string) => Promise<void>;
   enterDemo: () => void;
   logout: () => void;
@@ -171,6 +174,8 @@ export interface SmartEggContextValue extends ConsoleState {
   mqttConnected: boolean;
   nodeOnline: boolean | null;
   criticalAlarm: MqttCriticalAlarm | null;
+  alarmSoundEnabled: boolean;
+  alarmSoundBlocked: boolean;
   error: string | null;
   loginPending: boolean;
   rfidConnection: RfidConnectionStatus;
@@ -260,6 +265,9 @@ export function SmartEggProvider({
   const [nodeOnline, setNodeOnline] = useState<boolean | null>(null);
   const [criticalAlarm, setCriticalAlarm] =
     useState<MqttCriticalAlarm | null>(null);
+  const [alarmSoundEnabled, setAlarmSoundEnabled] = useState(true);
+  const [alarmSoundBlocked, setAlarmSoundBlocked] = useState(false);
+  const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
   const connectionRef = useRef<ConnectionStatus>("connecting");
   const [error, setError] = useState<string | null>(null);
   const [loginPending, setLoginPending] = useState(false);
@@ -268,6 +276,63 @@ export function SmartEggProvider({
   );
   const [accessMessage, setAccessMessage] = useState<string | null>(null);
   const mqttNodeCode = incubator?.code;
+
+  useEffect(() => {
+    const audio = new Audio(ALARM_SOUND_PATH);
+    audio.preload = "auto";
+    audio.volume = 0.7;
+    alarmAudioRef.current = audio;
+    return () => {
+      audio.pause();
+      alarmAudioRef.current = null;
+    };
+  }, []);
+
+  const playAlarmSound = useCallback(async () => {
+    const audio = alarmAudioRef.current;
+    if (!audio) return;
+    audio.currentTime = 0;
+    try {
+      await audio.play();
+      setAlarmSoundBlocked(false);
+    } catch {
+      setAlarmSoundBlocked(true);
+    }
+  }, []);
+
+  const toggleAlarmSound = useCallback(() => {
+    const audio = alarmAudioRef.current;
+    if (alarmSoundBlocked || !alarmSoundEnabled) {
+      setAlarmSoundEnabled(true);
+      void playAlarmSound();
+      return;
+    }
+    setAlarmSoundEnabled(false);
+    setAlarmSoundBlocked(false);
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  }, [alarmSoundBlocked, alarmSoundEnabled, playAlarmSound]);
+
+  const testAlarmSound = useCallback(() => {
+    setAlarmSoundEnabled(true);
+    void playAlarmSound();
+  }, [playAlarmSound]);
+
+  useEffect(() => {
+    const audio = alarmAudioRef.current;
+    if (!criticalAlarm) {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      return;
+    }
+    if (alarmSoundEnabled) {
+      queueMicrotask(() => void playAlarmSound());
+    }
+  }, [alarmSoundEnabled, criticalAlarm, playAlarmSound]);
 
   const updateConnection = useCallback((next: ConnectionStatus) => {
     connectionRef.current = next;
@@ -905,6 +970,8 @@ export function SmartEggProvider({
         }
       },
       closeDoorOperation: () => dispatch({ type: "closeDoorOperation" }),
+      toggleAlarmSound,
+      testAlarmSound,
       login,
       enterDemo,
       logout,
@@ -934,6 +1001,8 @@ export function SmartEggProvider({
       assignTechnician,
       setTechnicianActive,
       technician,
+      testAlarmSound,
+      toggleAlarmSound,
     ],
   );
 
@@ -971,6 +1040,8 @@ export function SmartEggProvider({
       mqttConnected,
       nodeOnline,
       criticalAlarm,
+      alarmSoundEnabled,
+      alarmSoundBlocked,
       error,
       loginPending,
       rfidConnection,
@@ -996,6 +1067,8 @@ export function SmartEggProvider({
       mqttConnected,
       nodeOnline,
       criticalAlarm,
+      alarmSoundEnabled,
+      alarmSoundBlocked,
       error,
       loginPending,
       rfidConnection,
