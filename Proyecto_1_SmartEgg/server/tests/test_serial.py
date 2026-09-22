@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import select
 
+from app.main import create_app
 from app.models import AccessSession, DoorEvent
 from app.services.serial_access import process_serial_access_event
 from app.services.serial_bridge import parse_serial_access_event, parse_serial_line
@@ -105,3 +106,29 @@ def test_unknown_rfid_is_denied_over_serial(client, incubator) -> None:
     assert outcome.command is not None
     assert outcome.command["authorized"] is False
     assert outcome.mqtt_payload["reason"] == "card_not_authorized"
+
+
+def test_rfid_database_failure_sends_denial(client, monkeypatch) -> None:
+    def fail_processing(*args, **kwargs) -> None:
+        del args, kwargs
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr("app.main.process_serial_access_event", fail_processing)
+    app = create_app(client.app.state.settings)
+    sent_commands: list[dict[str, object]] = []
+    monkeypatch.setattr(app.state.serial_bridge, "send_command", sent_commands.append)
+
+    handler = app.state.serial_bridge.on_access_event
+    assert handler is not None
+    handler(parse_serial_access_event("RFID:00112233", "NODE-01"))
+
+    assert sent_commands == [
+        {
+            "type": "access",
+            "action": "authorize",
+            "authorized": False,
+            "session_id": 0,
+            "servo_angle": client.app.state.settings.access_servo_lock_degrees,
+        }
+    ]
+    app.state.engine.dispose()

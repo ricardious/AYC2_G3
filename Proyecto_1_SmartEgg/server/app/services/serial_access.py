@@ -35,7 +35,7 @@ def _as_utc(value: datetime) -> datetime:
     return value.astimezone(UTC)
 
 
-def _deny(
+def build_serial_access_denial(
     event: SerialAccessEvent, reason: str, settings: Settings
 ) -> SerialAccessOutcome:
     code = event.incubator_code or settings.default_incubator_code
@@ -80,8 +80,8 @@ def _authorize_rfid(
     if authorization is None:
         incubator = db.scalar(select(Incubator).where(Incubator.code == code))
         if incubator is None:
-            return _deny(event, "incubator_not_found", settings)
-        denied = _deny(event, "card_not_authorized", settings)
+            return build_serial_access_denial(event, "incubator_not_found", settings)
+        denied = build_serial_access_denial(event, "card_not_authorized", settings)
         return replace(denied, incubator_id=incubator.id)
     technician, incubator = authorization
 
@@ -99,7 +99,9 @@ def _authorize_rfid(
             active.ended_at = now
             active.ended_reason = "expired"
         else:
-            denied = _deny(event, "session_already_active", settings)
+            denied = build_serial_access_denial(
+                event, "session_already_active", settings
+            )
             return replace(denied, incubator_id=incubator.id)
 
     session = AccessSession(
@@ -174,7 +176,7 @@ def _update_door(
         )
     incubator = db.get(Incubator, session.incubator_id)
     if incubator is None:
-        return _deny(event, "incubator_not_found", settings)
+        return build_serial_access_denial(event, "incubator_not_found", settings)
 
     now = datetime.now(UTC)
     if event.door_open:

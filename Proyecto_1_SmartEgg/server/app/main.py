@@ -14,7 +14,10 @@ from .database import Base, build_session_factory, create_engine
 from .services.bootstrap import ensure_initial_incubators, ensure_initial_technicians
 from .services.broadcast import AccessConnectionManager, ConnectionManager
 from .services.mqtt import MqttPublisher, build_mqtt_snapshot
-from .services.serial_access import process_serial_access_event
+from .services.serial_access import (
+    build_serial_access_denial,
+    process_serial_access_event,
+)
 from .services.serial_bridge import SerialBridge
 from .services.telemetry import ingest_telemetry
 
@@ -68,6 +71,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 outcome = process_serial_access_event(db, event, configured)
             except Exception:
                 logger.exception("Rejected serial access event")
+                if event.kind == "rfid":
+                    failure = build_serial_access_denial(
+                        event, "backend_unavailable", configured
+                    )
+                    try:
+                        serial_bridge.send_command(failure.command or {})
+                    except RuntimeError:
+                        logger.exception("Could not send serial failure response")
                 return
         logger.info(
             "Processed serial access event kind=%s result=%s in %.0f ms",
