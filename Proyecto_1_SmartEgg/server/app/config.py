@@ -81,6 +81,15 @@ class Settings(BaseSettings):
 
     report_logo_path: Path | None = None
 
+    @field_validator("database_url")
+    @classmethod
+    def select_psycopg_driver(cls, value: str) -> str:
+        if value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+psycopg://", 1)
+        if value.startswith("postgres://"):
+            return value.replace("postgres://", "postgresql+psycopg://", 1)
+        return value
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_origins(cls, value: object) -> object:

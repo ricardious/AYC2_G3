@@ -12,7 +12,7 @@ datasources:
     editable: false
     jsonData:
       database: $__env{GRAFANA_POSTGRES_DATABASE}
-      sslmode: disable
+      sslmode: $__env{GRAFANA_POSTGRES_SSL_MODE}
       postgresVersion: 1700
       timescaledb: false
       maxOpenConns: 10
