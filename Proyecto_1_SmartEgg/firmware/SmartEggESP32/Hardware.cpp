@@ -98,6 +98,15 @@ void configureServoChannel(uint8_t pin, ledc_channel_t channel) {
   ESP_ERROR_CHECK(ledc_channel_config(&settings));
 }
 
+void updateServoChannel(ledc_channel_t channel, uint8_t angleDegrees) {
+  // ledc_set_duty_and_update() depends on the optional fade service. Servos do
+  // not use fades, and without installing that service the call fails while
+  // leaving the channel at its initial 90-degree duty cycle.
+  ESP_ERROR_CHECK(
+      ledc_set_duty(kServoSpeedMode, channel, servoDuty(angleDegrees)));
+  ESP_ERROR_CHECK(ledc_update_duty(kServoSpeedMode, channel));
+}
+
 void initializeServos() {
   ledc_timer_config_t timer = {};
   timer.speed_mode = kServoSpeedMode;
@@ -393,16 +402,15 @@ void setStatusLed(bool enabled) {
 void setTrayAngle(int8_t signedAngleDegrees) {
   const int16_t requested = static_cast<int16_t>(config::kServoCenterDegrees) +
                             signedAngleDegrees;
-  ledc_set_duty_and_update(kServoSpeedMode, kTrayServoChannel,
-                           servoDuty(static_cast<uint8_t>(
-                               requested < 0 ? 0 :
-                               (requested > 180 ? 180 : requested))), 0);
+  updateServoChannel(
+      kTrayServoChannel,
+      static_cast<uint8_t>(requested < 0 ? 0 :
+                           (requested > 180 ? 180 : requested)));
 }
 
 void setAccessAngle(uint8_t absoluteAngleDegrees) {
   const uint8_t angle = absoluteAngleDegrees > 180 ? 180 : absoluteAngleDegrees;
-  ledc_set_duty_and_update(kServoSpeedMode, kAccessServoChannel,
-                           servoDuty(angle), 0);
+  updateServoChannel(kAccessServoChannel, angle);
 }
 
 bool isDoorOpen() {
