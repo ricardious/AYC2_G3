@@ -299,7 +299,17 @@ docker compose ps
 curl http://localhost:8000/health
 ```
 
-Para conectar la ESP32 por `/dev/ttyUSB0` usamos el archivo adicional:
+Para conectar la ESP32 usamos el archivo adicional. En Linux conviene configurar
+`SERIAL_DEVICE` con la ruta estable del adaptador para que una reconexión no cambie
+`ttyUSB0` por `ttyUSB1`:
+
+```bash
+ls -l /dev/serial/by-id/
+# Copiar la ruta encontrada en .env, por ejemplo:
+# SERIAL_DEVICE=/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0
+```
+
+Luego iniciamos los servicios:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.serial.yml up -d --build
