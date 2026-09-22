@@ -217,7 +217,7 @@ def test_rfid_access_locks_servo_and_invalidates_session_when_door_closes(
         assert automatic_login["access_token"] == granted.json()["access_token"]
     assert granted.status_code == 200, granted.text
     access = granted.json()
-    assert access["technician"]["role"] == "operator_1"
+    assert access["technician"]["role"] == "operator"
     assert access["technician"]["rfid_uid"] == "A1B2C3D4"
     assert access["servo_action"] == "unlock"
     assert access["servo_angle"] == 90

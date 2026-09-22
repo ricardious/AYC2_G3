@@ -562,7 +562,7 @@
           { "matcher": { "id": "byName", "options": "Duración" }, "properties": [{ "id": "unit", "value": "s" }, { "id": "decimals", "value": 0 }] },
           { "matcher": { "id": "byName", "options": "Método" }, "properties": [{ "id": "mappings", "value": [{ "options": { "fingerprint": { "color": "purple", "index": 1, "text": "Huella" }, "key": { "color": "orange", "index": 2, "text": "Llave" }, "password": { "color": "text", "index": 3, "text": "Contraseña" }, "rfid": { "color": "blue", "index": 0, "text": "Tarjeta RFID" } }, "type": "value" }] }, { "id": "custom.cellOptions", "value": { "type": "color-text" } }] },
           { "matcher": { "id": "byName", "options": "Operación" }, "properties": [{ "id": "mappings", "value": [{ "options": { "egg_entry": { "index": 0, "text": "Ingreso de huevos" }, "egg_removal": { "index": 1, "text": "Retiro de huevos" }, "inspection": { "index": 2, "text": "Inspección" }, "maintenance": { "index": 3, "text": "Mantenimiento" } }, "type": "value" }] }] },
-          { "matcher": { "id": "byName", "options": "Rol" }, "properties": [{ "id": "mappings", "value": [{ "options": { "admin": { "index": 2, "text": "Administrador" }, "operator_1": { "index": 0, "text": "Operador 1" }, "operator_2": { "index": 1, "text": "Operador 2" } }, "type": "value" }] }] }
+          { "matcher": { "id": "byName", "options": "Rol" }, "properties": [{ "id": "mappings", "value": [{ "options": { "admin": { "index": 1, "text": "Administrador" }, "operator": { "index": 0, "text": "Operador" } }, "type": "value" }] }] }
         ]
       },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 44 },

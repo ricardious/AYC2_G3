@@ -31,7 +31,7 @@ class Technician(Base):
             "age IS NULL OR age BETWEEN 1 AND 120", name="ck_technician_age"
         ),
         CheckConstraint(
-            "role IN ('operator_1', 'operator_2', 'admin')",
+            "role IN ('operator', 'admin')",
             name="ck_technician_role",
         ),
     )
@@ -41,7 +41,7 @@ class Technician(Base):
     full_name: Mapped[str] = mapped_column(String(120))
     age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     gender: Mapped[str | None] = mapped_column(String(30), nullable=True)
-    role: Mapped[str] = mapped_column(String(20), default="operator_1", index=True)
+    role: Mapped[str] = mapped_column(String(20), default="operator", index=True)
     rfid_uid: Mapped[str | None] = mapped_column(
         String(20), unique=True, nullable=True, index=True
     )

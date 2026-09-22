@@ -28,7 +28,7 @@ export function RolesScreen() {
   const [form, setForm] = useState<TechnicianCreate>({
     username: "",
     full_name: "",
-    role: "operator_1",
+    role: "operator",
     password: "",
     rfid_uid: "",
   });
@@ -50,7 +50,7 @@ export function RolesScreen() {
       setForm({
         username: "",
         full_name: "",
-        role: "operator_1",
+        role: "operator",
         password: "",
         rfid_uid: "",
       });
@@ -257,8 +257,7 @@ export function RolesScreen() {
                     })
                   }
                 >
-                  <option value="operator_1">Operador 1</option>
-                  <option value="operator_2">Operador 2</option>
+                  <option value="operator">Operador</option>
                   <option value="admin">Administrador</option>
                 </select>
                 <button

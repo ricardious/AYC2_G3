@@ -31,7 +31,7 @@ export function canNavigate(role: Role, screen: ScreenId): boolean {
 }
 
 export function canOpenDoor(role: Role): boolean {
-  return role === "operator_1" || role === "operator_2";
+  return role === "operator";
 }
 
 export function canManageSystem(role: Role): boolean {

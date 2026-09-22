@@ -45,7 +45,7 @@ def test_legacy_operator_can_create_only_the_first_admin(client: TestClient) -> 
             Technician(
                 username="legacy-operator",
                 full_name="Operador heredado",
-                role="operator_1",
+                role="operator",
                 password_hash=hash_password("clave-heredada-segura"),
             )
         )
@@ -98,7 +98,7 @@ def test_roles_enforce_management_and_hardware_permissions(
         json={
             "username": "forbidden-user",
             "full_name": "Usuario no permitido",
-            "role": "operator_2",
+            "role": "operator",
             "password": "clave-no-permitida",
         },
     )
@@ -152,7 +152,7 @@ def test_operator_data_is_private_and_admin_has_global_visibility(
         client,
         auth_headers,
         username="operador2",
-        role="operator_2",
+        role="operator",
         incubator_ids=[incubator["id"]],
     )
     lot = client.post(
@@ -205,7 +205,7 @@ def test_incubator_assignment_diagnostics_and_report_audit_are_scoped(
         client,
         auth_headers,
         username="scoped-operator",
-        role="operator_1",
+        role="operator",
         incubator_ids=[incubator["id"]],
     )
     other = client.post(

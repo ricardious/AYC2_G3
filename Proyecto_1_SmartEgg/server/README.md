@@ -237,9 +237,10 @@ configuración, última lectura, ocupación, sensores, actuadores y alarmas acti
 
 La autorización se valida en el servidor, no sólo en la navegación. `admin` administra
 perfiles, configuración, sensores, actuadores y rotaciones manuales y tiene visibilidad
-global, pero no abre la puerta. `operator_1` y `operator_2` abren la puerta y operan
+global, pero no abre la puerta. Las cuentas con rol `operator` abren la puerta y operan
 únicamente los nodos asignados; sus lotes, huevos, eventos e informes quedan aislados
-por propietario. Desactivar una cuenta invalida sus JWT en la siguiente petición.
+por ID de usuario. Así, Operador 1 y Operador 2 son perfiles independientes sin duplicar
+el rol técnico. Desactivar una cuenta invalida sus JWT en la siguiente petición.
 Si una base anterior sólo contiene operadores, `GET /auth/admin-status` activa en la
 consola una recuperación única: cualquier operador autenticado puede crear el primer
 `admin`; en cuanto existe uno, esa excepción deja de estar disponible.
@@ -283,7 +284,7 @@ Content-Type: application/json
     "full_name": "Operador 1",
     "age": 25,
     "gender": "masculino",
-    "role": "operator_1",
+    "role": "operator",
     "rfid_uid": "A1B2C3D4",
     "is_active": true,
     "created_at": "2026-09-07T12:00:00Z"

@@ -105,7 +105,7 @@ def require_roles(*roles: str) -> Callable[..., Technician]:
 
 
 require_admin = require_roles("admin")
-require_operator = require_roles("operator_1", "operator_2")
+require_operator = require_roles("operator")
 
 
 def technician_incubator_ids(db: Session, technician: Technician) -> list[int]:
