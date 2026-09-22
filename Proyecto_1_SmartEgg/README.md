@@ -191,7 +191,8 @@ y sin reiniciar ningún servicio.
 
 ## Modelo de datos
 
-Doce tablas, todas colgando de `incubators` salvo el catálogo de lotes y el de técnicos.
+Catorce tablas, con asignaciones explícitas entre técnicos e incubadoras y auditoría de
+propiedad e informes.
 El esquema se administra con Alembic desde `server/migrations`; `db/schema.dbml`
 documenta cada columna e índice.
 
@@ -200,6 +201,10 @@ erDiagram
     technicians  ||--o{ door_events        : "opera"
     technicians  ||--o{ access_sessions    : "autentica"
     technicians  ||--o{ alarms             : "reconoce"
+    technicians  ||--o{ technician_incubators : "se asigna"
+    technicians  ||--o{ lots               : "crea"
+    technicians  ||--o{ eggs               : "registra"
+    technicians  ||--o{ report_exports     : "genera"
 
     incubators   ||--|| incubator_configs  : "define umbrales"
     incubators   ||--o{ telemetry_readings : "registra"
@@ -210,6 +215,8 @@ erDiagram
     incubators   ||--o{ door_events        : "recibe"
     incubators   ||--o{ access_sessions    : "autoriza"
     incubators   ||--o{ eggs               : "aloja"
+    incubators   ||--o{ technician_incubators : "asigna"
+    incubators   ||--o{ report_exports     : "documenta"
 
     lots         ||--o{ eggs               : "agrupa"
     access_sessions |o--o| door_events     : "genera"
@@ -218,6 +225,7 @@ erDiagram
 | Tabla | Qué guarda | Escrita por |
 |---|---|---|
 | `technicians` | Credenciales, rol y UID RFID del personal | `POST /auth/bootstrap` y `/auth/technicians` |
+| `technician_incubators` | Nodos autorizados para cada operador | Administrador (`PUT /auth/technicians/{id}/incubators`) |
 | `access_sessions` | Sesión RFID, operador, apertura, cierre y causa de finalización | ESP32 mediante `/access` |
 | `incubators` | Código, capacidad, número de serie y última señal | Bootstrap y telemetría |
 | `incubator_configs` | Rangos de temperatura y humedad, umbral crítico, intervalo y ángulo de rotación | Consola (`PUT /config`) |
@@ -229,6 +237,7 @@ erDiagram
 | `lots` | Lote, especie, origen y fechas de incubación | Consola |
 | `eggs` | Ficha del huevo, su lote y su posición física | Consola |
 | `door_events` | Aperturas de puerta con operador, método de acceso, motivo y conteo de huevos | ESP32 y consola |
+| `report_exports` | Quién generó cada PDF, alcance, operador y fecha | Endpoint de informes |
 
 `telemetry_readings` y `door_events` llevan índice compuesto por incubadora y fecha,
 que es la forma en que Grafana y el historial los consultan.
@@ -310,6 +319,8 @@ docker compose up -d broker
 ```
 
 Mosquitto escucha en `1883` para MQTT TCP y en `9001` para MQTT sobre WebSocket.
+La ACL separa al publicador backend de las cuentas de solo lectura del frontend y
+Grafana.
 Consulte `mqtt/README.md` antes de desplegarlo fuera de una red local.
 
 ### Grafana

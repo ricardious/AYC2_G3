@@ -4,8 +4,9 @@ Para el proyecto usamos Eclipse Mosquitto como broker MQTT. Por medio de este br
 conectamos el backend con el frontend y Grafana para enviar la telemetría y las alarmas
 en tiempo real.
 
-Dejamos habilitada la autenticación por usuario y contraseña. La ACL permite trabajar
-únicamente con los topics de `smartegg/#` y consultar el estado del broker en `$SYS/#`.
+Dejamos habilitada la autenticación por usuario y contraseña con mínimo privilegio:
+`smartegg` publica desde el backend, `smartegg-frontend` sólo lee los tres topics de la
+consola y `smartegg-grafana` sólo lee la jerarquía de SmartEgg.
 
 ## Levantar Mosquitto
 
@@ -15,8 +16,9 @@ Primero creamos el archivo de variables de entorno:
 cp .env.example .env
 ```
 
-En ese archivo cambiamos `MQTT_PASSWORD` y `POSTGRES_PASSWORD`. Luego levantamos el
-broker desde la raíz del proyecto:
+En ese archivo cambiamos `MQTT_PASSWORD`, `MQTT_FRONTEND_PASSWORD`,
+`MQTT_GRAFANA_PASSWORD` y `POSTGRES_PASSWORD`. Luego levantamos el broker desde la raíz
+del proyecto:
 
 ```bash
 docker compose up -d broker
@@ -28,9 +30,11 @@ Usamos los siguientes puertos:
 - `1883` para la conexión MQTT del backend y Grafana.
 - `9001` para la conexión MQTT sobre WebSocket del frontend.
 
-El servicio `mqtt-password-init` genera el archivo de contraseñas usando las variables
-`MQTT_USERNAME` y `MQTT_PASSWORD`. Este archivo y los datos del broker se guardan en
-volúmenes de Docker, por lo que no subimos credenciales al repositorio.
+El servicio `mqtt-password-init` regenera las tres cuentas usando esas contraseñas. Para
+compatibilidad con instalaciones anteriores, las dos claves de lectura heredan
+`MQTT_PASSWORD` cuando todavía no están definidas; conviene separarlas antes de exponer
+el broker. El archivo y los datos se guardan en volúmenes de Docker y no se suben al
+repositorio.
 
 ## Probar la conexión
 

@@ -50,6 +50,9 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_MQTT_USERNAME` | Usuario autenticado de Mosquitto |
 | `NEXT_PUBLIC_MQTT_PASSWORD` | Contraseña MQTT usada por el navegador |
 
+La cuenta esperada es `smartegg-frontend`. La ACL le permite suscribirse a alarmas,
+estado y actuadores, pero no publicar ni leer telemetría ajena a esos canales.
+
 Si `NEXT_PUBLIC_API_URL` no está definida, el navegador usa automáticamente su propio
 hostname con el puerto `8000`. Así, al visitar `http://192.168.1.20:3000` desde un móvil,
 la API se busca en `http://192.168.1.20:8000` y no en el `localhost` del teléfono.
@@ -68,6 +71,10 @@ El origen exacto del frontend debe estar autorizado en `SMARTEGG_CORS_ORIGINS` d
 de `server/.env`. Antes del primer acceso también deben existir el técnico y al menos una
 incubadora; ambos pueden crearse desde `http://localhost:8000/docs`. El código de la
 incubadora debe coincidir con el enviado por el firmware (`NODE-01` por defecto).
+
+El administrador ve configuración, actuadores, gestión de perfiles y diagnósticos de
+todos los operadores. Los operadores sólo ven sus incubadoras asignadas y sus propios
+lotes, huevos, aperturas e informes; únicamente ellos pueden abrir la puerta.
 
 Las variables `NEXT_PUBLIC_*` quedan incluidas en el código que recibe el navegador. En
 un despliegue público usamos un usuario MQTT limitado a lectura, TLS y `wss://`; no

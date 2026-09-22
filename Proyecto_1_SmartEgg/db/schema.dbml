@@ -22,6 +22,16 @@ Table incubators {
   created_at timestamptz [not null]
 }
 
+Table technician_incubators {
+  technician_id integer [not null, ref: > technicians.id]
+  incubator_id integer [not null, ref: > incubators.id]
+  assigned_at timestamptz [not null]
+
+  indexes {
+    (technician_id, incubator_id) [pk]
+  }
+}
+
 Table incubator_configs {
   incubator_id integer [pk, ref: > incubators.id]
   temperature_min_c float [not null]
@@ -43,6 +53,7 @@ Table lots {
   expected_hatch_on date
   status varchar(30) [not null]
   notes text
+  created_by_id integer [ref: > technicians.id]
   created_at timestamptz [not null]
 }
 
@@ -52,6 +63,7 @@ Table eggs {
   lot_id integer [not null, ref: > lots.id]
   incubator_id integer [not null, ref: > incubators.id]
   slot_number integer [not null]
+  registered_by_id integer [ref: > technicians.id]
   registered_at timestamptz [not null]
   ended_at timestamptz
   status varchar(30) [not null]
@@ -161,4 +173,19 @@ Table rotation_events {
   direction varchar(10) [not null]
   source varchar(20) [not null]
   performed_at timestamptz [not null]
+}
+
+Table report_exports {
+  id integer [pk, increment]
+  incubator_id integer [not null, ref: > incubators.id]
+  generated_by_id integer [not null, ref: > technicians.id]
+  subject_operator_id integer [ref: > technicians.id]
+  scope varchar(20) [not null, note: 'personal, operator, global']
+  report_day date [not null]
+  generated_at timestamptz [not null]
+
+  indexes {
+    (generated_by_id, generated_at)
+    (subject_operator_id, generated_at)
+  }
 }

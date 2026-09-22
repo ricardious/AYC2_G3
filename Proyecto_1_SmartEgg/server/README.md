@@ -178,7 +178,7 @@ Para crear automáticamente uno o varios técnicos al arrancar, configure la lis
 `server/.env`:
 
 ```env
-SMARTEGG_INITIAL_TECHNICIANS=[{"username":"ricardo","full_name":"Ricardo","age":25,"gender":"masculino","password":"una-clave-segura"}]
+SMARTEGG_INITIAL_TECHNICIANS=[{"username":"admin","full_name":"Administrador","role":"admin","password":"una-clave-segura"}]
 ```
 
 Cada nombre de usuario se crea solamente si todavía no existe. Los reinicios no cambian
@@ -198,7 +198,7 @@ Como alternativa, el primer técnico puede crearse manualmente una única vez:
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/auth/bootstrap \
   -H 'Content-Type: application/json' \
-  -d '{"username":"tecnico1","full_name":"Nombre del técnico","age":25,"gender":"no especificado","password":"clave-segura"}'
+  -d '{"username":"admin","full_name":"Administrador","role":"admin","password":"clave-segura"}'
 ```
 
 Luego use `POST /api/v1/auth/login` y envíe el token como
@@ -213,7 +213,7 @@ requieren JWT. Los endpoints físicos `/access/rfid/authorize` y
 
 | Área | Operaciones principales |
 |---|---|
-| Auth | `POST /auth/bootstrap`, `POST /auth/login`, `GET /auth/me`, `POST /auth/technicians` |
+| Auth | `POST /auth/bootstrap`, `POST /auth/login`, `GET /auth/me`, `GET/POST/PATCH /auth/technicians`, `PUT /auth/technicians/{id}/incubators` |
 | Acceso RFID | `POST /access/rfid/authorize`, `POST /access/sessions/{id}/door`, `POST .../{id}/cancel`, `GET .../{id}`, `WS /access/ws/{code}` |
 | Incubadoras | `POST/GET /incubators`, `GET /incubators/{id}/state` |
 | Configuración | `GET/PUT /incubators/{id}/config` |
@@ -226,13 +226,23 @@ requieren JWT. Los endpoints físicos `/access/rfid/authorize` y
 | Rotación | `POST/GET /incubators/{id}/rotations` |
 | Alarmas | `GET .../alarms`, `POST .../alarms/{alarm_id}/acknowledge` |
 | Puerta | `POST/GET .../door-events`, `PATCH .../door-events/{event_id}/close` |
-| Reporte | `GET /reports/incubators/{id}/daily.pdf?day=AAAA-MM-DD` |
+| Perfiles | `GET /me/diagnostics`, `GET /admin/diagnostics?operator_id={id}` |
+| Reporte | `GET /reports`, `GET /reports/incubators/{id}/daily.pdf?day=AAAA-MM-DD&operator_id={id}` |
 | Tiempo real | `WS /ws/incubators/{id}?token=<JWT>` |
 | Serial | `GET /serial/status` |
 
 El contrato exacto, ejemplos, restricciones y respuestas 422 siempre se mantienen en
 `/openapi.json` y Swagger. El endpoint agregado `state` entrega en una petición el nodo,
 configuración, última lectura, ocupación, sensores, actuadores y alarmas activas.
+
+La autorización se valida en el servidor, no sólo en la navegación. `admin` administra
+perfiles, configuración, sensores, actuadores y rotaciones manuales y tiene visibilidad
+global, pero no abre la puerta. `operator_1` y `operator_2` abren la puerta y operan
+únicamente los nodos asignados; sus lotes, huevos, eventos e informes quedan aislados
+por propietario. Desactivar una cuenta invalida sus JWT en la siguiente petición.
+Si una base anterior sólo contiene operadores, `GET /auth/admin-status` activa en la
+consola una recuperación única: cualquier operador autenticado puede crear el primer
+`admin`; en cuanto existe uno, esa excepción deja de estar disponible.
 
 ## Acceso físico con ESP32
 
