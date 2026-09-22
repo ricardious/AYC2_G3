@@ -19,11 +19,15 @@ def create_engine(database_url: str) -> Engine:
         if database_path != ":memory:":
             Path(database_path).parent.mkdir(parents=True, exist_ok=True)
 
+    is_sqlite = database_url.startswith("sqlite")
     engine = sa_create_engine(
         database_url,
-        connect_args={"check_same_thread": False}
-        if database_url.startswith("sqlite")
-        else {},
+        connect_args={"check_same_thread": False} if is_sqlite else {},
+        # Neon can close pooled connections while its compute is suspended.
+        # Validate reused connections so the first RFID request after idle does
+        # not fail with a stale SSL socket.
+        pool_pre_ping=not is_sqlite,
+        pool_recycle=300 if not is_sqlite else -1,
     )
     if database_url.startswith("sqlite"):
 

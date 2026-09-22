@@ -63,18 +63,27 @@ def _authorize_rfid(
     db: Session, event: SerialAccessEvent, settings: Settings
 ) -> SerialAccessOutcome:
     code = event.incubator_code or settings.default_incubator_code
-    incubator = db.scalar(select(Incubator).where(Incubator.code == code))
-    if incubator is None:
-        return _deny(event, "incubator_not_found", settings)
-    technician = db.scalar(select(Technician).where(Technician.rfid_uid == event.uid))
-    if (
-        technician is None
-        or not technician.is_active
-        or technician.role != "operator"
-        or db.get(TechnicianIncubator, (technician.id, incubator.id)) is None
-    ):
+    authorization = db.execute(
+        select(Technician, Incubator)
+        .join(
+            TechnicianIncubator,
+            TechnicianIncubator.technician_id == Technician.id,
+        )
+        .join(Incubator, Incubator.id == TechnicianIncubator.incubator_id)
+        .where(
+            Incubator.code == code,
+            Technician.rfid_uid == event.uid,
+            Technician.is_active.is_(True),
+            Technician.role == "operator",
+        )
+    ).one_or_none()
+    if authorization is None:
+        incubator = db.scalar(select(Incubator).where(Incubator.code == code))
+        if incubator is None:
+            return _deny(event, "incubator_not_found", settings)
         denied = _deny(event, "card_not_authorized", settings)
         return replace(denied, incubator_id=incubator.id)
+    technician, incubator = authorization
 
     now = datetime.now(UTC)
     active_sessions = list(
