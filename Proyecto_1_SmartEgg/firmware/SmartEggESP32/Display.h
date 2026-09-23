@@ -29,6 +29,10 @@ void render(const SystemState& state);
 // runs on the sensor/control task.
 void showAccessFeedback(AccessFeedback feedback, uint32_t durationMs);
 
+// Shows an authorized operator's LCD-safe name, alternating with the door
+// instruction while the access servo is unlocked.
+void showAccessGranted(const char* operatorName, uint32_t durationMs);
+
 // Forces the next render to repaint all 32 cells.
 void invalidate();
 

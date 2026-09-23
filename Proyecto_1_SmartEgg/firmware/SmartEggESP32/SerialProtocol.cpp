@@ -199,6 +199,7 @@ void parseAccessCommand(const char* input) {
   bool authorized = false;
   int sessionId = 0;
   int servoAngle = config::kAccessUnlockedDegrees;
+  char operatorName[17] = {};
   if (!readBoolField(input, "\"authorized\"", authorized)) {
     postProtocolMessage(MessageType::kError,
                         static_cast<uint8_t>(ErrorCode::kUnknownCommand));
@@ -206,13 +207,15 @@ void parseAccessCommand(const char* input) {
   }
   readIntegerField(input, "\"session_id\"", sessionId);
   readIntegerField(input, "\"servo_angle\"", servoAngle);
+  readStringField(input, "\"operator_name\"", operatorName,
+                  sizeof(operatorName));
   if (servoAngle < 0) {
     servoAngle = 0;
   } else if (servoAngle > 180) {
     servoAngle = 180;
   }
   handleAccessAuthorization(authorized, sessionId,
-                            static_cast<uint8_t>(servoAngle));
+                            static_cast<uint8_t>(servoAngle), operatorName);
 }
 
 void parseCommand(const char* input) {
