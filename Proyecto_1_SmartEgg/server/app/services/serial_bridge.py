@@ -210,9 +210,21 @@ class SerialBridge:
     def _run(self) -> None:
         while not self._stop.is_set():
             try:
-                with serial.serial_for_url(
-                    self.port, self.baudrate, timeout=self.timeout
-                ) as connection:
+                connection = serial.serial_for_url(
+                    self.port,
+                    self.baudrate,
+                    timeout=self.timeout,
+                    do_not_open=True,
+                )
+                # CP2102 adapters on ESP32 DevKit boards wire DTR/RTS to the
+                # BOOT and EN pins. Configure both inactive before opening so
+                # recreating the backend cannot reset or hold the board in its
+                # bootloader. Discard only bytes accumulated during startup.
+                connection.dtr = False
+                connection.rts = False
+                connection.open()
+                connection.reset_input_buffer()
+                with connection:
                     self._serial = connection
                     self.connected = True
                     self.last_error = None
