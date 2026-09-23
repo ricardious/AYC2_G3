@@ -4,6 +4,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "Config.h"
 #include "Hardware.h"
@@ -126,6 +127,7 @@ uint8_t animationFrame = 0;
 uint8_t marqueeOffset = 0;
 portMUX_TYPE accessFeedbackMux = portMUX_INITIALIZER_UNLOCKED;
 AccessFeedback activeAccessFeedback = AccessFeedback::kReading;
+char activeOperatorName[17] = {};
 int64_t accessFeedbackExpiresAtUs = 0;
 
 // Last bitmap pushed to CGRAM for each animated slot; 0xFF means "unknown", so
@@ -287,7 +289,7 @@ void composeSensorFault(const SystemState& state) {
   }
 }
 
-void composeAccessFeedback(AccessFeedback feedback) {
+void composeAccessFeedback(AccessFeedback feedback, const char* operatorName) {
   // Keep the animation inside the character subset shared by HD44780 ROM
   // variants. In particular, code point 0x5C (ASCII backslash) is rendered as
   // a Yen sign or another regional glyph by many LCD modules.
@@ -307,9 +309,13 @@ void composeAccessFeedback(AccessFeedback feedback) {
     }
     case AccessFeedback::kGranted:
       putText(0, 0, "ACCESO PERMITIDO");
-      putText(1, 1, "ABRA LA PUERTA");
-      put(1, 0, (phase & 1U) == 0 ? '>' : ' ');
-      put(1, 15, (phase & 1U) == 0 ? '<' : ' ');
+      if (operatorName[0] != '\0' && ((animationFrame / 8U) & 1U) == 0) {
+        putText(1, 0, operatorName);
+      } else {
+        putText(1, 1, "ABRA LA PUERTA");
+        put(1, 0, (phase & 1U) == 0 ? '>' : ' ');
+        put(1, 15, (phase & 1U) == 0 ? '<' : ' ');
+      }
       break;
     case AccessFeedback::kDenied:
       putText(0, 0, "ACCESO DENEGADO");
@@ -335,12 +341,17 @@ void composeAccessFeedback(AccessFeedback feedback) {
   }
 }
 
-bool copyActiveAccessFeedback(AccessFeedback& feedback) {
+bool copyActiveAccessFeedback(AccessFeedback& feedback, char* operatorName,
+                              size_t operatorNameSize) {
   const int64_t nowUs = esp_timer_get_time();
   bool active = false;
   portENTER_CRITICAL(&accessFeedbackMux);
   if (accessFeedbackExpiresAtUs > nowUs) {
     feedback = activeAccessFeedback;
+    if (operatorNameSize > 0) {
+      strncpy(operatorName, activeOperatorName, operatorNameSize - 1);
+      operatorName[operatorNameSize - 1] = '\0';
+    }
     active = true;
   } else {
     accessFeedbackExpiresAtUs = 0;
@@ -510,6 +521,18 @@ void showAccessFeedback(AccessFeedback feedback, uint32_t durationMs) {
       esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000LL;
   portENTER_CRITICAL(&accessFeedbackMux);
   activeAccessFeedback = feedback;
+  activeOperatorName[0] = '\0';
+  accessFeedbackExpiresAtUs = expiresAtUs;
+  portEXIT_CRITICAL(&accessFeedbackMux);
+}
+
+void showAccessGranted(const char* operatorName, uint32_t durationMs) {
+  const int64_t expiresAtUs =
+      esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000LL;
+  portENTER_CRITICAL(&accessFeedbackMux);
+  activeAccessFeedback = AccessFeedback::kGranted;
+  strncpy(activeOperatorName, operatorName, sizeof(activeOperatorName) - 1);
+  activeOperatorName[sizeof(activeOperatorName) - 1] = '\0';
   accessFeedbackExpiresAtUs = expiresAtUs;
   portEXIT_CRITICAL(&accessFeedbackMux);
 }
@@ -522,7 +545,9 @@ void render(const SystemState& state) {
   ++animationFrame;
 
   AccessFeedback accessFeedback = AccessFeedback::kReading;
-  const bool accessFeedbackActive = copyActiveAccessFeedback(accessFeedback);
+  char operatorName[17] = {};
+  const bool accessFeedbackActive = copyActiveAccessFeedback(
+      accessFeedback, operatorName, sizeof(operatorName));
 
   Screen screen;
   if (accessFeedbackActive) {
@@ -559,7 +584,7 @@ void render(const SystemState& state) {
         composeSensorFault(state);
         break;
       case Screen::kAccess:
-        composeAccessFeedback(accessFeedback);
+        composeAccessFeedback(accessFeedback, operatorName);
         break;
       default:
         composeRunning(state);

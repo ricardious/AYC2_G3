@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import secrets
+import unicodedata
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 
@@ -27,6 +28,15 @@ class SerialAccessOutcome:
     mqtt_payload: dict[str, object]
     dashboard_payload: dict[str, object] | None = None
     kiosk_payload: dict[str, object] | None = None
+
+
+def _lcd_operator_name(full_name: str) -> str:
+    ascii_name = (
+        unicodedata.normalize("NFKD", full_name)
+        .encode("ascii", "ignore")
+        .decode("ascii")
+    )
+    return " ".join(ascii_name.upper().split())[:16]
 
 
 def _as_utc(value: datetime) -> datetime:
@@ -123,6 +133,7 @@ def _authorize_rfid(
             "authorized": True,
             "session_id": session.id,
             "servo_angle": settings.access_servo_unlock_degrees,
+            "operator_name": _lcd_operator_name(technician.full_name),
         },
         incubator_id=incubator.id,
         incubator_code=incubator.code,

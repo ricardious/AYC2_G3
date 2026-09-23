@@ -92,7 +92,7 @@ void pollAccessControl() {
 }
 
 void handleAccessAuthorization(bool authorized, int sessionId,
-                               uint8_t servoAngle) {
+                               uint8_t servoAngle, const char* operatorName) {
   if (!authorizationPending) {
     return;
   }
@@ -107,7 +107,7 @@ void handleAccessAuthorization(bool authorized, int sessionId,
   doorWasOpened = false;
   unlockedAtMs = milliseconds();
   setAccessAngle(servoAngle);
-  display::showAccessFeedback(display::AccessFeedback::kGranted, 3000);
+  display::showAccessGranted(operatorName, 5000);
 }
 
 void handleAccessLock() {
