@@ -1,10 +1,10 @@
 # Proyecto 1 — SmartEgg
 
-Desarrollamos SmartEgg como una incubadora inteligente IoT a partir de la
-Práctica 1. Migramos el nodo a una ESP32 que mide el ambiente, controla los
-actuadores y lee tarjetas RFID. Integramos FastAPI para recibir las tramas por
-USB y guardar las lecturas en PostgreSQL; Mosquitto distribuye los eventos y
-Next.js y Grafana presentan la operación en vivo y el historial.
+Desarrollamos SmartEgg, una incubadora inteligente IoT. La ESP32 mide el
+ambiente, controla los actuadores y lee tarjetas RFID. Integramos FastAPI para
+recibir las tramas por USB y guardar las lecturas en PostgreSQL; Mosquitto
+distribuye los eventos, y Next.js y Grafana presentan la operación en vivo y el
+historial.
 
 Organizamos la plataforma con Docker Compose y mantuvimos el cliente web fuera
 de los contenedores. La API expone su documentación en `:8000/docs`, la consola
