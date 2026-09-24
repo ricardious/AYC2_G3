@@ -108,8 +108,10 @@ firmware/tests/run_host_tests.sh
 
 Abra [preview-animaciones.html](preview-animaciones.html) en un navegador. El visor
 funciona sin servidor ni dependencias: dibuja el LCD 16×2 con caracteres de matriz
-5×8, permite comparar cuatro animaciones de lectura y tres secuencias de acceso
-permitido, cambiar la velocidad y simular un acceso denegado.
+5×8. Incluye el arranque, pantalla operativa, sistema apagado, fallas y todas las
+respuestas RFID del firmware, con datos de ejemplo ajustables para los sensores y
+actuadores. Por separado permite comparar cuatro propuestas de lectura y tres de
+acceso permitido, además de cambiar la velocidad.
 Es una maqueta visual; para comprobar los caracteres reales del firmware sin grabar
 la placa, use [la simulación de Wokwi](wokwi/README.md).
 
