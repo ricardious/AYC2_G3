@@ -42,6 +42,15 @@
     .choice { width: 100%; display: flex; gap: 13px; align-items: baseline; text-align: left; padding: 11px; }
     .choice small { color: var(--amber); }
     .choice[aria-pressed="true"] { background: #e6bc701c; border-color: var(--amber); }
+    .scenario-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .scenario-choices .choice { min-height: 43px; align-items: center; font-size: .72rem; }
+    .group-note { margin: -6px 0 14px; color: var(--muted); font-size: .82rem; line-height: 1.4; }
+    .telemetry { display: none; margin-top: 23px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .telemetry.visible { display: block; }
+    .telemetry-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 13px; }
+    .telemetry-grid input[type="number"] { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid var(--line); background: #111b14; color: var(--paper); font: .85rem ui-monospace, monospace; }
+    .checks { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 13px; }
+    .checks label { display: flex; align-items: center; gap: 5px; margin: 0; font-size: .67rem; }
     .settings { border-top: 1px solid var(--line); margin-top: 26px; padding-top: 22px; }
     label { display: block; margin: 0 0 9px; color: var(--muted); font-size: .74rem; letter-spacing: .07em; text-transform: uppercase; }
     input[type="text"] { width: 100%; padding: 11px; margin-bottom: 20px; border: 1px solid var(--line); background: #111b14; color: var(--paper); font: 1rem ui-monospace, monospace; }
@@ -55,7 +64,7 @@
   <main>
     <div class="eyebrow">SMART EGG / BANCO DE PRUEBAS</div>
     <h1>Así se vería en el LCD.</h1>
-    <p class="intro">Pantalla 1602 simulada punto por punto. Compara la lectura RFID y tres maneras de mostrar un acceso permitido, sin grabar la ESP32.</p>
+    <p class="intro">Recorre todas las pantallas del firmware y compara las propuestas de animación RFID. Todo se dibuja punto por punto en un LCD 1602, sin grabar la ESP32.</p>
     <section class="workspace" aria-label="Simulador de animaciones">
       <div class="stage">
         <div class="meta"><span>LCD 1602 · MATRIZ 5×8</span><span id="stateLabel">VERIFICANDO</span></div>
@@ -63,15 +72,33 @@
         <div class="pin-label">VSS · VDD · VO · RS · RW · E · D4—D7 · LED</div>
         <p class="stage-caption" id="description"></p>
         <div class="controls">
-          <button type="button" class="primary" id="grant">Simular acceso permitido</button>
-          <button type="button" id="deny">Simular acceso denegado</button>
-          <button type="button" id="replay">Volver a verificar</button>
+          <button type="button" class="primary" id="grant">Probar propuesta permitida</button>
+          <button type="button" id="deny">Ver acceso denegado</button>
+          <button type="button" id="replay">Volver a lectura</button>
         </div>
       </div>
       <aside class="sidebar">
-        <h2>Durante la lectura</h2>
+        <h2>Pantallas del firmware</h2>
+        <p class="group-note">Estados y mensajes tomados de <code>Display.cpp</code>.</p>
+        <div class="scenario-choices" id="scenarios"></div>
+        <div class="telemetry" id="telemetry">
+          <h2>Datos de ejemplo</h2>
+          <div class="telemetry-grid">
+            <label>Temperatura °C<input id="temperature" type="number" min="-40" max="99.9" step="0.1" value="37.5"></label>
+            <label>Humedad %<input id="humidity" type="number" min="0" max="100" step="1" value="58"></label>
+            <label>Huevos ocupados<input id="occupied" type="number" min="0" max="4" step="1" value="2"></label>
+            <label>Ángulo bandeja<input id="angle" type="number" min="-90" max="90" step="1" value="45"></label>
+          </div>
+          <div class="checks">
+            <label><input id="door" type="checkbox"> Puerta</label>
+            <label><input id="heater" type="checkbox" checked> Calefactor</label>
+            <label><input id="fan" type="checkbox"> Ventilador</label>
+            <label><input id="alarm" type="checkbox"> Alarma</label>
+          </div>
+        </div>
+        <h2>Propuestas · lectura</h2>
         <div class="choices" id="readingChoices"></div>
-        <h2>Acceso permitido</h2>
+        <h2>Propuestas · acceso permitido</h2>
         <div class="choices" id="grantChoices"></div>
         <div class="settings">
           <label for="operator">Nombre de operador</label>
@@ -125,9 +152,34 @@
       '9':['01110','10001','10001','01111','00001','00001','01110'],
       ':':['00000','00100','00100','00000','00100','00100','00000'],
       '.':['00000','00000','00000','00000','00000','01100','01100'],
+      ',':['00000','00000','00000','00000','01100','01100','00100'],
       '-':['00000','00000','00000','11111','00000','00000','00000'],
       '>':['10000','01000','00100','00010','00100','01000','10000'],
+      '<':['00001','00010','00100','01000','00100','00010','00001'],
       '!':['00100','00100','00100','00100','00100','00000','00100'],
+      '%':['11001','11010','00100','01000','10110','00110','00000'],
+      '+':['00000','00100','00100','11111','00100','00100','00000'],
+      '/':['00001','00010','00100','00100','01000','10000','00000'],
+      '°':['01100','10010','10010','01100','00000','00000','00000'],
+      'a':['00000','00000','01110','00001','01111','10001','01111'],
+      'b':['10000','10000','10110','11001','10001','10001','11110'],
+      'c':['00000','00000','01110','10000','10000','10001','01110'],
+      'd':['00001','00001','01101','10011','10001','10001','01111'],
+      'e':['00000','00000','01110','10001','11111','10000','01110'],
+      'f':['00110','01001','01000','11100','01000','01000','01000'],
+      'g':['00000','01111','10001','10001','01111','00001','01110'],
+      'i':['00100','00000','01100','00100','00100','00100','01110'],
+      'l':['01100','00100','00100','00100','00100','00100','01110'],
+      'm':['00000','00000','11010','10101','10101','10101','10101'],
+      'n':['00000','00000','10110','11001','10001','10001','10001'],
+      'o':['00000','00000','01110','10001','10001','10001','01110'],
+      'p':['00000','00000','11110','10001','11110','10000','10000'],
+      'r':['00000','00000','10110','11001','10000','10000','10000'],
+      's':['00000','00000','01111','10000','01110','00001','11110'],
+      't':['00100','00100','11111','00100','00100','00101','00010'],
+      'u':['00000','00000','10001','10001','10001','10011','01101'],
+      'v':['00000','00000','10001','10001','10001','01010','00100'],
+      'y':['00000','00000','10001','10001','01111','00001','01110'],
     };
     const icon = {
       egg: [[4,14,14,31,31,31,31,14],[4,14,14,31,27,31,31,14],[4,14,14,27,21,27,31,14],[4,14,0,31,31,31,31,14],[4,14,6,0,21,31,31,14]],
@@ -135,10 +187,29 @@
       card: [[31,17,21,17,17,17,31,0],[0,31,17,21,17,17,31,0],[0,0,31,17,21,17,31,0],[0,0,0,31,17,21,31,0]],
       check: [[0,0,0,1,2,20,8,0],[0,0,1,2,20,8,0,0],[0,1,2,20,8,0,0,0]],
       door: [[31,17,17,17,17,17,17,31],[31,17,17,17,21,17,17,31],[31,16,16,16,20,16,16,31],[31,0,0,0,4,0,0,31]],
-      cross: [0,17,10,4,10,17,0,0],
       full: [31,31,31,31,31,31,31,31],
       empty: [0,0,0,0,0,0,0,0],
+      thermometer: [4,10,10,14,14,31,31,14],
+      droplet: [4,4,14,14,31,31,31,14],
+      slotFull: [0,4,14,14,31,31,31,14],
+      slotEmpty: [0,4,10,10,17,17,17,14],
+      doorOpen: [15,9,9,11,9,9,9,15],
+      heater: [[4,6,12,14,31,31,14,0],[4,12,6,14,31,31,14,0],[4,4,14,14,31,31,31,14]],
+      fan: [[0,0,0,31,0,0,0,0],[16,8,8,4,2,2,1,0],[4,4,4,4,4,4,4,0],[1,2,2,4,8,8,16,0]],
+      alarm: [[4,14,14,14,31,0,4,0],[2,6,14,14,31,0,8,0],[4,14,14,14,31,0,4,0],[8,12,14,14,31,0,2,0]],
     };
+    const scenarios = [
+      { id:'boot', name:'Encendido', description:'Logo que aparece letra por letra; los huevos llenan la segunda fila y eclosionan.' },
+      { id:'running', name:'En marcha', description:'Lecturas, bandeja y actuadores: los iconos de calefactor, ventilador y alarma se animan.' },
+      { id:'disabled', name:'Sistema apagado', description:'Indicador de reposo y cantidad de espacios libres.' },
+      { id:'sensorFault', name:'Error DHT', description:'Aviso fijo con una instrucción que se desplaza por la segunda fila.' },
+      { id:'actualReading', name:'RFID · lectura', description:'Mensaje de verificación que muestra el firmware actual.' },
+      { id:'actualGranted', name:'RFID · permitido', description:'El nombre del operador alterna con la orden de abrir la puerta.' },
+      { id:'actualDenied', name:'RFID · denegado', description:'Acceso denegado con cruces intermitentes.' },
+      { id:'timeout', name:'Sin respuesta', description:'La autorización tardó demasiado; invita a intentar de nuevo.' },
+      { id:'readerError', name:'Error RC522', description:'Error del lector RFID con signos de alerta intermitentes.' },
+      { id:'fatal', name:'Error fatal', description:'Mensaje de emergencia cuando no hay RAM para crear las tareas.' },
+    ];
     const readingOptions = [
       { id:'egg', name:'Huevo eclosionando', description:'El huevo se agrieta durante la verificación.' },
       { id:'lock', name:'Cerradura', description:'El candado se abre mientras se comprueba la tarjeta.' },
@@ -153,22 +224,63 @@
     const canvas = document.getElementById('screen');
     const ctx = canvas.getContext('2d');
     const operator = document.getElementById('operator');
-    let reading = 'egg', grant = 'welcome', state = 'reading', frame = 0, timer;
+    let reading = 'egg', grant = 'welcome', state = 'running', frame = 0, timer;
 
     function cells() { return Array(16).fill(' '); }
     function write(line, column, value) { [...value].slice(0, 16-column).forEach((char, i) => { line[column+i] = char; }); }
     function name() { return operator.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9 ]/g, '').trim().slice(0,16); }
     function center(line, value) { write(line, Math.max(0, Math.floor((16-value.length)/2)), value); }
+    function number(id, min, max) { return Math.max(min, Math.min(max, Number(document.getElementById(id).value) || 0)); }
+    function checked(id) { return document.getElementById(id).checked; }
+    function slots(line) { const occupied=number('occupied',0,4); for(let i=0;i<4;i++) line[i]=i<occupied?icon.slotFull:icon.slotEmpty; }
     function screen() {
       const top = cells(), bottom = cells();
-      if (state === 'reading') {
+      if (state === 'boot') {
+        top[1]=icon.slotFull; top[14]=icon.slotFull;
+        write(top,4,'SmartEgg'.slice(0,Math.min(8,frame)));
+        const count=Math.max(0,Math.min(16,frame-8));
+        for(let i=0;i<count;i++) bottom[i]=frame<25?icon.egg[0]:icon.egg[Math.min(4,frame-24)];
+      } else if (state === 'running') {
+        const temperature=number('temperature',-40,99.9).toFixed(1);
+        const [whole,decimal]=temperature.split('.');
+        top[0]=icon.thermometer; write(top,1,whole.padStart(3)); top[4]='.'; top[5]=decimal; top[6]='°'; top[7]='C';
+        top[9]=icon.droplet; write(top,10,String(Math.round(number('humidity',0,100))).padStart(3)); top[13]='%';
+        if(checked('door')) top[15]=icon.doorOpen;
+        slots(bottom);
+        const angle=number('angle',-90,90); write(bottom,6,((angle>0?'+':'')+angle).padStart(3)); bottom[9]='°';
+        if(checked('heater')) bottom[12]=icon.heater[frame%3];
+        if(checked('fan')) bottom[13]=icon.fan[frame%4];
+        if(checked('alarm') && (frame&2)) bottom[14]=icon.alarm[frame%4];
+      } else if (state === 'disabled') {
+        write(top,0,'SISTEMA APAGADO'); top[15]=[' ','.','o','O','o','.'][Math.floor(frame/3)%6];
+        slots(bottom); write(bottom,5,'Libres:'); bottom[12]=String(4-number('occupied',0,4));
+        if(checked('door')) bottom[15]=icon.doorOpen;
+      } else if (state === 'sensorFault') {
+        write(top,0,'ERROR SENSOR DHT');
+        const hint='Revise DATA en GPIO15, 3.3V y GND comun.   ';
+        for(let i=0;i<16;i++) bottom[i]=hint[(Math.floor(frame/2)+i)%hint.length];
+      } else if (state === 'actualReading') {
+        const phase=frame%4; write(top,1,'TARJETA LEIDA'); bottom[0]=['.','o','O','o'][phase];
+        write(bottom,2,'Verificando'); for(let i=0;i<phase%3+1;i++) bottom[13+i]='.';
+      } else if (state === 'actualGranted') {
+        write(top,0,'ACCESO PERMITIDO');
+        if(name() && (Math.floor(frame/8)&1)===0) write(bottom,0,name());
+        else { write(bottom,1,'ABRA LA PUERTA'); if((frame%4&1)===0){bottom[0]='>';bottom[15]='<';} }
+      } else if (state === 'actualDenied') {
+        write(top,0,'ACCESO DENEGADO'); write(bottom,1,'NO AUTORIZADO');
+        if((frame%4&1)===0){bottom[0]='X';bottom[15]='X';}
+      } else if (state === 'timeout') {
+        write(top,1,'SIN RESPUESTA'); top[14]=['.','o','O','o'][frame%4]; write(bottom,0,'INTENTE DE NUEVO');
+      } else if (state === 'readerError') {
+        write(top,2,'ERROR LECTOR'); write(bottom,2,'REVISE RC522');
+        if((frame%4&1)===0){top[0]='!';top[15]='!';}
+      } else if (state === 'fatal') {
+        write(top,0,'ERROR FATAL RTOS'); write(bottom,0,'Sin RAM p/tareas');
+      } else if (state === 'reading') {
         if (reading === 'egg') { write(top, 1, 'TARJETA LEIDA'); bottom[0] = icon.egg[frame%5]; write(bottom, 2, 'VERIFICANDO'); }
         if (reading === 'lock') { write(top, 0, 'VERIFICANDO'); bottom[0] = icon.lock[frame%4]; write(bottom, 2, 'CERRADURA'); }
         if (reading === 'card') { write(top, 0, 'LEYENDO TARJETA'); bottom[frame%4] = icon.card[frame%4]; write(bottom, 7, 'RFID'); }
         if (reading === 'bar') { write(top, 0, 'VERIFICANDO'); for (let i=0;i<16;i++) bottom[i] = i < frame%17 ? icon.full : icon.empty; }
-      } else if (state === 'denied') {
-        top[0] = icon.cross; write(top, 1, 'ACCESO DENEGADO');
-        center(bottom, frame%2 ? 'NO AUTORIZADO' : 'TARJETA INVALIDA');
       } else if (frame < 4) {
         top[0] = grant === 'unlock' ? icon.lock[Math.min(3,frame)] : grant === 'hatch' ? icon.egg[Math.min(4,frame)] : icon.check[Math.min(2,frame)];
         write(top, 2, frame < 2 ? 'VALIDANDO' : 'ACCESO VALIDO');
@@ -202,11 +314,14 @@
     }
     function render() {
       draw(screen());
-      document.getElementById('stateLabel').textContent = state === 'reading' ? 'VERIFICANDO' : state === 'granted' ? 'PERMITIDO' : 'DENEGADO';
-      document.getElementById('description').textContent = state === 'granted' ? grantOptions.find(o=>o.id===grant).description : state === 'denied' ? 'La tarjeta se rechaza con una cruz y un mensaje claro.' : readingOptions.find(o=>o.id===reading).description;
+      const scenario=scenarios.find(option=>option.id===state);
+      document.getElementById('stateLabel').textContent = scenario ? scenario.name.toUpperCase() : state === 'granted' ? 'PROPUESTA · PERMITIDO' : 'PROPUESTA · LECTURA';
+      document.getElementById('description').textContent = scenario ? scenario.description : state === 'granted' ? grantOptions.find(option=>option.id===grant).description : readingOptions.find(option=>option.id===reading).description;
+      document.getElementById('telemetry').classList.toggle('visible',state==='running'||state==='disabled');
+      document.querySelectorAll('#scenarios .choice').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scenario===state)));
     }
     function setState(next) { state=next; frame=0; render(); }
-    function tick() { frame++; if (state !== 'reading' && frame >= 19) setState('reading'); else render(); }
+    function tick() { frame=(frame+1)%(state==='boot'?30:state==='granted'?19:120); render(); }
     function start() { clearInterval(timer); timer=setInterval(tick, Number(document.getElementById('speed').value)); render(); }
     function addChoices(options, containerId, kind) {
       const container=document.getElementById(containerId);
@@ -225,12 +340,20 @@
       });
     }
     document.querySelector('.pins').append(...Array.from({length:16},()=>document.createElement('i')));
+    const scenarioContainer=document.getElementById('scenarios');
+    scenarios.forEach((option,index)=>{
+      const button=document.createElement('button'); button.type='button'; button.className='choice'; button.dataset.scenario=option.id;
+      const number=document.createElement('small'); number.textContent=String(index+1).padStart(2,'0');
+      const title=document.createElement('span'); title.textContent=option.name;
+      button.append(number,title); button.addEventListener('click',()=>setState(option.id)); scenarioContainer.appendChild(button);
+    });
     addChoices(readingOptions,'readingChoices','reading');
     addChoices(grantOptions,'grantChoices','grant');
     document.getElementById('grant').addEventListener('click',()=>setState('granted'));
-    document.getElementById('deny').addEventListener('click',()=>setState('denied'));
+    document.getElementById('deny').addEventListener('click',()=>setState('actualDenied'));
     document.getElementById('replay').addEventListener('click',()=>setState('reading'));
     operator.addEventListener('input',render);
+    document.querySelectorAll('#telemetry input').forEach(input=>input.addEventListener('input',render));
     document.getElementById('speed').addEventListener('input',event=>{
       const speed=Number(event.target.value);
       document.getElementById('speedLabel').textContent=speed<300?'rápida':speed>600?'lenta':'normal';
