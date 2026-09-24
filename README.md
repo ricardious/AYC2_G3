@@ -1,6 +1,15 @@
-# Arquitectura de Computadoras y Ensambladores 2
+# Arquitectura de Computadoras y Ensambladores 2 — Grupo 3
 
-En este repositorio almacenamos las prácticas y proyectos que realizamos como Grupo 3 para el curso **Arquitectura de Computadoras y Ensambladores 2**, sección A, de la Facultad de Ingeniería de la Universidad de San Carlos de Guatemala.
+Repositorio del Grupo 3 para el curso **Arquitectura de Computadoras y Ensambladores 2**, sección A, de la Facultad de Ingeniería de la Universidad de San Carlos de Guatemala. Aquí reunimos las entregas de SmartEgg: una incubadora inteligente que comenzó como práctica con Arduino y evolucionó a un sistema IoT con ESP32.
+
+## Contenido
+
+| Entrega | Descripción | Documentación |
+| --- | --- | --- |
+| [Práctica 1 — SmartEgg](Practica_1_SmartEgg/) | Prototipo con Arduino Uno R3, sensores, actuadores, comunicación serial, API FastAPI y consola web. | [README](Practica_1_SmartEgg/README.md) · [Informe técnico](Practica_1_SmartEgg/docs/INFORME_TECNICO.md) · [Enunciado](Practica_1_SmartEgg/docs/enunciado/Practica_1_SmartEgg_2S2026.pdf) |
+| [Proyecto 1 — SmartEgg](Proyecto_1_SmartEgg/) | Evolución con ESP32, FreeRTOS, acceso RFID, PostgreSQL, MQTT, Grafana y frontend Next.js. | [README](Proyecto_1_SmartEgg/README.md) · [Montaje](Proyecto_1_SmartEgg/firmware/MONTAJE_PASO_A_PASO.md) · [Enunciado](Proyecto_1_SmartEgg/docs/enunciado/Proyecto_1_2S2026.pdf) |
+
+Cada entrega tiene sus propias instrucciones de instalación, ejecución y pruebas. Para trabajar con el Proyecto 1, comience por su [guía principal](Proyecto_1_SmartEgg/README.md); para la Práctica 1, consulte su [README](Practica_1_SmartEgg/README.md).
 
 ## Integrantes
 
@@ -11,10 +20,6 @@ En este repositorio almacenamos las prácticas y proyectos que realizamos como G
 | José Adrian Orozco Ramírez | 202210908 |
 | Alex Oswaldo López Alquejay | 202100171 |
 | Kevin Rodrigo Sandoval Hernández | 202001376 |
-
-## Contenido
-
-- [Práctica 1 — SmartEgg](Practica_1_SmartEgg/README.md)
 
 ## Contribuciones
 
