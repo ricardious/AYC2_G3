@@ -107,8 +107,9 @@ firmware/tests/run_host_tests.sh
 ## Probar animaciones sin cargar la ESP32
 
 Abra [preview-animaciones.html](preview-animaciones.html) en un navegador. El visor
-funciona sin servidor ni dependencias: permite comparar cuatro propuestas para el LCD
-16×2, cambiar la velocidad y simular acceso permitido o denegado con un nombre.
+funciona sin servidor ni dependencias: dibuja el LCD 16×2 con caracteres de matriz
+5×8, permite comparar cuatro animaciones de lectura y tres secuencias de acceso
+permitido, cambiar la velocidad y simular un acceso denegado.
 Es una maqueta visual; para comprobar los caracteres reales del firmware sin grabar
 la placa, use [la simulación de Wokwi](wokwi/README.md).
 
