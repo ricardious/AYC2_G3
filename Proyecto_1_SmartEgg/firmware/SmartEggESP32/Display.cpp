@@ -37,6 +37,11 @@ constexpr uint8_t kHeaterFrames = 3;
 constexpr uint8_t kFanFrames = 4;
 constexpr uint8_t kAlarmFrames = 4;
 constexpr uint8_t kHatchFrames = 5;
+constexpr uint8_t kGreetingFrames = 2;
+constexpr uint8_t kGreetingDurationFrames = 12;
+constexpr uint8_t kPowerFrames = 3;
+constexpr uint8_t kHourglassFrames = 4;
+constexpr uint8_t kShieldFrames = 3;
 
 const uint8_t kThermometerBitmap[8] = {
     0b00100, 0b01010, 0b01010, 0b01110,
@@ -71,6 +76,33 @@ const uint8_t kHatchBitmaps[kHatchFrames][8] = {
     {0b00100, 0b01110, 0b00000, 0b11111, 0b11111, 0b11111, 0b11111, 0b01110},
     // A chick with its beak clear of a broken shell rim.
     {0b00100, 0b01110, 0b00110, 0b00000, 0b10101, 0b11111, 0b11111, 0b01110},
+};
+
+// The hatched chick lifts one wing for a short greeting after access is granted.
+const uint8_t kGreetingBitmaps[kGreetingFrames][8] = {
+    {0b00100, 0b01110, 0b00110, 0b00000, 0b10101, 0b11111, 0b11111, 0b01110},
+    {0b00100, 0b01110, 0b00110, 0b10000, 0b10101, 0b11111, 0b11111, 0b01110},
+};
+
+// Slot 4 is free outside the running/alarm screen. Temporary status icons use
+// that slot and restore the bell before returning to normal operation.
+const uint8_t kPowerBitmaps[kPowerFrames][8] = {
+    {0b00100, 0b00100, 0b00100, 0b00000, 0b10001, 0b10001, 0b01110, 0b00000},
+    {0b00100, 0b00100, 0b10101, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000},
+    {0b00100, 0b01110, 0b10101, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000},
+};
+
+const uint8_t kHourglassBitmaps[kHourglassFrames][8] = {
+    {0b11111, 0b10001, 0b01010, 0b00100, 0b01010, 0b10001, 0b11111, 0b00000},
+    {0b11111, 0b10001, 0b01010, 0b00100, 0b00100, 0b01110, 0b11111, 0b00000},
+    {0b11111, 0b10001, 0b00100, 0b00100, 0b01110, 0b10001, 0b11111, 0b00000},
+    {0b11111, 0b10001, 0b00100, 0b00100, 0b01010, 0b10001, 0b11111, 0b00000},
+};
+
+const uint8_t kShieldBitmaps[kShieldFrames][8] = {
+    {0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b01010, 0b00100, 0b00000},
+    {0b01110, 0b10001, 0b10101, 0b10001, 0b10101, 0b01010, 0b00100, 0b00000},
+    {0b01110, 0b10001, 0b10101, 0b01110, 0b10101, 0b01010, 0b00100, 0b00000},
 };
 
 const uint8_t kDoorOpenBitmap[8] = {
@@ -127,14 +159,19 @@ uint8_t animationFrame = 0;
 uint8_t marqueeOffset = 0;
 portMUX_TYPE accessFeedbackMux = portMUX_INITIALIZER_UNLOCKED;
 AccessFeedback activeAccessFeedback = AccessFeedback::kReading;
-char activeOperatorName[17] = {};
+char activeOperatorName[33] = {};
 int64_t accessFeedbackExpiresAtUs = 0;
+int64_t accessFeedbackStartedAtUs = 0;
 
 // Last bitmap pushed to CGRAM for each animated slot; 0xFF means "unknown", so
 // the next visible frame is uploaded even if its index happens to match.
 uint8_t uploadedHeaterFrame = 0xFF;
 uint8_t uploadedFanFrame = 0xFF;
 uint8_t uploadedAlarmFrame = 0xFF;
+uint8_t uploadedAccessGlyphFrame = 0xFF;
+bool accessGlyphActive = false;
+uint8_t uploadedStatusGlyphFrame = 0xFF;
+bool statusGlyphActive = false;
 
 const char kFaultMarquee[] =
     "Revise DATA en GPIO15, 3.3V y GND comun.   ";
@@ -258,11 +295,10 @@ void composeRunning(const SystemState& state) {
 }
 
 // The system is switched off at the toggle: no actuator state to show, so the
-// screen reports what is still being sensed plus a slow breathing marker.
+// screen reports what is still being sensed plus a softly pulsing power glyph.
 void composeDisabled(const SystemState& state) {
-  static const char kBreath[] = {' ', '.', 'o', 'O', 'o', '.'};
   putText(0, 0, "SISTEMA APAGADO");
-  put(0, 15, kBreath[(animationFrame / 3) % sizeof(kBreath)]);
+  put(0, 15, static_cast<char>(kGlyphAlarm));
 
   putSlots(1, 0, state.occupiedSlots);
   putText(1, 5, "Libres:");
@@ -289,46 +325,61 @@ void composeSensorFault(const SystemState& state) {
   }
 }
 
-void composeAccessFeedback(AccessFeedback feedback, const char* operatorName) {
+void composeAccessFeedback(AccessFeedback feedback, const char* operatorName,
+                           uint32_t feedbackFrame) {
   // Keep the animation inside the character subset shared by HD44780 ROM
   // variants. In particular, code point 0x5C (ASCII backslash) is rendered as
   // a Yen sign or another regional glyph by many LCD modules.
-  static const char kSpinner[] = {'.', 'o', 'O', 'o'};
-  const uint8_t phase = animationFrame % 4;
+  const uint8_t phase = feedbackFrame % 4;
 
   switch (feedback) {
     case AccessFeedback::kReading: {
       putText(0, 1, "TARJETA LEIDA");
-      put(1, 0, kSpinner[phase]);
-      putText(1, 2, "Verificando");
-      const uint8_t dots = static_cast<uint8_t>((phase % 3) + 1);
-      for (uint8_t index = 0; index < dots; ++index) {
-        put(1, static_cast<uint8_t>(13 + index), '.');
-      }
+      put(0, 0, static_cast<char>(kGlyphSlotFull));
+      putText(1, 2, "VERIFICANDO");
       break;
     }
     case AccessFeedback::kGranted:
+      if (feedbackFrame < kGreetingDurationFrames) {
+        put(0, 0, static_cast<char>(kGlyphSlotFull));
+        putText(0, 2, "BIENVENIDO");
+        if (operatorName[0] != '\0') {
+          const size_t nameLength = strlen(operatorName);
+          const size_t overflow = nameLength > config::kLcdColumns
+                                      ? nameLength - config::kLcdColumns : 0;
+          const size_t offset =
+              (static_cast<size_t>(feedbackFrame) * overflow) /
+              (kGreetingDurationFrames - 1U);
+          putText(1, 0, operatorName + offset);
+        } else {
+          putText(1, 0, "ACCESO LISTO");
+        }
+        break;
+      }
       putText(0, 0, "ACCESO PERMITIDO");
-      if (operatorName[0] != '\0' && ((animationFrame / 8U) & 1U) == 0) {
+      if (operatorName[0] != '\0' &&
+          (((feedbackFrame - kGreetingDurationFrames) / 8U) & 1U) != 0) {
         putText(1, 0, operatorName);
       } else {
-        putText(1, 1, "ABRA LA PUERTA");
-        put(1, 0, (phase & 1U) == 0 ? '>' : ' ');
-        put(1, 15, (phase & 1U) == 0 ? '<' : ' ');
+        putText(1, 0, "> ABRA LA PUERTA");
       }
       break;
     case AccessFeedback::kDenied:
-      putText(0, 0, "ACCESO DENEGADO");
-      putText(1, 1, "NO AUTORIZADO");
-      if ((phase & 1U) == 0) {
-        put(1, 0, 'X');
-        put(1, 15, 'X');
+      put(0, 0, static_cast<char>(kGlyphAlarm));
+      putText(0, 1, "ACCESO DENEGADO");
+      {
+        static const char kDeniedMessage[] = "NO AUTORIZADO";
+        const uint8_t visible = static_cast<uint8_t>(feedbackFrame * 4U + 1U);
+        for (uint8_t index = 0;
+             index < sizeof(kDeniedMessage) - 1U && index < visible; ++index) {
+          put(1, static_cast<uint8_t>(index + 1U), kDeniedMessage[index]);
+        }
       }
       break;
     case AccessFeedback::kTimeout:
-      putText(0, 1, "SIN RESPUESTA");
+      put(0, 0, static_cast<char>(kGlyphAlarm));
+      putText(0, 2, "SIN RESPUESTA");
       putText(1, 0, "INTENTE DE NUEVO");
-      put(0, 14, kSpinner[phase]);
       break;
     case AccessFeedback::kReaderError:
       putText(0, 2, "ERROR LECTOR");
@@ -342,12 +393,14 @@ void composeAccessFeedback(AccessFeedback feedback, const char* operatorName) {
 }
 
 bool copyActiveAccessFeedback(AccessFeedback& feedback, char* operatorName,
-                              size_t operatorNameSize) {
+                              size_t operatorNameSize,
+                              int64_t& startedAtUs) {
   const int64_t nowUs = esp_timer_get_time();
   bool active = false;
   portENTER_CRITICAL(&accessFeedbackMux);
   if (accessFeedbackExpiresAtUs > nowUs) {
     feedback = activeAccessFeedback;
+    startedAtUs = accessFeedbackStartedAtUs;
     if (operatorNameSize > 0) {
       strncpy(operatorName, activeOperatorName, operatorNameSize - 1);
       operatorName[operatorNameSize - 1] = '\0';
@@ -370,6 +423,75 @@ bool backBufferShows(uint8_t glyph) {
   return false;
 }
 
+void updateAccessGlyph(bool accessActive, AccessFeedback feedback,
+                       uint32_t feedbackFrame) {
+  const bool showChick = accessActive &&
+      (feedback == AccessFeedback::kReading ||
+       (feedback == AccessFeedback::kGranted &&
+        feedbackFrame < kGreetingDurationFrames));
+  if (!showChick) {
+    if (accessGlyphActive) {
+      lcdCreateChar(kGlyphSlotFull, kSlotFullBitmap);
+      accessGlyphActive = false;
+      uploadedAccessGlyphFrame = 0xFF;
+    }
+    return;
+  }
+
+  uint8_t glyphFrame;
+  const uint8_t* bitmap;
+  if (feedback == AccessFeedback::kReading) {
+    glyphFrame = static_cast<uint8_t>(feedbackFrame < kHatchFrames
+        ? feedbackFrame : kHatchFrames - 1);
+    bitmap = kHatchBitmaps[glyphFrame];
+  } else {
+    glyphFrame = static_cast<uint8_t>(kHatchFrames +
+        ((feedbackFrame / 2U) % kGreetingFrames));
+    bitmap = kGreetingBitmaps[glyphFrame - kHatchFrames];
+  }
+  if (!accessGlyphActive || uploadedAccessGlyphFrame != glyphFrame) {
+    lcdCreateChar(kGlyphSlotFull, bitmap);
+    uploadedAccessGlyphFrame = glyphFrame;
+    accessGlyphActive = true;
+  }
+}
+
+void updateStatusGlyph(Screen screen, AccessFeedback feedback,
+                       uint32_t feedbackFrame) {
+  uint8_t glyphFrame = 0xFF;
+  const uint8_t* bitmap = nullptr;
+  if (screen == Screen::kDisabled) {
+    glyphFrame = static_cast<uint8_t>((animationFrame / 3U) % kPowerFrames);
+    bitmap = kPowerBitmaps[glyphFrame];
+  } else if (screen == Screen::kAccess &&
+             feedback == AccessFeedback::kTimeout) {
+    glyphFrame = static_cast<uint8_t>(kPowerFrames +
+        ((feedbackFrame / 3U) % kHourglassFrames));
+    bitmap = kHourglassBitmaps[glyphFrame - kPowerFrames];
+  } else if (screen == Screen::kAccess &&
+             feedback == AccessFeedback::kDenied) {
+    glyphFrame = static_cast<uint8_t>(kPowerFrames + kHourglassFrames +
+        (feedbackFrame < kShieldFrames ? feedbackFrame : kShieldFrames - 1U));
+    bitmap = kShieldBitmaps[glyphFrame - kPowerFrames - kHourglassFrames];
+  }
+
+  if (bitmap == nullptr) {
+    if (statusGlyphActive) {
+      lcdCreateChar(kGlyphAlarm, kAlarmBitmaps[0]);
+      statusGlyphActive = false;
+      uploadedStatusGlyphFrame = 0xFF;
+      uploadedAlarmFrame = 0xFF;
+    }
+    return;
+  }
+  if (!statusGlyphActive || uploadedStatusGlyphFrame != glyphFrame) {
+    lcdCreateChar(kGlyphAlarm, bitmap);
+    statusGlyphActive = true;
+    uploadedStatusGlyphFrame = glyphFrame;
+    uploadedAlarmFrame = 0xFF;
+  }
+}
+
 // Runs on the composed frame, so an icon that is currently blinked off or that
 // belongs to another screen costs nothing. Scanning 32 bytes is far cheaper
 // than the eight byte writes an unnecessary CGRAM upload would put on the bus.
@@ -388,7 +510,7 @@ void uploadAnimatedGlyphs() {
       uploadedFanFrame = frame;
     }
   }
-  if (backBufferShows(kGlyphAlarm)) {
+  if (currentScreen == Screen::kRunning && backBufferShows(kGlyphAlarm)) {
     const uint8_t frame = animationFrame % kAlarmFrames;
     if (frame != uploadedAlarmFrame) {
       lcdCreateChar(kGlyphAlarm, kAlarmBitmaps[frame]);
@@ -432,6 +554,8 @@ void invalidate() {
   uploadedHeaterFrame = 0xFF;
   uploadedFanFrame = 0xFF;
   uploadedAlarmFrame = 0xFF;
+  uploadedAccessGlyphFrame = 0xFF;
+  uploadedStatusGlyphFrame = 0xFF;
 }
 
 void showFatalRtos() {
@@ -465,11 +589,15 @@ void initialize() {
   lcdCreateChar(kGlyphThermometer, kThermometerBitmap);
   lcdCreateChar(kGlyphDroplet, kDropletBitmap);
   lcdCreateChar(kGlyphSlotFull, kSlotFullBitmap);
+  accessGlyphActive = false;
+  uploadedAccessGlyphFrame = 0xFF;
   lcdCreateChar(kGlyphSlotEmpty, kSlotEmptyBitmap);
   lcdCreateChar(kGlyphDoorOpen, kDoorOpenBitmap);
   lcdCreateChar(kGlyphHeater, kHeaterBitmaps[0]);
   lcdCreateChar(kGlyphFan, kFanBitmaps[0]);
   lcdCreateChar(kGlyphAlarm, kAlarmBitmaps[0]);
+  statusGlyphActive = false;
+  uploadedStatusGlyphFrame = 0xFF;
 
   // Splash: the title types itself in, the bottom row fills with eggs instead
   // of an anonymous progress bar, and then the whole clutch hatches. It runs
@@ -517,22 +645,26 @@ void initialize() {
 }
 
 void showAccessFeedback(AccessFeedback feedback, uint32_t durationMs) {
+  const int64_t startedAtUs = esp_timer_get_time();
   const int64_t expiresAtUs =
-      esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000LL;
+      startedAtUs + static_cast<int64_t>(durationMs) * 1000LL;
   portENTER_CRITICAL(&accessFeedbackMux);
   activeAccessFeedback = feedback;
   activeOperatorName[0] = '\0';
+  accessFeedbackStartedAtUs = startedAtUs;
   accessFeedbackExpiresAtUs = expiresAtUs;
   portEXIT_CRITICAL(&accessFeedbackMux);
 }
 
 void showAccessGranted(const char* operatorName, uint32_t durationMs) {
+  const int64_t startedAtUs = esp_timer_get_time();
   const int64_t expiresAtUs =
-      esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000LL;
+      startedAtUs + static_cast<int64_t>(durationMs) * 1000LL;
   portENTER_CRITICAL(&accessFeedbackMux);
   activeAccessFeedback = AccessFeedback::kGranted;
   strncpy(activeOperatorName, operatorName, sizeof(activeOperatorName) - 1);
   activeOperatorName[sizeof(activeOperatorName) - 1] = '\0';
+  accessFeedbackStartedAtUs = startedAtUs;
   accessFeedbackExpiresAtUs = expiresAtUs;
   portEXIT_CRITICAL(&accessFeedbackMux);
 }
@@ -545,9 +677,14 @@ void render(const SystemState& state) {
   ++animationFrame;
 
   AccessFeedback accessFeedback = AccessFeedback::kReading;
-  char operatorName[17] = {};
+  char operatorName[33] = {};
+  int64_t accessStartedAtUs = 0;
   const bool accessFeedbackActive = copyActiveAccessFeedback(
-      accessFeedback, operatorName, sizeof(operatorName));
+      accessFeedback, operatorName, sizeof(operatorName), accessStartedAtUs);
+  const uint32_t accessFrame = accessFeedbackActive
+      ? static_cast<uint32_t>((esp_timer_get_time() - accessStartedAtUs) /
+          (static_cast<int64_t>(config::kDisplayFramePeriodMs) * 1000LL))
+      : 0U;
 
   Screen screen;
   if (accessFeedbackActive) {
@@ -573,6 +710,9 @@ void render(const SystemState& state) {
         static_cast<uint8_t>((marqueeOffset + 1) % kFaultMarqueeLength);
   }
 
+  updateAccessGlyph(accessFeedbackActive, accessFeedback, accessFrame);
+  updateStatusGlyph(screen, accessFeedback, accessFrame);
+
   for (uint8_t row = 0; row < config::kLcdRows; ++row) {
     composingRow = row;
     clearBackBuffer();
@@ -584,7 +724,7 @@ void render(const SystemState& state) {
         composeSensorFault(state);
         break;
       case Screen::kAccess:
-        composeAccessFeedback(accessFeedback, operatorName);
+        composeAccessFeedback(accessFeedback, operatorName, accessFrame);
         break;
       default:
         composeRunning(state);
