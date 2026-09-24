@@ -142,7 +142,7 @@ def test_rfid_serial_access_lifecycle(client, operator_headers, incubator) -> No
         )
         assert authorization.command is not None
         assert authorization.command["authorized"] is True
-        assert authorization.command["operator_name"] == "OPERADOR DE PRUE"
+        assert authorization.command["operator_name"] == "OPERADOR DE PRUEBA"
         session_id = int(authorization.command["session_id"])
 
         opened = process_serial_access_event(

@@ -36,7 +36,8 @@ def _lcd_operator_name(full_name: str) -> str:
         .encode("ascii", "ignore")
         .decode("ascii")
     )
-    return " ".join(ascii_name.upper().split())[:16]
+    # The LCD scrolls long names during the greeting; the serial buffer holds 32.
+    return " ".join(ascii_name.upper().split())[:32]
 
 
 def _as_utc(value: datetime) -> datetime:

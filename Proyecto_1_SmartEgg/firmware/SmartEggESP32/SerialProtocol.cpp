@@ -199,7 +199,7 @@ void parseAccessCommand(const char* input) {
   bool authorized = false;
   int sessionId = 0;
   int servoAngle = config::kAccessUnlockedDegrees;
-  char operatorName[17] = {};
+  char operatorName[33] = {};
   if (!readBoolField(input, "\"authorized\"", authorized)) {
     postProtocolMessage(MessageType::kError,
                         static_cast<uint8_t>(ErrorCode::kUnknownCommand));
