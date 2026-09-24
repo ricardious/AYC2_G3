@@ -17,6 +17,8 @@ medición real de la ESP32 si no se ha verificado su origen.
 | [grafana-tiempo-real-sin-nodo.png](grafana-tiempo-real-sin-nodo.png) | Dashboard MQTT provisionado, capturado el 24-09-2026 | Paneles vacíos porque no había publicación del nodo; no cumple la evidencia de lectura en vivo. |
 | [grafana-historico-actual-sin-nodo.png](grafana-historico-actual-sin-nodo.png) | Dashboard SQL abierto, capturado el 24-09-2026 | El rango elegido indica **SIN CONEXIÓN** y **No data**; no acredita telemetría real. |
 | [mqtt-broker-publicacion-suscripcion-sin-esp32.png](mqtt-broker-publicacion-suscripcion-sin-esp32.png) | Prueba del 24-09-2026: Mosquitto en Docker recibió en `smartegg/diagnostico/manual` el JSON publicado con QoS 1 | Mensaje sintético, sin retención ni ESP32; acredita publicación/suscripción del broker, no lecturas ni integración física. |
+| [mqtt-explorer-conexion-sin-esp32.png](mqtt-explorer-conexion-sin-esp32.png) | MQTT Explorer conectado al Mosquitto local el 24-09-2026; se observan los árboles `smartegg` y `$SYS` | Acredita conexión y recepción de topics, no lecturas nuevas de la ESP32. |
+| [mqtt-explorer-prueba-manual-sin-esp32.png](mqtt-explorer-prueba-manual-sin-esp32.png) | MQTT Explorer publica y recibe `{"test":"publish-subscribe"}` en `smartegg/diagnostico/manual` el 24-09-2026 | Prueba gráfica con QoS 0 y mensaje sintético sin retención; no acredita telemetría física. |
 
 ## Capturas y demostraciones que faltan
 
