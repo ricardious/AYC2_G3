@@ -1,30 +1,33 @@
 # Proyecto 1 — SmartEgg
 
-SmartEgg es un sistema de incubadora inteligente IoT. Un nodo ESP32 mide el
-ambiente de la cámara y acciona sus actuadores; una plataforma en Docker persiste cada
-lectura, la publica en un broker MQTT y la distribuye a una consola web y a Grafana.
-Este proyecto reutiliza como base el frontend, el servidor y la lógica de control
-desarrollados para la Práctica 1.
+Desarrollamos SmartEgg como una incubadora inteligente IoT a partir de la
+Práctica 1. Migramos el nodo a una ESP32 que mide el ambiente, controla los
+actuadores y lee tarjetas RFID. Integramos FastAPI para recibir las tramas por
+USB y guardar las lecturas en PostgreSQL; Mosquitto distribuye los eventos y
+Next.js y Grafana presentan la operación en vivo y el historial.
 
-```bash
-cp .env.example .env
-docker compose up -d --build      # PostgreSQL + Mosquitto + FastAPI + Grafana
-cd client && pnpm install && pnpm dev
-```
+Organizamos la plataforma con Docker Compose y mantuvimos el cliente web fuera
+de los contenedores. La API expone su documentación en `:8000/docs`, la consola
+web utiliza `:3000` y Grafana `:3001`. Las instrucciones reproducibles de cada
+componente están en sus respectivos README; aquí describimos lo que construimos
+y cómo se relaciona.
 
 ## Contenido
 
 - [Estructura](#estructura)
 - [Arquitectura general](#arquitectura-general)
+  - [Boceto conceptual](#boceto-conceptual)
   - [Conexiones](#conexiones)
   - [Recorrido de una lectura](#recorrido-de-una-lectura)
   - [Ciclo de vida de una alarma](#ciclo-de-vida-de-una-alarma)
 - [Modelo de datos](#modelo-de-datos)
-- [Ejecución local](#ejecución-local)
+- [Despliegue y operación](#despliegue-y-operación)
+  - [Cuentas y permisos](#cuentas-y-permisos)
+  - [Pruebas y evidencias](#pruebas-y-evidencias)
 - [Visualización de datos](#visualización-de-datos)
 - [HTTP vs. MQTT en SmartEgg](#http-vs-mqtt-en-smartegg)
 - [Firmware ESP32](#firmware-esp32)
-- [Hoja de calificación](#hoja-de-calificación)
+- [Documentación y evaluación](#documentación-y-evaluación)
 
 ## Estructura
 
@@ -37,13 +40,16 @@ Proyecto_1_SmartEgg/
 ├── docs/         # Documentación y enunciado
 ├── grafana/      # Dashboards provisionados y datasources
 ├── mqtt/         # Mosquitto, ACL y contrato de topics MQTT
+├── scripts/      # Reconexión del backend al puerto USB de la ESP32
 ├── docker-compose.yml         # Plataforma completa
-└── docker-compose.serial.yml  # Sobrecarga que expone /dev/ttyACM0 al backend
+└── docker-compose.serial.yml  # Sobrecarga que expone SERIAL_DEVICE al backend
 ```
 
-La base de datos PostgreSQL se ejecuta fuera del servidor como un servicio independiente
-y conserva sus datos en el volumen Docker `postgres_data`. El modelo documentado está
-en `db/schema.dbml` y las consultas de Grafana en `db/grafana_queries.sql`.
+Usamos PostgreSQL como servicio independiente y conservamos sus datos en el
+volumen Docker `postgres_data`. También integramos una conexión opcional a
+PostgreSQL de Neon; su datasource de Grafana se configura por separado. El
+modelo está en `db/schema.dbml` y las consultas de Grafana en
+`db/grafana_queries.sql`.
 
 ## Arquitectura general
 
@@ -91,6 +97,15 @@ flowchart TB
 
 > 🟩 nodo físico · ⬛ backend · 🟪 almacenamiento · 🟦 broker · 🟧 superficies de visualización
 
+### Boceto conceptual
+
+También conservamos el boceto con el que representamos el flujo general entre
+microcontrolador, API, base de datos, broker, interfaz y Grafana. Incluye la
+placa de la Práctica 1 y logotipos ilustrativos de frontend; el diagrama técnico
+anterior muestra los componentes que usamos finalmente en el Proyecto 1.
+
+![Boceto conceptual de los componentes y el flujo de datos de SmartEgg](docs/arquitectura-conceptual.png)
+
 ### Conexiones
 
 | Origen | Destino | Conexión | Datos |
@@ -112,7 +127,7 @@ Mosquitto para el estado actual y PostgreSQL para el historial.
 
 ### Recorrido de una lectura
 
-Cada dos segundos el firmware emite una línea de texto plano. Este es el camino
+El firmware emite una línea de texto plano por ciclo de telemetría. Este es el camino
 completo desde esa línea hasta las tres superficies que la muestran:
 
 ```mermaid
@@ -242,10 +257,12 @@ erDiagram
 `telemetry_readings` y `door_events` llevan índice compuesto por incubadora y fecha,
 que es la forma en que Grafana y el historial los consultan.
 
-## Ejecución local
+## Despliegue y operación
 
-`docker-compose.yml` levanta cuatro servicios más un trabajo de inicialización. El
-frontend queda fuera de Compose y se ejecuta con `pnpm`.
+Distribuimos la plataforma en cuatro servicios de Compose y un trabajo que
+prepara las contraseñas de Mosquitto. El frontend se ejecuta fuera de Compose
+con pnpm. El backend espera la disponibilidad de PostgreSQL y del broker,
+aplica las migraciones Alembic y después inicia FastAPI.
 
 ```mermaid
 flowchart LR
@@ -254,7 +271,7 @@ flowchart LR
     DBS[("<b>database</b> · :5432<br/><i>healthcheck</i>: pg_isready")]
     BACK["<b>backend</b> · :8000<br/>alembic upgrade head → uvicorn"]
     GRAF["<b>grafana</b> · :3001<br/>datasources y dashboards<br/>provisionados al arrancar"]
-    FRONT["<b>client</b> · :3000<br/>pnpm dev — fuera de Compose"]
+    FRONT["<b>client</b> · :3000<br/>fuera de Compose"]
 
     INIT ==>|"service_completed_successfully"| BROKER
     BROKER ==>|"service_healthy"| BACK
@@ -285,118 +302,91 @@ flowchart LR
 
 ### Plataforma completa
 
-```bash
-cp .env.example .env
-docker compose up -d --build
-```
+Preparamos `.env.example` como plantilla de contraseñas y claves, y mantuvimos
+los valores reales fuera de Git. Compose reúne PostgreSQL, Mosquitto, FastAPI y
+Grafana; el cliente Next.js se ejecuta por separado. El acceso desde el navegador
+usa una cuenta MQTT limitada y una clave de quiosco que coincide con la del
+backend. La API expone `/health` para comprobar su disponibilidad.
 
-Con este comando levantamos PostgreSQL, Mosquitto, el backend y Grafana. El backend
-aplica las migraciones antes de iniciar y queda disponible en `http://localhost:8000`.
-Podemos verificar todos los servicios con:
-
-```bash
-docker compose ps
-curl http://localhost:8000/health
-```
-
-Para conectar la ESP32 usamos el archivo adicional. En Linux conviene configurar
-`SERIAL_DEVICE` con la ruta estable del adaptador para que una reconexión no cambie
-`ttyUSB0` por `ttyUSB1`:
-
-```bash
-ls -l /dev/serial/by-id/
-# Copiar la ruta encontrada en .env, por ejemplo:
-# SERIAL_DEVICE=/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0
-```
-
-Luego iniciamos los servicios:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.serial.yml up -d --build
-```
-
-Después de reiniciar Linux o reconectar la ESP32, Docker puede conservar el número
-interno anterior del dispositivo USB. Este comando espera al CP2102 y recrea solo el
-backend con el dispositivo actual:
-
-```bash
-./scripts/start-hardware.sh
-```
+La conexión serial permanece desactivada en el Compose base. Para el prototipo
+físico añadimos `docker-compose.serial.yml`, que entrega al backend el dispositivo
+indicado en `SERIAL_DEVICE` y opera a 115200 baudios. Elegimos la ruta estable
+`/dev/serial/by-id/` del adaptador CP2102 para evitar cambios entre `ttyUSB0` y
+`ttyUSB1`. También creamos `scripts/start-hardware.sh`: espera la aparición del
+dispositivo hasta 30 segundos y recrea solo el backend después de una
+reconexión o reinicio del equipo.
 
 ### Base de datos
 
-El backend usa PostgreSQL local cuando `DATABASE_URL` está vacía:
+El backend utiliza PostgreSQL local cuando `DATABASE_URL` está vacía. Integramos
+también el proyecto de Neon mediante esa misma variable, sin sustituir SQLAlchemy
+ni Alembic. El archivo `neon.ts` describe únicamente la configuración de Neon;
+la aplicación continúa siendo Python.
 
-```bash
-cp .env.example .env
-docker compose up -d database
-```
+Neon entrega una URL agrupada y otra directa. Como el contenedor ejecuta Alembic
+en su arranque y utiliza una sola conexión para migraciones y aplicación,
+documentamos la URL directa para esta configuración; la dirección con `-pooler`
+queda reservada para un despliegue que separe ambos procesos. El backend
+normaliza `postgresql://` a `postgresql+psycopg://`.
 
-Para usar la rama enlazada de Neon sin guardar credenciales en Git:
-
-```bash
-neon auth
-neon link --project-id icy-sky-83296816 --branch production -y
-neon env pull
-cd server
-SMARTEGG_DATABASE_URL="$(neon connection-string production)" uv run alembic upgrade head
-cd ..
-docker compose up -d --build backend
-```
-
-`neon env pull` mantiene `DATABASE_URL` exclusivamente en el `.env` ignorado por
-Git. Docker Compose prioriza esa URL y conserva el contenedor local como respaldo si
-la variable se elimina. FastAPI normaliza las URLs `postgresql://` de Neon al driver
-SQLAlchemy `postgresql+psycopg://`; no se requiere código TypeScript para acceder a
-la base. `neon.ts` describe solamente la política de infraestructura de Neon.
+El contenedor PostgreSQL local sigue levantándose aunque FastAPI apunte a Neon;
+no replica ni respalda los datos remotos. Grafana conserva por defecto su
+datasource local `database:5432`: para consultar Neon requiere una conexión a
+la misma base y rama, SSL y un usuario de lectura creado allí. El usuario
+`grafana_reader` del script `db/init/` pertenece solo a PostgreSQL local.
 
 ### Broker MQTT
 
-```bash
-docker compose up -d broker
-```
-
-Mosquitto escucha en `1883` para MQTT TCP y en `9001` para MQTT sobre WebSocket.
-La ACL separa al publicador backend de las cuentas de solo lectura del frontend y
-Grafana.
-Consulte `mqtt/README.md` antes de desplegarlo fuera de una red local.
+Configuramos Mosquitto en `1883` para MQTT TCP y en `9001` para MQTT sobre
+WebSocket. La ACL separa al publicador backend de las cuentas de solo lectura
+del frontend y Grafana. El contrato de mensajes y el alcance de cada cuenta
+quedaron documentados en [mqtt/README.md](mqtt/README.md).
 
 ### Grafana
 
-```bash
-docker compose up -d grafana
-```
-
-Grafana estará disponible en `http://localhost:3001`. Al iniciar cargamos los
-datasources de PostgreSQL y MQTT junto con los dashboards del proyecto. Los detalles
-están en `grafana/README.md`.
+Provisionamos Grafana en `:3001` con dos datasources: MQTT para el estado en vivo
+y PostgreSQL para el historial. Sus dashboards contienen 17 paneles en tiempo
+real y 37 paneles históricos. La descripción de las consultas y variables está
+en [grafana/README.md](grafana/README.md).
 
 ### Servidor
 
-Para ejecutar el servidor sin Docker requiere Python 3.12 o superior y `uv`.
-
-```bash
-cd server
-uv sync
-cp .env.example .env
-uv run alembic upgrade head
-uv run fastapi dev --host 0.0.0.0
-```
-
-La API estará disponible en `http://localhost:8000` y su documentación en
-`http://localhost:8000/docs`.
+Construimos la API con Python 3.12, FastAPI, SQLAlchemy y Alembic. Expone REST,
+WebSocket, Swagger en `:8000/docs` y un puente serial que procesa telemetría,
+RFID y eventos de puerta. El [README del servidor](server/README.md) contiene
+su configuración y sus pruebas.
 
 ### Cliente
 
-Requiere Node.js y `pnpm`.
+Desarrollamos la consola con Next.js y pnpm. La servimos en `:3000` y la
+conectamos a la API por REST/WebSocket y al broker por MQTT sobre WebSocket.
+El [README del cliente](client/README.md) describe su configuración y las
+pantallas.
 
-```bash
-cd client
-pnpm install
-pnpm dev
-```
+### Cuentas y permisos
 
-El frontend estará disponible en `http://localhost:3000`.
+Definimos únicamente dos roles. El `admin` administra usuarios, asignaciones,
+incubadoras y configuración; el `operator` trabaja en sus incubadoras asignadas,
+registra lotes, huevos y operaciones, y es el único rol autorizado para abrir
+la puerta con RFID. El alta inicial admite un administrador por bootstrap o
+mediante `INITIAL_TECHNICIANS`. Las cuentas ya existentes no se sobrescriben al
+reiniciar el backend. Asociamos cada tarjeta al campo `rfid_uid` del operador,
+normalizado como hexadecimal sin espacios. Las contraseñas y UID reales
+permanecen fuera de este documento y de Git.
+
+Para el navegador usamos una cuenta MQTT limitada a lectura; las variables
+`NEXT_PUBLIC_*` son visibles en el cliente y no contienen credenciales del
+backend. Incluimos un modo demostración de desarrollo para recorrer la interfaz
+sin hardware; sus datos temporales no representan lecturas físicas. Su alcance
+está descrito en [client/README.md](client/README.md).
+
+### Pruebas y evidencias
+
+Incluimos pruebas automatizadas del servidor y pruebas de la lógica y las
+animaciones del firmware que se ejecutan en el equipo sin conectar la ESP32.
+Documentamos por separado la [prueba física](docs/PRUEBA_FISICA.md) del RC522,
+la cerradura, el final de carrera y las posiciones de huevos. El puerto serial
+es exclusivo: un monitor abierto y el backend no pueden leerlo al mismo tiempo.
 
 ## Visualización de datos
 
@@ -418,7 +408,7 @@ flowchart LR
         CTRL["<b>Centro de control</b> · SVG<br/>medidores, urna y actuadores"]
         OBS["<b>Observatorio</b> · p5.js<br/>vista isométrica 2D a 30 FPS<br/>capas de temperatura<br/>y humedad"]
         HIS["<b>Historial</b> · Chart.js<br/>líneas de 30 / 120 / 240 muestras<br/>tabla accesible de valores"]
-        GFR["<b>Grafana</b><br/>6 paneles en vivo<br/>10 paneles históricos"]
+        GFR["<b>Grafana</b><br/>17 paneles en vivo<br/>37 paneles históricos"]
     end
 
     REST --> HIS
@@ -455,9 +445,11 @@ bandeja. Son representaciones ilustrativas del estado, no una simulación físic
 mapa térmico. Sin lecturas mostramos un estado de espera y al perder la conexión
 detenemos el flujo animado.
 
-Las cuatro superficies conservan los temas claro, oscuro y automático, y respetan
-`prefers-reduced-motion`. Los promedios del Historial corresponden a las lecturas
-disponibles, no a un período fijo de 24 horas.
+Las tres vistas del cliente conservan los temas claro, oscuro y automático, y
+respetan `prefers-reduced-motion`. La consola reproduce una alarma audible ante
+una alarma crítica y permite silenciarla o probarla desde su control lateral.
+Grafana se configura y tematiza por separado. Los promedios del Historial
+corresponden a las lecturas disponibles, no a un período fijo de 24 horas.
 
 La elección de librerías, el flujo de datos y el guion del video están en
 [client/README.md](client/README.md#visualización-avanzada). Falta grabar el video
@@ -566,22 +558,30 @@ contrato de mensajes definido en [mqtt/TOPICS.md](mqtt/TOPICS.md).
 
 ## Firmware ESP32
 
-El firmware reutiliza la lógica de control de
-[`Practica_1_SmartEgg/firmware`](../Practica_1_SmartEgg/firmware/) y la adapta a una
-ESP32 DevKit. El nodo integra el RC522, el servo de acceso y las tareas FreeRTOS junto a
-los sensores y actuadores de la incubadora. La telemetría conserva una trama JSON por
-línea a 115200 8N1:
+Adaptamos la lógica de control de
+[`Practica_1_SmartEgg/firmware`](../Practica_1_SmartEgg/firmware/) a una ESP32
+DevKit con ESP-IDF y FreeRTOS. Controlamos el RC522 directamente por SPI (sin
+`MFRC522` de Arduino) e integramos dos servos: bandeja y cerradura. Enviamos
+telemetría como campos `CLAVE:valor` separados por comas, una línea por trama
+a 115200 8N1:
 
 ```text
-{"incubator_code":"NODE-01","temperature_c":37.52,"humidity_pct":58.1,"door_open":false,"occupied_slots":3,"heater":false,"fan":false,"servo_angle":-45,"buzzer":false}
+MSG:1,TEMP:37.52,HUM:58.1,DOOR:0,SLOTS:3,HEATER:0,FAN:0,SERVO:-45,BUZZER:0,POWER:1,SENSOR:1
 ```
 
-El acceso RFID viaja por el mismo puerto UART/USB: el ESP32 envía el UID, el backend
-valida la tarjeta y responde por serial con la autorización y el ángulo del servo. El
-nodo físico no usa Wi-Fi ni HTTP. El mapa de pines, las bibliotecas y la configuración
-están en [firmware/README.md](firmware/README.md).
+Conservamos en el backend la compatibilidad con JSON de otros emisores, aunque
+nuestro firmware utiliza esta trama de texto. El UID RFID viaja por el mismo
+puerto UART/USB como `RFID:A1B2C3D4` (ejemplo ficticio); el backend valida la
+tarjeta y responde con la autorización, el nombre del operador y el ángulo del
+servo. Diseñamos animaciones para la LCD 16×2 durante la lectura, el acceso
+permitido o denegado y los errores. Reunimos esas pantallas en
+[firmware/preview-animaciones.html](firmware/preview-animaciones.html).
+El nodo físico no usa Wi-Fi ni HTTP. Pines, montaje, carga y pruebas están en
+[firmware/README.md](firmware/README.md).
 
-## Hoja de calificación
+## Documentación y evaluación
 
-La hoja de calificación de la Práctica 1 está en
-[`docs/calificacion/Hoja_Calificacion_Practica1_SmartEgg.pdf`](docs/calificacion/Hoja_Calificacion_Practica1_SmartEgg.pdf).
+- [Enunciado del Proyecto 1](docs/enunciado/Proyecto_1_2S2026.pdf).
+- [Hoja de calificación de la Práctica 1](docs/calificacion/Hoja_Calificacion_Practica1_SmartEgg.pdf), antecedente reutilizado por este proyecto.
+- [Guía de montaje](firmware/MONTAJE_PASO_A_PASO.md), [prueba física](docs/PRUEBA_FISICA.md) y [guion del video](docs/GUION_VIDEO.md).
+- [Evidencias disponibles](docs/evidencias/README.md). Las capturas documentan la interfaz; el video de demostración física permanece pendiente.
