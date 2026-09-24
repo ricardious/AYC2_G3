@@ -191,10 +191,10 @@ stateDiagram-v2
 
 | Transición | Efecto en `alarms` | Publicación MQTT |
 |---|---|---|
-| Normal → Activa | `INSERT` con `occurred_at`, `kind`, `severity`, `message` y `value` | Mensaje retenido en `alarmas/critica` |
-| Activa → Activa | Reutiliza la fila abierta y actualiza `severity`, `message` y `value` | Reemplaza el mensaje retenido |
-| Activa → Reconocida | `acknowledged_at` y `acknowledged_by_id` | Sin cambio |
-| → Resuelta | `resolved_at` | Mensaje retenido vacío |
+| Normal → Activa | `INSERT` con `occurred_at`, `kind`, `severity`, `message` y `value` | Sólo si la severidad es `critical` se publica JSON retenido en `alarmas/critica`; una advertencia no genera un mensaje de alarma MQTT. |
+| Activa → Activa | Reutiliza la fila abierta y actualiza `severity`, `message` y `value` | En cada lectura se vuelve a publicar la alarma crítica activa, si existe. |
+| Activa → Reconocida | `acknowledged_at` y `acknowledged_by_id` | El reconocimiento no cambia por sí solo el payload MQTT. |
+| → Resuelta | `resolved_at` | Cuando no queda ninguna alarma crítica activa, el backend publica payload vacío retenido para despejar el topic. |
 
 Los cinco tipos vigilados son `temperature_low`, `temperature_high`, `humidity_low`,
 `humidity_high` y `door_open`. La severidad es `warning` salvo cuando la temperatura
@@ -315,6 +315,34 @@ indicado en `SERIAL_DEVICE` y opera a 115200 baudios. Elegimos la ruta estable
 `ttyUSB1`. También creamos `scripts/start-hardware.sh`: espera la aparición del
 dispositivo hasta 30 segundos y recrea solo el backend después de una
 reconexión o reinicio del equipo.
+
+### Reproducción del despliegue
+
+Estos son los comandos con los que levantamos y verificamos la plataforma desde
+`Proyecto_1_SmartEgg` (sin publicar los secretos de `.env`):
+
+```bash
+test -f .env || cp .env.example .env  # primera vez; sustituir las claves de ejemplo
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps
+curl -fsS http://localhost:8000/health
+```
+
+La consola web se ejecuta en otra terminal:
+
+```bash
+cd client
+test -f .env.local || cp .env.example .env.local  # primera vez; ajustar quiosco/MQTT
+pnpm install
+pnpm dev
+```
+
+Para la ESP32 usamos `SERIAL_DEVICE` en `.env`, el archivo serial de Compose
+y `./scripts/start-hardware.sh` tras cada reconexión. El puerto serial no puede
+permanecer abierto simultáneamente en el monitor y en el backend. Si se usa
+Neon, `DATABASE_URL` selecciona la base del backend y la configuración del
+datasource de Grafana debe apuntar explícitamente a la misma base y rama.
 
 ### Base de datos
 
@@ -451,9 +479,10 @@ una alarma crítica y permite silenciarla o probarla desde su control lateral.
 Grafana se configura y tematiza por separado. Los promedios del Historial
 corresponden a las lecturas disponibles, no a un período fijo de 24 horas.
 
-La elección de librerías, el flujo de datos y el guion del video están en
-[client/README.md](client/README.md#visualización-avanzada). Falta grabar el video
-demostrativo con el nodo físico y agregar su enlace.
+La elección de librerías y el flujo de datos se explican en
+[client/README.md](client/README.md#visualización-avanzada). El
+[guion del video](docs/GUION_VIDEO.md) se centra en el Observatorio de p5.js
+reaccionando a lecturas reales; falta grabarlo y publicar aquí su enlace.
 
 ## HTTP vs. MQTT en SmartEgg
 
@@ -524,8 +553,8 @@ flowchart LR
     SEN --> TEMP["<b>temperatura</b><br/>QoS 0 · retained<br/><i>→ Grafana</i>"]
     SEN --> HUM["<b>humedad</b><br/>QoS 0 · retained<br/><i>→ Grafana</i>"]
     ACT --> AEST["<b>estado</b><br/>QoS 1 · retained<br/>calefactor, ventilador, servo y buzzer<br/><i>→ Frontend · Grafana</i>"]
-    ALA --> ACRI["<b>critica</b><br/>QoS 1 · retained<br/>vacío al resolverse<br/><i>→ Frontend</i>"]
-    ACC --> AEV["<b>eventos</b><br/>QoS 1 · no retained<br/>RFID y puerta<br/><i>→ Frontend · Grafana</i>"]
+    ALA --> ACRI["<b>critica</b><br/>QoS 1 · retained<br/>vacío al resolverse<br/><i>→ Frontend · Grafana</i>"]
+    ACC --> AEV["<b>eventos</b><br/>QoS 1 · no retained<br/>RFID y puerta<br/><i>→ Grafana</i>"]
 
     classDef raiz fill:#0c4a6e,stroke:#38bdf8,color:#f0f9ff,stroke-width:2px
     classDef rama fill:none,stroke:#64748b,color:#64748b,stroke-dasharray:4 3
@@ -540,10 +569,50 @@ flowchart LR
 
 > ⬛ QoS 0 · retained — telemetría periódica · 🟪 QoS 1 — estados y eventos
 
-La telemetría periódica se publica con QoS 0 y retained. Una lectura posterior
-reemplaza el último valor. Los estados, actuadores y alarmas se publican con QoS 1 y
-retained. El topic `smartegg/{id}/status` tiene un Last Will que informa la
-desconexión inesperada del backend.
+| Topic completo (`{id}` = código del nodo) | Publicador | Suscriptor(es) | QoS | Retained |
+|---|---|---|---:|---|
+| `smartegg/{id}/sensores/temperatura` | Backend | Grafana | 0 | Sí |
+| `smartegg/{id}/sensores/humedad` | Backend | Grafana | 0 | Sí |
+| `smartegg/{id}/telemetria` | Backend | Grafana | 0 | Sí |
+| `smartegg/{id}/actuadores/estado` | Backend | Frontend, Grafana | 1 | Sí |
+| `smartegg/{id}/alarmas/critica` | Backend | Frontend, Grafana | 1 | Sí; vacío al resolverse |
+| `smartegg/{id}/acceso/eventos` | Backend | Grafana | 1 | No |
+| `smartegg/{id}/status` | Backend; Mosquitto publica el LWT | Frontend, Grafana | 1 | Sí |
+
+La cuenta MQTT del frontend sólo lee alarma crítica, status y actuadores;
+los eventos de acceso llegan a la consola por el WebSocket de FastAPI. El
+healthcheck del broker usa aparte `smartegg/healthcheck` (publicador: chequeo
+de Compose; QoS 1; no retained; sin suscriptores de aplicación).
+La prueba manual publica `{"test":"publish-subscribe"}` en
+`smartegg/diagnostico/manual` (QoS 1, no retained); sólo el cliente de prueba
+se suscribe, y ese mensaje no representa telemetría del nodo.
+El backend registra el `status`/LWT sólo para `DEFAULT_INCUBATOR_CODE`
+(`NODE-01` de forma predeterminada), aunque la telemetría y el acceso usan
+el código de cada nodo recibido.
+
+Los payloads que publica `server/app/services/mqtt.py` tienen esta forma; los
+ejemplos de acceso provienen también de `server/app/services/serial_access.py`
+y `server/app/api/access.py`:
+
+| Topic | Ejemplo de payload JSON |
+|---|---|
+| `sensores/temperatura` | `{"value":37.6,"unit":"celsius","recorded_at":"2026-09-04T18:30:00Z"}` |
+| `sensores/humedad` | `{"value":58.2,"unit":"percent","recorded_at":"2026-09-04T18:30:00Z"}` |
+| `telemetria` | `{"temperature_c":37.6,"humidity_pct":58.2,"door_open":false,"system_enabled":true,"sensor_ok":true,"occupied_slots":3,"available_slots":1,"recorded_at":"2026-09-04T18:30:00Z"}` |
+| `actuadores/estado` | `{"heater":false,"fan":true,"servo_angle":45,"buzzer":false,"recorded_at":"2026-09-04T18:30:00Z"}` |
+| `alarmas/critica` | `{"kind":"temperature_high","severity":"critical","message":"Sobrecalentamiento detectado","value":39.5,"occurred_at":"2026-09-04T18:30:00Z"}` |
+| `acceso/eventos` | `{"event":"door_closed","session_id":12,"operator_id":1,"method":"rfid","recorded_at":"2026-09-04T18:30:00Z"}` |
+| `status` | `{"status":"online","recorded_at":"2026-09-04T18:30:00Z"}` |
+
+`telemetria` puede llevar `null` en `door_open`, `system_enabled` o `sensor_ok`;
+`servo_angle` también puede ser `null`. El backend retiene el último valor
+periódico; publica **cero bytes**, no JSON, en `alarmas/critica` cuando ya no
+hay alarma crítica. `status` tiene un Last Will retenido con
+`{"status":"offline","reason":"unexpected_disconnect"}` que Mosquitto
+emite al caer abruptamente la conexión. Un cierre normal publica otro mensaje
+con `reason: "graceful_shutdown"` y marca temporal. Los eventos de acceso no
+se retienen; sus variantes `rejected`, `access_cancelled` e
+`invalid_session` se detallan en [mqtt/TOPICS.md](mqtt/TOPICS.md).
 
 FastAPI expone el contrato REST mediante OpenAPI en `/docs`. Mosquitto mantiene el
 contrato de mensajes definido en [mqtt/TOPICS.md](mqtt/TOPICS.md).
@@ -581,7 +650,9 @@ El nodo físico no usa Wi-Fi ni HTTP. Pines, montaje, carga y pruebas están en
 
 ## Documentación y evaluación
 
+- [Documento técnico](docs/DOCUMENTO_TECNICO.md) y [manual de usuario](docs/MANUAL_USUARIO.md).
 - [Enunciado del Proyecto 1](docs/enunciado/Proyecto_1_2S2026.pdf).
+- [Hoja de calificación de SmartEgg](docs/Hoja_Calificacion_Proyecto2_Fase2_SmartEgg.pdf).
 - [Hoja de calificación de la Práctica 1](docs/calificacion/Hoja_Calificacion_Practica1_SmartEgg.pdf), antecedente reutilizado por este proyecto.
 - [Guía de montaje](firmware/MONTAJE_PASO_A_PASO.md), [prueba física](docs/PRUEBA_FISICA.md) y [guion del video](docs/GUION_VIDEO.md).
-- [Evidencias disponibles](docs/evidencias/README.md). Las capturas documentan la interfaz; el video de demostración física permanece pendiente.
+- [Evidencias y pendientes verificables](docs/evidencias/README.md). Las capturas disponibles documentan la interfaz; el video del Observatorio con datos reales permanece pendiente.

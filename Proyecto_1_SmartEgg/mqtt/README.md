@@ -38,12 +38,12 @@ repositorio.
 
 ## Probar la conexión
 
-Podemos escuchar todos los topics del proyecto con:
+Para una prueba aislada del broker, escuchamos un topic de diagnóstico manual:
 
 ```bash
 mosquitto_sub -h localhost -p 1883 \
   -u smartegg -P '<contraseña>' \
-  -t 'smartegg/#' -v
+  -t 'smartegg/diagnostico/manual' -v
 ```
 
 Desde otra terminal publicamos un mensaje de prueba:
@@ -51,18 +51,23 @@ Desde otra terminal publicamos un mensaje de prueba:
 ```bash
 mosquitto_pub -h localhost -p 1883 \
   -u smartegg -P '<contraseña>' \
-  -t 'smartegg/NODE-01/status' \
-  -m '{"status":"online"}' -q 1 -r
+  -t 'smartegg/diagnostico/manual' \
+  -m '{"test":"publish-subscribe"}' -q 1
 ```
 
-La lista completa de topics, los niveles de QoS y los payloads que usamos están en
-`TOPICS.md`.
+Esta prueba usa un mensaje sintético **sin retención** y no suplanta el status
+real de `NODE-01`. Para acreditar la integración hay que observar una lectura
+que el backend publique desde la ESP32 y que reciban Grafana y el frontend;
+para retained y LWT se siguen las comprobaciones de la hoja de calificación.
+El contrato de aplicación, los niveles de QoS y los payloads están en
+[`TOPICS.md`](TOPICS.md) y en el README principal.
 
 ## Despliegue en AWS
 
-Durante el desarrollo podemos ejecutar Mosquitto localmente. Para la entrega tenemos
-previsto desplegar solamente el broker en AWS y mantener PostgreSQL en el equipo local.
+El despliegue documentado en este repositorio usa Mosquitto local mediante
+Docker Compose. La configuración para AWS queda como alternativa, no como
+evidencia de un despliegue remoto ya realizado.
 
-En AWS usaremos TLS y reglas de red para no publicar directamente los puertos inseguros.
+En AWS harían falta TLS y reglas de red para no publicar directamente los puertos inseguros.
 Dejamos `config/mosquitto-tls.conf.example` como base para configurar los certificados.
 Los certificados, contraseñas y archivos `.env` no se incluyen en Git.
