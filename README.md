@@ -1,6 +1,6 @@
 # Arquitectura de Computadoras y Ensambladores 2 — Grupo 3
 
-Repositorio del Grupo 3 para el curso **Arquitectura de Computadoras y Ensambladores 2**, sección A, de la Facultad de Ingeniería de la Universidad de San Carlos de Guatemala. Aquí reunimos las entregas de SmartEgg: una incubadora inteligente que comenzó como práctica con Arduino y evolucionó a un sistema IoT con ESP32.
+Repositorio del Grupo 3 para el curso **Arquitectura de Computadoras y Ensambladores 2**, sección A, de la Facultad de Ingeniería de la Universidad de San Carlos de Guatemala. Aquí reunimos la Práctica 1 y el Proyecto 1 de SmartEgg.
 
 ## Contenido
 
