@@ -30,18 +30,22 @@ datos.
 
 ## SmartEgg · Tiempo real
 
-Se alimenta del broker MQTT y se refresca cada 5 segundos. El nodo se elige con la
-variable `node_code`, que por defecto vale `NODE-01`.
+Se alimenta del broker MQTT. Los paneles se actualizan solos con cada mensaje, por eso el
+dashboard no tiene refresco automático: refrescar cada pocos segundos vuelve a lanzar las
+suscripciones y deja los paneles vacíos. El nodo se elige con la variable `node_code`, que
+por defecto vale `NODE-01`.
 
 | Fila | Panel | Topic | Qué muestra |
 |---|---|---|---|
-| Estado del nodo | Estado del nodo | `status` | `online` / `offline` publicado por el LWT |
-| Estado del nodo | Temperatura actual | `sensores/temperatura` | Gauge con el rango óptimo 37 – 38 °C y el crítico en 39 °C |
-| Estado del nodo | Humedad actual | `sensores/humedad` | Gauge con el rango óptimo 50 – 65 % |
-| Estado del nodo | Puerta | `telemetria` | ABIERTA o CERRADA según el sensor |
-| Telemetría y actuadores | Actuadores | `actuadores/estado` | Calefactor, ventilador, buzzer y ángulo de la bandeja |
-| Telemetría y actuadores | Telemetría en vivo | `telemetria` | Temperatura y humedad con ejes independientes |
-| Telemetría y actuadores | Ocupación de la cámara | `telemetria` | Posiciones ocupadas y disponibles |
+| Estado del nodo | Nodo | `status` | `EN LÍNEA` / `DESCONECTADO` publicado por el LWT |
+| Estado del nodo | Temperatura · Humedad | `sensores/*` | Valor actual con la tendencia de fondo |
+| Estado del nodo | Puerta | `telemetria` | ABIERTA o CERRADA según el final de carrera |
+| Estado del nodo | Ocupación de la bandeja | `telemetria` | Posiciones ocupadas y libres |
+| Condiciones en vivo | Temperatura actual · en vivo | `sensores/temperatura` | Gauge y serie con la banda óptima 37 – 38 °C y la zona crítica desde 39 °C |
+| Condiciones en vivo | Humedad actual · en vivo | `sensores/humedad` | Gauge y serie con la banda óptima 50 – 65 % |
+| Actuadores y sistema | Calefactor · Ventilador · Buzzer · Bandeja | `actuadores/estado` | Estado actual de cada actuador |
+| Actuadores y sistema | Línea de tiempo del sistema | `actuadores/estado`, `telemetria` | Actuadores, puerta, sensor y sistema a lo largo del tiempo |
+| Actuadores y sistema | Posición de la bandeja | `actuadores/estado` | Ángulo del servomotor |
 | Alarmas y accesos | Alarma crítica | `alarmas/critica` | Severidad con color; queda vacío al resolverse |
 | Alarmas y accesos | Eventos de acceso | `acceso/eventos` | Autorizaciones RFID, aperturas y cierres |
 
@@ -49,25 +53,28 @@ variable `node_code`, que por defecto vale `NODE-01`.
 
 Se alimenta de PostgreSQL con los rangos de tiempo del selector (última hora, 24 horas,
 última semana). Tiene cuatro variables: **Incubadora**, **Lote**, **Huevo** y
-**Operador**.
+**Operador**. Los límites óptimos y críticos se leen de `incubator_configs`.
 
 | Fila | Panel | Qué muestra |
 |---|---|---|
-| Resumen del rango | Temperatura y Humedad · mín / máx / promedio | Los tres agregados del nodo en el rango |
+| Resumen del rango | Estado del nodo | En línea o sin conexión según el último reporte |
+| Resumen del rango | Temperatura · Humedad promedio | Promedio del rango con la tendencia de fondo |
+| Resumen del rango | Tiempo en rango óptimo | Porcentaje de lecturas con temperatura y humedad dentro de los límites |
 | Resumen del rango | Muestras registradas · Alarmas activas | Volumen de lecturas y alarmas sin resolver |
-| Resumen del rango | Aperturas y Cierres de puerta | Conteo de aperturas y de cierres confirmados |
-| Tendencias | Historial de temperatura y humedad | Series con líneas punteadas en los umbrales |
-| Tendencias | Ocupación de posiciones | Posiciones ocupadas y disponibles |
-| Tendencias | Rotaciones de bandeja | Rotaciones agrupadas por intervalo |
-| Por lote y huevo | Lote · Temperatura y Humedad | Mín, máx y promedio mientras el lote estuvo dentro |
-| Por lote y huevo | Huevo · Temperatura y Humedad | Lo mismo para el huevo seleccionado |
-| Por lote y huevo | Resumen por lote | Tabla con los agregados de todos los lotes |
-| Puerta y accesos | Aperturas por operador | Cuántas veces abrió cada operador |
-| Puerta y accesos | Aperturas por método de acceso | Tarjeta RFID, huella, llave o contraseña |
-| Puerta y accesos | Huevos ingresados y retirados | Suma de huevos que entraron y salieron |
+| Condiciones ambientales | Temperatura · Humedad | Promedio por intervalo con sombra mín / máx y bandas óptima y crítica |
+| Condiciones ambientales | Tiempo por zona | Porcentaje del rango en zona baja, óptima, alta o crítica |
+| Condiciones ambientales | Línea de tiempo de la cámara | Zona térmica, humedad, puerta, sensor y sistema por intervalo |
+| Operación de la incubadora | Ocupación · Posiciones | Ocupación actual y su evolución apilada |
+| Operación de la incubadora | Rotaciones de bandeja | Rotaciones por intervalo con el total del rango |
+| Operación de la incubadora | Última lectura · Huevos en incubación | Frescura de los datos y huevos activos |
+| Por lote y huevo | Lote · Huevo | Mín, promedio y máx mientras el lote o el huevo estuvo dentro |
+| Por lote y huevo | Resumen por lote | Agregados de cada lote con el avance hasta la eclosión |
+| Puerta y accesos | Aperturas · Cierres · Tiempo medio abierta | Actividad de la puerta en el rango |
+| Puerta y accesos | Huevos ingresados · retirados · Operadores activos | Movimiento de huevos y operadores distintos |
+| Puerta y accesos | Aperturas por operador · Método · Tipo de operación | Distribución de las aperturas |
 | Puerta y accesos | Operaciones de puerta | Auditoría filtrable por operador |
-| Alarmas | Alarmas por tipo | Conteo por tipo de condición |
-| Alarmas | Historial de alarmas | Severidad, estado y duración de cada alarma |
+| Alarmas | En el rango · Críticas · Tiempo medio de resolución · Reconocidas | Indicadores de alarmas |
+| Alarmas | Alarmas por tipo · Historial de alarmas | Conteo por condición y detalle con severidad, estado y duración |
 
 Las series de temperatura y humedad llevan dos anotaciones sobrepuestas: las **alarmas**
 en rojo y las **aperturas de puerta** en naranja, ambas dibujadas como región desde que
