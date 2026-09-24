@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SmartEgg · Simulador LCD 1602</title>
+  <title>SmartEgg · Pantallas del LCD</title>
   <style>
     :root { color-scheme: dark; --paper: #e8e9d8; --muted: #9ba996; --line: #344637; --amber: #e6bc70; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; color: var(--paper); font-family: Georgia, serif; background: radial-gradient(circle at 78% 0%, #273e2c, transparent 40%), #111a14; }
     main { max-width: 1160px; margin: auto; padding: clamp(24px, 5vw, 68px); }
-    .eyebrow, .meta, button, label, .hint, .module-label, .pin-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .eyebrow, .meta, button, label, .module-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .eyebrow { color: var(--amber); font-size: .75rem; letter-spacing: .2em; }
     h1 { max-width: 760px; margin: 18px 0; font-size: clamp(2.5rem, 5.4vw, 5rem); font-weight: 400; line-height: 1; }
     .intro { max-width: 700px; color: var(--muted); font-size: 1.1rem; line-height: 1.55; }
@@ -28,61 +28,49 @@
     .module-label { margin-top: 12px; color: #d1ded0; font-size: .65rem; letter-spacing: .16em; text-align: center; }
     .pins { display: flex; gap: 3px; width: 58%; margin: 11px auto -37px; }
     .pins i { flex: 1; height: 12px; border: 1px solid #6b663b; background: #b4a664; }
-    .pin-label { margin-top: 28px; color: #768878; text-align: center; font-size: .63rem; letter-spacing: .1em; }
-    .stage-caption { min-height: 3.2em; margin: 29px 0 0; color: var(--muted); line-height: 1.55; }
-    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .stage-caption { max-width: 490px; min-height: 3.2em; margin: 32px 0 0; color: var(--muted); font-size: 1.08rem; line-height: 1.55; }
     button { cursor: pointer; border: 1px solid #647762; background: transparent; color: var(--paper); padding: 11px 14px; font-size: .8rem; transition: background .15s, border-color .15s, transform .15s; }
     button:hover, button:focus-visible { background: #344a38; border-color: var(--amber); outline: none; transform: translateY(-1px); }
-    button.primary { background: var(--amber); border-color: var(--amber); color: #1b251b; }
-    button.primary:hover { background: #f5d49b; }
     .sidebar { padding: 24px; }
     .sidebar h2 { margin: 0 0 15px; font-size: 1.3rem; font-weight: 400; }
     .sidebar h2:not(:first-child) { margin-top: 27px; }
-    .choices { display: grid; gap: 6px; }
     .choice { width: 100%; display: flex; gap: 13px; align-items: baseline; text-align: left; padding: 11px; }
     .choice small { color: var(--amber); }
     .choice[aria-pressed="true"] { background: #e6bc701c; border-color: var(--amber); }
     .scenario-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
     .scenario-choices .choice { min-height: 43px; align-items: center; font-size: .72rem; }
-    .group-note { margin: -6px 0 14px; color: var(--muted); font-size: .82rem; line-height: 1.4; }
+    .group-note { margin: -6px 0 18px; color: var(--muted); font-size: .82rem; line-height: 1.4; }
     .telemetry { display: none; margin-top: 23px; padding-top: 20px; border-top: 1px solid var(--line); }
     .telemetry.visible { display: block; }
     .telemetry-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 13px; }
     .telemetry-grid input[type="number"] { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid var(--line); background: #111b14; color: var(--paper); font: .85rem ui-monospace, monospace; }
     .checks { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 13px; }
     .checks label { display: flex; align-items: center; gap: 5px; margin: 0; font-size: .67rem; }
-    .settings { border-top: 1px solid var(--line); margin-top: 26px; padding-top: 22px; }
+    .operator-panel { display: none; border-top: 1px solid var(--line); margin-top: 26px; padding-top: 22px; }
+    .operator-panel.visible { display: block; }
     label { display: block; margin: 0 0 9px; color: var(--muted); font-size: .74rem; letter-spacing: .07em; text-transform: uppercase; }
-    input[type="text"] { width: 100%; padding: 11px; margin-bottom: 20px; border: 1px solid var(--line); background: #111b14; color: var(--paper); font: 1rem ui-monospace, monospace; }
-    input[type="range"] { width: 100%; accent-color: var(--amber); }
-    .hint { margin-top: 27px; color: var(--muted); font-size: .75rem; line-height: 1.55; }
+    input[type="text"] { width: 100%; padding: 11px; border: 1px solid var(--line); background: #111b14; color: var(--paper); font: 1rem ui-monospace, monospace; }
     @media (max-width: 800px) { .workspace { grid-template-columns: 1fr; } }
     @media (max-width: 480px) { .module { padding: 24px 17px 17px; } .meta { font-size: .63rem; } }
   </style>
 </head>
 <body>
   <main>
-    <div class="eyebrow">SMART EGG / BANCO DE PRUEBAS</div>
-    <h1>Así se vería en el LCD.</h1>
-    <p class="intro">Recorre todas las pantallas del firmware. La lectura ahora usa un huevo que eclosiona; cuando se permite el acceso, el pollito saluda al operador. Compara también las variantes sin grabar la ESP32.</p>
-    <section class="workspace" aria-label="Simulador de animaciones">
+    <div class="eyebrow">SMART EGG / PANTALLA DEL DISPOSITIVO</div>
+    <h1>SmartEgg en 32 caracteres.</h1>
+    <p class="intro">Del cuidado de los huevos al control de acceso, el LCD comunica cada momento con mensajes claros y animaciones discretas.</p>
+    <section class="workspace" aria-label="Pantallas del LCD SmartEgg">
       <div class="stage">
-        <div class="meta"><span>LCD 1602 · MATRIZ 5×8</span><span id="stateLabel">VERIFICANDO</span></div>
+        <div class="meta"><span>LCD 1602 · MATRIZ 5×8</span><span id="stateLabel">EN MARCHA</span></div>
         <div class="module"><span class="screw"></span><div class="bezel"><div class="lcd"><canvas id="screen" width="112" height="26" role="img" aria-label="Pantalla LCD"></canvas></div></div><div class="module-label">SMART EGG · 16 × 2</div><div class="pins" aria-hidden="true"></div></div>
-        <div class="pin-label">VSS · VDD · VO · RS · RW · E · D4—D7 · LED</div>
         <p class="stage-caption" id="description"></p>
-        <div class="controls">
-          <button type="button" class="primary" id="grant">Probar propuesta permitida</button>
-          <button type="button" id="deny">Ver acceso denegado</button>
-          <button type="button" id="replay">Volver a lectura</button>
-        </div>
       </div>
       <aside class="sidebar">
-        <h2>Pantallas del firmware</h2>
-        <p class="group-note">Estados y mensajes tomados de <code>Display.cpp</code>.</p>
+        <h2>Estados del sistema</h2>
+        <p class="group-note">Cada escena corresponde a una pantalla del dispositivo.</p>
         <div class="scenario-choices" id="scenarios"></div>
         <div class="telemetry" id="telemetry">
-          <h2>Datos de ejemplo</h2>
+          <h2>Lecturas y actuadores</h2>
           <div class="telemetry-grid">
             <label>Temperatura °C<input id="temperature" type="number" min="-40" max="99.9" step="0.1" value="37.5"></label>
             <label>Humedad %<input id="humidity" type="number" min="0" max="100" step="1" value="58"></label>
@@ -96,17 +84,10 @@
             <label><input id="alarm" type="checkbox"> Alarma</label>
           </div>
         </div>
-        <h2>Propuestas · lectura</h2>
-        <div class="choices" id="readingChoices"></div>
-        <h2>Propuestas · acceso permitido</h2>
-        <div class="choices" id="grantChoices"></div>
-        <div class="settings">
-          <label for="operator">Nombre de operador</label>
+        <div class="operator-panel" id="operatorPanel">
+          <label for="operator">Operador autorizado</label>
           <input id="operator" type="text" maxlength="32" value="RICARDO CASTANEDA">
-          <label for="speed">Velocidad <span id="speedLabel">firmware (150 ms)</span></label>
-          <input id="speed" type="range" min="150" max="800" step="10" value="150">
         </div>
-        <p class="hint">El visor refleja los cambios del firmware, pero abrirlo no programa la ESP32. El LCD físico depende del contraste, la luz y el módulo instalado.</p>
       </aside>
     </section>
   </main>
@@ -184,12 +165,6 @@
     const icon = {
       egg: [[4,14,14,31,31,31,31,14],[4,14,14,31,27,31,31,14],[4,14,14,27,21,27,31,14],[4,14,0,31,31,31,31,14],[4,14,6,0,21,31,31,14]],
       greeting: [[4,14,6,0,21,31,31,14],[4,14,6,16,21,31,31,14]],
-      lock: [[14,17,17,17,31,31,27,31],[14,17,17,16,31,31,27,31],[14,17,16,16,31,31,27,31],[14,16,16,16,31,31,27,31]],
-      card: [[31,17,21,17,17,17,31,0],[0,31,17,21,17,17,31,0],[0,0,31,17,21,17,31,0],[0,0,0,31,17,21,31,0]],
-      check: [[0,0,0,1,2,20,8,0],[0,0,1,2,20,8,0,0],[0,1,2,20,8,0,0,0]],
-      door: [[31,17,17,17,17,17,17,31],[31,17,17,17,21,17,17,31],[31,16,16,16,20,16,16,31],[31,0,0,0,4,0,0,31]],
-      full: [31,31,31,31,31,31,31,31],
-      empty: [0,0,0,0,0,0,0,0],
       thermometer: [4,10,10,14,14,31,31,14],
       droplet: [4,4,14,14,31,31,31,14],
       slotFull: [0,4,14,14,31,31,31,14],
@@ -203,38 +178,26 @@
       shield: [[14,17,17,17,17,10,4,0],[14,17,21,17,21,10,4,0],[14,17,21,14,21,10,4,0]],
     };
     const scenarios = [
-      { id:'boot', name:'Encendido', description:'Logo que aparece letra por letra; los huevos llenan la segunda fila y eclosionan.' },
-      { id:'running', name:'En marcha', description:'Lecturas, bandeja y actuadores: los iconos de calefactor, ventilador y alarma se animan.' },
-      { id:'disabled', name:'Sistema apagado', description:'Símbolo de energía que pulsa suavemente, con la cantidad de espacios libres.' },
-      { id:'sensorFault', name:'Error DHT', description:'Aviso fijo con una instrucción que se desplaza por la segunda fila.' },
-      { id:'actualReading', name:'RFID · lectura', description:'El huevo eclosiona una vez mientras se consulta la tarjeta; el pollito espera la respuesta.' },
-      { id:'actualGranted', name:'RFID · permitido', description:'El pollito saluda al operador y después aparece el permiso con la instrucción de abrir.' },
-      { id:'actualDenied', name:'RFID · denegado', description:'Un escudo marca el rechazo y el mensaje se revela una sola vez, sin parpadeos.' },
-      { id:'timeout', name:'Sin respuesta', description:'La autorización tardó demasiado; un reloj de arena acompaña la indicación de reintentar.' },
-      { id:'readerError', name:'Error RC522', description:'Error del lector RFID con signos de alerta intermitentes.' },
-      { id:'fatal', name:'Error fatal', description:'Mensaje de emergencia cuando no hay RAM para crear las tareas.' },
-    ];
-    const readingOptions = [
-      { id:'egg', name:'Huevo eclosionando · en uso', description:'El huevo eclosiona durante la verificación. Esta es la animación elegida para el firmware.' },
-      { id:'lock', name:'Cerradura', description:'El candado se abre mientras se comprueba la tarjeta.' },
-      { id:'card', name:'Tarjeta entrando', description:'Una tarjeta avanza hacia el lector.' },
-      { id:'bar', name:'Barra de progreso', description:'La segunda línea se llena con los bloques del LCD.' },
-    ];
-    const grantOptions = [
-      { id:'welcome', name:'Sello + bienvenida', description:'Confirmación, nombre del operador y una puerta que se abre.' },
-      { id:'unlock', name:'Cerradura + apertura', description:'El candado se abre antes de mostrar el permiso y la puerta.' },
-      { id:'hatch', name:'Pollito + saludo · en uso', description:'El pollito saluda al operador antes del mensaje de acceso permitido. Esta secuencia está en el firmware.' },
+      { id:'boot', name:'Encendido', description:'El nombre SmartEgg aparece letra a letra; una fila de huevos cobra vida.' },
+      { id:'running', name:'En marcha', description:'Temperatura, humedad, bandeja y actuadores conviven en un solo vistazo.' },
+      { id:'disabled', name:'Sistema apagado', description:'La incubadora queda en reposo; el símbolo de energía conserva un pulso suave.' },
+      { id:'sensorFault', name:'Error DHT', description:'Una instrucción recorre la segunda fila mientras el aviso permanece visible.' },
+      { id:'actualReading', name:'RFID · lectura', description:'Un huevo eclosiona mientras SmartEgg consulta la tarjeta.' },
+      { id:'actualGranted', name:'RFID · permitido', description:'El pollito saluda al operador antes de mostrar la puerta disponible.' },
+      { id:'actualDenied', name:'RFID · denegado', description:'El escudo se marca con una X y el rechazo queda claro en pantalla.' },
+      { id:'timeout', name:'Sin respuesta', description:'El reloj de arena acompaña la petición de intentar de nuevo.' },
+      { id:'readerError', name:'Error RC522', description:'El lector RFID avisa que necesita revisión.' },
+      { id:'fatal', name:'Error fatal', description:'El LCD informa que el sistema no pudo iniciar sus tareas.' },
     ];
     const canvas = document.getElementById('screen');
     const ctx = canvas.getContext('2d');
     const operator = document.getElementById('operator');
-    let reading = 'egg', grant = 'hatch', state = 'running', frame = 0, timer;
+    let state = 'running', frame = 0;
 
     function cells() { return Array(16).fill(' '); }
     function write(line, column, value) { [...value].slice(0, 16-column).forEach((char, i) => { line[column+i] = char; }); }
     function name() { return operator.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9 ]/g, '').trim().slice(0,32); }
     function greetingName() { const value=name(); const overflow=Math.max(0,value.length-16); return value.slice(Math.floor(frame*overflow/11),Math.floor(frame*overflow/11)+16); }
-    function center(line, value) { write(line, Math.max(0, Math.floor((16-value.length)/2)), value); }
     function number(id, min, max) { return Math.max(min, Math.min(max, Number(document.getElementById(id).value) || 0)); }
     function checked(id) { return document.getElementById(id).checked; }
     function slots(line) { const occupied=number('occupied',0,4); for(let i=0;i<4;i++) line[i]=i<occupied?icon.slotFull:icon.slotEmpty; }
@@ -280,27 +243,6 @@
         if((frame%4&1)===0){top[0]='!';top[15]='!';}
       } else if (state === 'fatal') {
         write(top,0,'ERROR FATAL RTOS'); write(bottom,0,'Sin RAM p/tareas');
-      } else if (state === 'reading') {
-        if (reading === 'egg') { top[0]=icon.egg[Math.min(4,frame)]; write(top,1,'TARJETA LEIDA'); write(bottom,2,'VERIFICANDO'); }
-        if (reading === 'lock') { write(top, 0, 'VERIFICANDO'); bottom[0] = icon.lock[frame%4]; write(bottom, 2, 'CERRADURA'); }
-        if (reading === 'card') { write(top, 0, 'LEYENDO TARJETA'); bottom[frame%4] = icon.card[frame%4]; write(bottom, 7, 'RFID'); }
-        if (reading === 'bar') { write(top, 0, 'VERIFICANDO'); for (let i=0;i<16;i++) bottom[i] = i < frame%17 ? icon.full : icon.empty; }
-      } else if (grant === 'hatch') {
-        if(frame<12){ top[0]=icon.greeting[Math.floor(frame/2)%2]; write(top,2,'BIENVENIDO'); write(bottom,0,greetingName()||'ACCESO LISTO'); }
-        else { write(top,0,'ACCESO PERMITIDO'); write(bottom,0,name()&&Math.floor((frame-12)/8)%2===1?name():'> ABRA LA PUERTA'); }
-      } else if (frame < 4) {
-        top[0] = grant === 'unlock' ? icon.lock[Math.min(3,frame)] : grant === 'hatch' ? icon.egg[Math.min(4,frame)] : icon.check[Math.min(2,frame)];
-        write(top, 2, frame < 2 ? 'VALIDANDO' : 'ACCESO VALIDO');
-        for (let i=0;i<12;i++) bottom[i+2] = i <= frame*4 ? icon.full : icon.empty;
-      } else if (frame < 9) {
-        top[0] = grant === 'hatch' ? icon.egg[4] : icon.check[2];
-        write(top, 2, 'BIENVENIDO');
-        const visible = name().slice(0, (frame-3)*4);
-        center(bottom, visible || 'OPERADOR');
-      } else {
-        write(top, 0, 'ACCESO PERMITIDO');
-        if (frame%5 === 0 && name()) center(bottom, name());
-        else { bottom[0] = icon.door[Math.min(3, Math.floor((frame-9)/2))]; write(bottom, 2, 'ABRA LA PUERTA'); }
       }
       return [top,bottom];
     }
@@ -322,30 +264,14 @@
     function render() {
       draw(screen());
       const scenario=scenarios.find(option=>option.id===state);
-      document.getElementById('stateLabel').textContent = scenario ? scenario.name.toUpperCase() : state === 'granted' ? 'PROPUESTA · PERMITIDO' : 'PROPUESTA · LECTURA';
-      document.getElementById('description').textContent = scenario ? scenario.description : state === 'granted' ? grantOptions.find(option=>option.id===grant).description : readingOptions.find(option=>option.id===reading).description;
+      document.getElementById('stateLabel').textContent = scenario.name.toUpperCase();
+      document.getElementById('description').textContent = scenario.description;
       document.getElementById('telemetry').classList.toggle('visible',state==='running'||state==='disabled');
+      document.getElementById('operatorPanel').classList.toggle('visible',state==='actualGranted');
       document.querySelectorAll('#scenarios .choice').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scenario===state)));
     }
     function setState(next) { state=next; frame=0; render(); }
-    function tick() { frame=(frame+1)%(state==='boot'?30:state==='granted'||state==='actualGranted'?34:120); render(); }
-    function start() { clearInterval(timer); timer=setInterval(tick, Number(document.getElementById('speed').value)); render(); }
-    function addChoices(options, containerId, kind) {
-      const container=document.getElementById(containerId);
-      options.forEach((option,index)=>{
-        const button=document.createElement('button'); button.type='button'; button.className='choice';
-        const number=document.createElement('small'); number.textContent=`0${index+1}`;
-        const title=document.createElement('span'); title.textContent=option.name;
-        button.append(number,title);
-        button.setAttribute('aria-pressed', String(option.id===(kind==='reading'?reading:grant)));
-        button.addEventListener('click',()=>{
-          if (kind==='reading') { reading=option.id; setState('reading'); }
-          else { grant=option.id; setState('granted'); }
-          container.querySelectorAll('.choice').forEach(choice=>choice.setAttribute('aria-pressed',String(choice===button)));
-        });
-        container.appendChild(button);
-      });
-    }
+    function tick() { frame=(frame+1)%(state==='boot'?30:state==='actualGranted'?34:120); render(); }
     document.querySelector('.pins').append(...Array.from({length:16},()=>document.createElement('i')));
     const scenarioContainer=document.getElementById('scenarios');
     scenarios.forEach((option,index)=>{
@@ -354,19 +280,10 @@
       const title=document.createElement('span'); title.textContent=option.name;
       button.append(number,title); button.addEventListener('click',()=>setState(option.id)); scenarioContainer.appendChild(button);
     });
-    addChoices(readingOptions,'readingChoices','reading');
-    addChoices(grantOptions,'grantChoices','grant');
-    document.getElementById('grant').addEventListener('click',()=>setState('granted'));
-    document.getElementById('deny').addEventListener('click',()=>setState('actualDenied'));
-    document.getElementById('replay').addEventListener('click',()=>setState('reading'));
     operator.addEventListener('input',render);
     document.querySelectorAll('#telemetry input').forEach(input=>input.addEventListener('input',render));
-    document.getElementById('speed').addEventListener('input',event=>{
-      const speed=Number(event.target.value);
-      document.getElementById('speedLabel').textContent=speed===150?'firmware (150 ms)':speed<300?'rápida':speed>600?'lenta':'normal';
-      start();
-    });
-    start();
+    setInterval(tick,150);
+    render();
   </script>
 </body>
 </html>
