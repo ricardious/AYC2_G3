@@ -13,3 +13,14 @@ g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
 
 "$output_file"
 echo "SmartEgg ESP32 control logic tests passed"
+
+display_output_file="${TMPDIR:-/tmp}/smartegg-esp32-display-animation-test"
+g++ -std=c++17 -Wall -Wextra -Werror -pedantic \
+  -I"$script_dir/stubs" \
+  -I"$firmware_dir" \
+  "$firmware_dir/Display.cpp" \
+  "$script_dir/display_animation_test.cpp" \
+  -o "$display_output_file"
+
+"$display_output_file"
+echo "SmartEgg ESP32 display animation tests passed"

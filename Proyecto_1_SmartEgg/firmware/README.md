@@ -145,11 +145,17 @@ mensajes animados y luego vuelve por sí solo a la vista anterior:
 
 | Estado | Mensaje en el LCD | Animación |
 |---|---|---|
-| Tarjeta detectada | `TARJETA LEIDA` / `Verificando...` | Indicador giratorio y puntos progresivos |
-| Autorizada | `ACCESO PERMITIDO` / `ABRA LA PUERTA` | Flechas laterales intermitentes |
-| Rechazada | `ACCESO DENEGADO` / `NO AUTORIZADO` | Cruces laterales intermitentes |
-| Backend sin respuesta | `SIN RESPUESTA` / `INTENTE DE NUEVO` | Indicador giratorio |
+| Tarjeta detectada | `TARJETA LEIDA` / `VERIFICANDO` | El huevo eclosiona una vez y el pollito espera la respuesta |
+| Autorizada | `BIENVENIDO` / nombre; luego `ACCESO PERMITIDO` / `> ABRA LA PUERTA` | El pollito saluda con el ala antes de mostrar la instrucción |
+| Rechazada | `ACCESO DENEGADO` / `NO AUTORIZADO` | Escudo con cruz y texto que se revela una vez, sin parpadeos |
+| Backend sin respuesta | `SIN RESPUESTA` / `INTENTE DE NUEVO` | Reloj de arena animado |
 | RC522 no inicializado | `ERROR LECTOR` / `REVISE RC522` | Signos de alerta intermitentes |
 
 Las animaciones no introducen esperas bloqueantes: avanzan con el ciclo normal de
 refresco del LCD mientras las tareas de control y comunicación continúan ejecutándose.
+El dibujo temporal del pollito reutiliza la ranura del huevo y la restaura al volver
+a la pantalla ambiental. Durante el saludo, los nombres de más de 16 caracteres
+se desplazan una sola vez para mostrar el final sin cortarlo.
+Al apagar el sistema, el indicador `. o O` se sustituye por un símbolo de energía
+animado. El escudo y el reloj de arena reutilizan temporalmente la ranura de la
+campana, que se restaura al volver a la pantalla normal.
