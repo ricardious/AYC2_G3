@@ -1,4 +1,5 @@
 import type {
+  Alarm,
   AdminStatus,
   AuthToken,
   DashboardState,
@@ -13,6 +14,7 @@ import type {
   Lot,
   LotCreate,
   ReportExport,
+  RotationEvent,
   Technician,
   TechnicianCreate,
   TechnicianWithAssignments,
@@ -225,6 +227,20 @@ export const api = {
   telemetry: (incubatorId: number, token: string, limit = 240) =>
     request<TelemetryReading[]>(
       `/incubators/${incubatorId}/telemetry?limit=${limit}`,
+      {},
+      token,
+    ),
+
+  alarms: (incubatorId: number, token: string, limit = 500) =>
+    request<Alarm[]>(
+      `/incubators/${incubatorId}/alarms?limit=${limit}`,
+      {},
+      token,
+    ),
+
+  rotations: (incubatorId: number, token: string, limit = 500) =>
+    request<RotationEvent[]>(
+      `/incubators/${incubatorId}/rotations?limit=${limit}`,
       {},
       token,
     ),

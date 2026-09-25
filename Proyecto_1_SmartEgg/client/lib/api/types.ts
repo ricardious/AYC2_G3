@@ -210,6 +210,15 @@ export interface Actuator {
   updated_at: string;
 }
 
+export interface RotationEvent {
+  id: number;
+  incubator_id: number;
+  angle_degrees: number;
+  direction: "left" | "right" | string;
+  source: string;
+  performed_at: string;
+}
+
 export interface Alarm {
   id: number;
   incubator_id: number;
