@@ -58,6 +58,8 @@ export interface SeriesPoint {
   t: number;
   /** Relative humidity in %. */
   h: number;
+  /** Occupied tray positions reported with the reading. */
+  o?: number;
 }
 
 export interface DetailRow {

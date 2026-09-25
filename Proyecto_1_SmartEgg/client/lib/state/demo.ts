@@ -1,8 +1,10 @@
 import type {
+  Alarm,
   DashboardState,
   Egg,
   Incubator,
   Lot,
+  RotationEvent,
   Technician,
   TelemetryReading,
 } from "@/lib/api/types";
@@ -39,6 +41,7 @@ export function createDemoState() {
     return {
       t: Math.round((37.5 + Math.sin(phase) * 0.25) * 10) / 10,
       h: Math.round((58 + Math.cos(phase / 2) * 3) * 10) / 10,
+      o: index < 40 ? 2 : 3,
       recordedAt: new Date(now.getTime() - (119 - index) * 120_000).toISOString(),
     };
   });
@@ -103,5 +106,34 @@ export function createDemoState() {
     status: "incubating",
     notes: null,
   }));
-  return { technician, incubator, dashboard, lots, eggs, series };
+  const minutesAgo = (minutes: number) =>
+    new Date(now.getTime() - minutes * 60_000).toISOString();
+  const alarms: Alarm[] = [
+    ["temperature_high", "warning", 200],
+    ["temperature_high", "critical", 150],
+    ["temperature_low", "warning", 120],
+    ["humidity_low", "warning", 90],
+    ["humidity_low", "warning", 60],
+    ["door_open", "warning", 30],
+  ].map(([kind, severity, minutes], index) => ({
+    id: index + 1,
+    incubator_id: incubator.id,
+    kind: kind as string,
+    severity: severity as string,
+    message: "Alarma de demostración",
+    value: null,
+    occurred_at: minutesAgo(minutes as number),
+    resolved_at: minutesAgo((minutes as number) - 5),
+    acknowledged_at: null,
+    acknowledged_by_id: null,
+  }));
+  const rotations: RotationEvent[] = Array.from({ length: 8 }, (_, index) => ({
+    id: index + 1,
+    incubator_id: incubator.id,
+    angle_degrees: 45,
+    direction: index % 2 ? "left" : "right",
+    source: "automatic",
+    performed_at: minutesAgo(232 - index * 30),
+  }));
+  return { technician, incubator, dashboard, lots, eggs, series, alarms, rotations };
 }

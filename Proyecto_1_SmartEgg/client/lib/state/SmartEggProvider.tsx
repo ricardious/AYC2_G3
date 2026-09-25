@@ -19,6 +19,7 @@ import {
   websocketUrl,
 } from "@/lib/api/client";
 import type {
+  Alarm,
   AuthToken,
   DashboardState,
   DiagnosticSummary,
@@ -33,6 +34,7 @@ import type {
   LotCreate,
   ReportExport,
   RfidAccessMessage,
+  RotationEvent,
   Technician,
   TechnicianCreate,
   TechnicianWithAssignments,
@@ -169,6 +171,9 @@ export interface SmartEggContextValue extends ConsoleState {
   diagnostic: DiagnosticSummary | null;
   technicians: TechnicianWithAssignments[];
   reportExports: ReportExport[];
+  /** Histórico de alarmas y giros de bandeja, para las gráficas. */
+  alarmHistory: Alarm[];
+  rotationHistory: RotationEvent[];
   adminExists: boolean;
   connection: ConnectionStatus;
   mqttConnected: boolean;
@@ -194,7 +199,12 @@ export const SmartEggContext = createContext<SmartEggContextValue | null>(null);
 export const TelemetryContext = createContext<TelemetryContextValue | null>(null);
 
 function point(reading: TelemetryReading): SeriesPoint {
-  return { t: reading.temperature_c, h: reading.humidity_pct, recordedAt: reading.recorded_at };
+  return {
+    t: reading.temperature_c,
+    h: reading.humidity_pct,
+    o: reading.occupied_slots,
+    recordedAt: reading.recorded_at,
+  };
 }
 
 function clockFor(recordedAt: string | null): string {
@@ -259,6 +269,8 @@ export function SmartEggProvider({
   const [reportExports, setReportExports] = useState<ReportExport[]>([]);
   const [adminExists, setAdminExists] = useState(true);
   const [series, setSeries] = useState<SeriesPoint[]>([]);
+  const [alarmHistory, setAlarmHistory] = useState<Alarm[]>([]);
+  const [rotationHistory, setRotationHistory] = useState<RotationEvent[]>([]);
   const [connection, setConnection] =
     useState<ConnectionStatus>("connecting");
   const [mqttConnected, setMqttConnected] = useState(false);
@@ -381,6 +393,8 @@ export function SmartEggProvider({
     setReportExports([]);
     setAdminExists(true);
     setSeries([]);
+    setAlarmHistory([]);
+    setRotationHistory([]);
     setMqttConnected(false);
     setNodeOnline(null);
     setCriticalAlarm(null);
@@ -399,6 +413,8 @@ export function SmartEggProvider({
     setLots(demo.lots);
     setEggs(demo.eggs);
     setSeries(demo.series);
+    setAlarmHistory(demo.alarms);
+    setRotationHistory(demo.rotations);
     setError(null);
     setAccessMessage(null);
     updateConnection("offline");
@@ -594,6 +610,32 @@ export function SmartEggProvider({
       cancelled = true;
     };
   }, [demoActive, incubator, token, updateConnection]);
+
+  // Se vuelve a pedir cuando cambian las alarmas activas o el ángulo de la
+  // bandeja: MQTT avisa del cambio y la base de datos tiene el registro.
+  const activeAlarmKey = dashboard?.active_alarms
+    .map((alarm) => `${alarm.id}:${alarm.severity}`)
+    .join(",");
+  const servoAngle = dashboard?.actuators.find((a) => a.kind === "servo")?.value;
+  useEffect(() => {
+    if (demoActive || !token || !incubator) return;
+    let cancelled = false;
+    Promise.all([
+      api.alarms(incubator.id, token),
+      api.rotations(incubator.id, token),
+    ])
+      .then(([alarms, rotations]) => {
+        if (cancelled) return;
+        setAlarmHistory(alarms);
+        setRotationHistory(rotations);
+      })
+      .catch(() => {
+        // Las gráficas muestran su estado vacío; el resto de la consola sigue.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeAlarmKey, criticalAlarm, demoActive, incubator, servoAngle, token]);
 
   useEffect(() => {
     if (demoActive || !token || !incubator) return;
@@ -1075,6 +1117,8 @@ export function SmartEggProvider({
       diagnostic,
       technicians,
       reportExports,
+      alarmHistory,
+      rotationHistory,
       adminExists,
       connection,
       mqttConnected,
@@ -1102,6 +1146,8 @@ export function SmartEggProvider({
       diagnostic,
       technicians,
       reportExports,
+      alarmHistory,
+      rotationHistory,
       adminExists,
       connection,
       mqttConnected,
