@@ -36,14 +36,14 @@ function ThemeIcon({ icon }: { icon: (typeof THEMES)[number]["icon"] }) {
 }
 
 /** Selector persistente: claro, preferencia del sistema u oscuro. */
-export function ThemeSwitcher() {
+export function ThemeSwitcher({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
 
   return (
     <div
       role="group"
       aria-label="Apariencia"
-      className="flex w-fit items-center border border-divider-chip bg-panel/65 p-0.5 backdrop-blur-sm"
+      className={cx("flex w-fit items-center border border-divider-chip bg-panel/65 p-0.5 backdrop-blur-sm", className)}
     >
       {THEMES.map((option) => {
         const active = theme === option.id;
@@ -56,7 +56,7 @@ export function ThemeSwitcher() {
             aria-pressed={active}
             onClick={() => setTheme(option.id)}
             className={cx(
-              "flex size-8 items-center justify-center transition-colors console:size-7",
+              "flex size-8 items-center justify-center transition-colors console:h-7 console:w-auto console:min-w-7 console:flex-1",
               active
                 ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]"
                 : "text-foreground-faint hover:bg-primary/8 hover:text-foreground-bright",
