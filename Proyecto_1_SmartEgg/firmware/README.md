@@ -185,6 +185,9 @@ en frío de la base de datos Neon. El servo vuelve a la posición bloqueada si l
 no se abre durante 15 segundos después de recibir la autorización.
 La telemetría, el UID RFID y los eventos de puerta utilizan exclusivamente UART/USB a
 115200 baud; el ESP32 no usa Wi-Fi ni HTTP.
+El nodo emite una trama de telemetría apenas cambia una lectura, la ocupación o un
+actuador, además del envío periódico cada 2 segundos. Esto permite que el backend
+publique el cambio por MQTT sin esperar al siguiente ciclo ni al guardado histórico.
 
 Durante el flujo RFID, el LCD 16×2 reemplaza temporalmente la pantalla ambiental con
 mensajes animados y luego vuelve por sí solo a la vista anterior:
