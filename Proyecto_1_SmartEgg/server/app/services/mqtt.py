@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..config import Settings
 from ..models import ActuatorState, Alarm, TelemetryReading
+from ..schemas import TelemetryCreate
 
 logger = logging.getLogger(__name__)
 
@@ -214,6 +215,27 @@ class MqttPublisher:
             self._publish_raw(alarm_topic, b"", qos=1, retain=True)
         else:
             self._publish(alarm_topic, snapshot.critical_alarm, qos=1, retain=True)
+
+    def publish_live_telemetry(self, payload: TelemetryCreate) -> None:
+        """Forward a serial reading before database persistence can delay the UI."""
+        if payload.occupied_slots is None:
+            return
+        self._publish(
+            self._topic(payload.incubator_code, "telemetria"),
+            {
+                "temperature_c": payload.temperature_c,
+                "humidity_pct": payload.humidity_pct,
+                "door_open": payload.door_open,
+                "system_enabled": payload.system_enabled,
+                "sensor_ok": payload.sensor_ok,
+                "occupied_slots": payload.occupied_slots,
+                "recorded_at": (
+                    payload.recorded_at or datetime.now(UTC)
+                ).isoformat(),
+            },
+            qos=0,
+            retain=False,
+        )
 
     def publish_access_event(
         self, node_code: str, payload: dict[str, object]
