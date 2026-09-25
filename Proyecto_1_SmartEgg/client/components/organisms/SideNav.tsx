@@ -8,6 +8,16 @@ import { canOpenDoor, screensForRole } from "@/lib/auth/permissions";
 import { nodeStatus } from "@/lib/smartegg/derive";
 import type { CSSVars } from "@/lib/smartegg/types";
 import { useSmartEgg } from "@/lib/state/hooks";
+import { cx } from "@/lib/cx";
+
+function SpeakerIcon({ muted }: { muted: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" className="size-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" strokeLinecap="round">
+      <path d="M2.5 6h2.5L8.5 3v10L5 10H2.5Z" />
+      {muted ? <path d="m11 6 3.5 4m0-4L11 10" /> : <path d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4" />}
+    </svg>
+  );
+}
 
 /**
  * Navegación del nodo: barra superior en pila, riel izquierdo en el plano.
@@ -42,20 +52,20 @@ export function SideNav() {
           markClassName="console:h-[42px] console:w-[38px]"
         />
 
+        {/* En el riel abre el pie: el estado es lo primero que se lee abajo. */}
         <div
           style={statusStyle}
-          className="flex shrink-0 items-center gap-3 font-mono text-[11px] tracking-[0.11em] text-foreground-fainter console:order-last console:flex-col console:items-start console:gap-0 console:pb-[18px] console:pl-[22px] console:leading-[1.6]"
+          className="flex shrink-0 items-center gap-3 font-mono text-[11px] tracking-[0.11em] text-foreground-fainter console:order-2 console:mx-[22px] console:mt-auto console:flex-col console:items-start console:gap-1 console:border-t console:border-divider console:pt-4 console:pb-4"
         >
-          <span className="hidden sm:block">NODO 01</span>
-          <span className="hidden sm:block">LOTE A</span>
-          <span className="text-[var(--status)]">● {status.word}</span>
+          <span className="hidden whitespace-nowrap sm:block console:text-[9px] console:tracking-[0.08em]">NODO 01 · LOTE A</span>
+          <span className="text-[var(--status)] console:text-[12px] console:tracking-[0.14em]">● {status.word}</span>
         </div>
       </div>
 
       {/* En pila la tira se parte en filas: cinco secciones no caben en el
           ancho de un teléfono y desplazarlas dejaba las dos últimas fuera de
           alcance, sin nada que indicara que seguían ahí. */}
-      <div className="flex flex-wrap gap-x-1 gap-y-0.5 px-5 console:mt-[54px] console:flex-col console:flex-nowrap console:gap-0.5 console:px-0">
+      <div className="flex flex-wrap gap-x-1 gap-y-0.5 px-5 console:order-1 console:mt-[54px] console:flex-col console:flex-nowrap console:gap-0.5 console:px-0">
         {NAV_ITEMS.filter(
           (item) => !technician || screensForRole(technician.role).includes(item.id),
         ).map((item) => (
@@ -68,29 +78,41 @@ export function SideNav() {
         ))}
       </div>
 
-      <div className="px-5 py-3 console:mt-auto console:px-[22px] console:pt-0 console:pb-3">
+      <div className="flex flex-wrap items-end gap-3 px-5 py-3 console:order-3 console:flex-col console:items-stretch console:gap-2.5 console:px-[22px] console:pt-0 console:pb-5">
         {technician ? (
-          <div className="mb-3 grid grid-cols-[1fr_auto] gap-1">
+          <div role="group" aria-label="Alarma sonora" className="flex min-w-32 flex-col gap-1.5 console:min-w-0">
+            {/* El riel deja 104 px: «Probar» va en la línea del rótulo para que
+                el interruptor tenga el ancho entero y su texto no desborde. */}
+            <div className="flex items-center justify-between gap-2 font-mono text-[9px] tracking-[0.12em]">
+              <span className="text-foreground-fainter">ALARMA</span>
+              <button
+                type="button"
+                onClick={actions.testAlarmSound}
+                title="Probar sonido de alarma"
+                className="flex items-center gap-1 text-foreground-faint transition hover:text-primary"
+              >
+                <svg aria-hidden="true" viewBox="0 0 12 12" className="size-2" fill="currentColor">
+                  <path d="M3 1.5v9l7.5-4.5Z" />
+                </svg>
+                PROBAR
+              </button>
+            </div>
             <button
               type="button"
               onClick={actions.toggleAlarmSound}
               aria-pressed={alarmSoundEnabled && !alarmSoundBlocked}
-              className="border border-frame-soft px-2 py-2 font-mono text-[9px] tracking-[0.1em] text-foreground-muted transition hover:border-primary/60 hover:text-primary"
+              title={alarmSoundBlocked ? "El navegador bloqueó el audio: pulsa para activarlo" : alarmSoundEnabled ? "Silenciar alarma" : "Activar sonido de alarma"}
+              className={cx(
+                "flex h-8 min-w-0 items-center gap-1.5 overflow-hidden border px-2 font-mono text-[10px] tracking-[0.1em] whitespace-nowrap transition",
+                alarmSoundBlocked
+                  ? "border-warning/50 text-warning hover:border-warning"
+                  : alarmSoundEnabled
+                    ? "border-primary/35 text-primary-soft hover:border-primary/70"
+                    : "border-frame-soft text-foreground-faint hover:border-primary/60 hover:text-primary",
+              )}
             >
-              {alarmSoundBlocked
-                ? "♫ ACTIVAR"
-                : alarmSoundEnabled
-                  ? "♫ SONIDO ON"
-                  : "♫ SILENCIADO"}
-            </button>
-            <button
-              type="button"
-              onClick={actions.testAlarmSound}
-              aria-label="Probar sonido de alarma"
-              title="Probar sonido de alarma"
-              className="border border-frame-soft px-2 py-2 font-mono text-[9px] text-foreground-muted transition hover:border-primary/60 hover:text-primary"
-            >
-              TEST
+              <SpeakerIcon muted={!alarmSoundEnabled || alarmSoundBlocked} />
+              {alarmSoundBlocked ? "ACTIVAR" : alarmSoundEnabled ? "SONIDO" : "SILENCIO"}
             </button>
           </div>
         ) : null}
@@ -98,12 +120,12 @@ export function SideNav() {
           <button
             type="button"
             onClick={actions.openDoorOperation}
-            className="mb-3 w-full border border-primary/35 bg-primary/[0.07] px-2 py-2.5 font-mono text-[11px] tracking-[0.12em] text-primary-soft transition hover:border-primary/70 hover:bg-primary/15"
+            className="h-8 border border-primary/35 bg-primary/[0.07] px-3 font-mono text-[10px] tracking-[0.14em] whitespace-nowrap text-primary-soft transition hover:border-primary/70 hover:bg-primary/15"
           >
             ◇ PUERTA
           </button>
         ) : null}
-        <ThemeSwitcher />
+        <ThemeSwitcher className="console:w-full" />
       </div>
     </nav>
   );
