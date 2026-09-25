@@ -16,6 +16,7 @@ medición real de la ESP32 si no se ha verificado su origen.
 | [frontend-reportes-demo.png](frontend-reportes-demo.png) | Vista previa de Reportes capturada el 24-09-2026 | No acredita un PDF descargado ni un informe de datos reales. |
 | [grafana-tiempo-real-sin-nodo.png](grafana-tiempo-real-sin-nodo.png) | Dashboard MQTT provisionado, capturado el 24-09-2026 | Paneles vacíos porque no había publicación del nodo; no cumple la evidencia de lectura en vivo. |
 | [grafana-historico-actual-sin-nodo.png](grafana-historico-actual-sin-nodo.png) | Dashboard SQL abierto, capturado el 24-09-2026 | El rango elegido indica **SIN CONEXIÓN** y **No data**; no acredita telemetría real. |
+| [docker-compose-servicios-health-sin-esp32.png](docker-compose-servicios-health-sin-esp32.png) | `docker compose up -d --build`, cuatro servicios activos en `docker compose ps` y `GET /health` con `{"status":"ok"}` el 24-09-2026 | Acredita el despliegue local del stack, no la conexión de la ESP32 ni lecturas físicas. |
 | [mqtt-explorer-conexion-sin-esp32.png](mqtt-explorer-conexion-sin-esp32.png) | MQTT Explorer conectado al Mosquitto local el 24-09-2026; se observan los árboles `smartegg` y `$SYS` | Acredita conexión y recepción de topics, no lecturas nuevas de la ESP32. |
 | [mqtt-explorer-prueba-manual-sin-esp32.png](mqtt-explorer-prueba-manual-sin-esp32.png) | MQTT Explorer publica y recibe `{"test":"publish-subscribe"}` en `smartegg/diagnostico/manual` el 24-09-2026 | Prueba gráfica con QoS 0 y mensaje sintético sin retención; no acredita telemetría física. |
 
@@ -27,9 +28,6 @@ medición real de la ESP32 si no se ha verificado su origen.
 - Broker MQTT: suscripción a los topics reales de temperatura, humedad y
   estado, y publicación visible tras cambiar una condición física. No mostrar
   contraseñas de `.env` en la captura.
-- Docker Compose con **broker, database, backend y grafana** activos y el
-  endpoint `/health` respondiendo. Una captura con solo parte del stack no
-  acredita el despliegue completo.
 - Commits verificables del proyecto en GitHub. El historial local o capturas
   de otra carpeta no sustituyen la evidencia de contribuciones del Proyecto 1.
 - Secuencia física: tarjeta autorizada y denegada, LCD, servo de cerradura,
