@@ -114,20 +114,22 @@ anterior muestra los componentes que usamos finalmente en el Proyecto 1.
 | Backend | PostgreSQL | SQLAlchemy con PostgreSQL | Telemetría, alarmas, configuración, lotes, huevos y operaciones de puerta |
 | Backend | Mosquitto | MQTT 3.1.1 por TCP | Telemetría, sensores, actuadores, alarmas y disponibilidad |
 | Frontend | Backend | REST por HTTP/JSON | Autenticación, consultas, configuración y registros |
-| Backend | Frontend | WebSocket | Telemetría procesada en vivo |
-| Mosquitto | Frontend | MQTT sobre WebSocket | Alarmas críticas, estado del nodo y actuadores |
+| Backend | Frontend | WebSocket | Telemetría procesada como respaldo y eventos de acceso |
+| Mosquitto | Frontend | MQTT sobre WebSocket | Telemetría en vivo, alarmas críticas, estado del nodo y actuadores |
 | Mosquitto | Grafana | Datasource MQTT | Paneles de estado en tiempo real |
 | PostgreSQL | Grafana | Datasource PostgreSQL de solo lectura | Tendencias, agregados, alarmas y operaciones de puerta |
 
-El backend es el único componente que recibe directamente la trama serial. Cada
-lectura válida se persiste en PostgreSQL, se publica en Mosquitto y se transmite a
-los clientes WebSocket conectados. El frontend utiliza REST para operaciones bajo
-demanda y MQTT sobre WebSocket para eventos del broker. Grafana mantiene dos fuentes:
+El backend es el único componente que recibe directamente la trama serial. Publica
+cada lectura serial válida en Mosquitto en cuanto la recibe; en paralelo la persiste
+en PostgreSQL y luego publica el snapshot completo y lo transmite a los clientes
+WebSocket conectados. El frontend utiliza REST para operaciones bajo demanda y
+MQTT sobre WebSocket para lecturas y eventos del broker. Grafana mantiene dos fuentes:
 Mosquitto para el estado actual y PostgreSQL para el historial.
 
 ### Recorrido de una lectura
 
-El firmware emite una línea de texto plano por ciclo de telemetría. Este es el camino
+El firmware emite una línea de texto plano cuando cambia el estado y, como respaldo,
+cada 2 segundos. Este es el camino
 completo desde esa línea hasta las tres superficies que la muestran:
 
 ```mermaid
@@ -143,6 +145,8 @@ sequenceDiagram
 
     ARD->>BR: MSG:1,TEMP:37.52,HUM:58.1,DOOR:0,SLOTS:3,…
     BR->>BR: parse_serial_line — alias, tipos y validación Pydantic
+    BR->>MQ: telemetría inmediata, no retenida
+    MQ-->>NX: temperatura, humedad y ocupación en vivo
     BR->>ING: TelemetryCreate (source = serial)
 
     ING->>PG: INSERT en telemetry_readings
@@ -159,7 +163,7 @@ sequenceDiagram
         BR->>NX: broadcast WebSocket con la lectura procesada
     end
 
-    MQ-->>NX: alarma crítica, disponibilidad y estado de actuadores
+    MQ-->>NX: snapshot persistido, alarma, disponibilidad y actuadores
     MQ-->>GF: paneles en tiempo real
     GF->>PG: SELECT sobre el histórico
 ```
@@ -425,8 +429,8 @@ flowchart LR
     subgraph ORIGEN["ORIGEN DE LOS DATOS"]
         direction TB
         REST["<b>REST</b><br/>GET .../telemetry<br/>últimas 240 lecturas"]
-        WSK["<b>WebSocket</b><br/>lectura procesada<br/>cada 2 s"]
-        MQW["<b>MQTT sobre WebSocket</b><br/>alarmas · status<br/>actuadores"]
+        WSK["<b>WebSocket</b><br/>lectura procesada<br/>respaldo"]
+        MQW["<b>MQTT sobre WebSocket</b><br/>telemetría en vivo · alarmas<br/>status · actuadores"]
         MQT["<b>Datasource MQTT</b><br/>estado actual desde que<br/>se abre el panel"]
         SQL["<b>SQL de solo lectura</b><br/>db/grafana_queries.sql"]
     end
@@ -434,7 +438,7 @@ flowchart LR
     subgraph VISTAS["SUPERFICIES VISUALES"]
         direction TB
         CTRL["<b>Centro de control</b> · SVG<br/>medidores, urna y actuadores"]
-        OBS["<b>Observatorio</b> · p5.js<br/>vista isométrica 2D a 30 FPS<br/>capas de temperatura<br/>y humedad"]
+        OBS["<b>Observatorio</b> · Three.js<br/>modelo interactivo 3D<br/>capas de temperatura<br/>y humedad"]
         HIS["<b>Historial</b> · Chart.js<br/>líneas de 30 / 120 / 240 muestras<br/>tabla accesible de valores"]
         GFR["<b>Grafana</b><br/>17 paneles en vivo<br/>37 paneles históricos"]
     end
@@ -463,11 +467,11 @@ flowchart LR
 | Superficie | Librería | Qué dibuja | Interacción |
 |---|---|---|---|
 | Centro de control | SVG propio | Medidor de temperatura, columna de humedad, urna, dial de bandeja y panel de actuadores | Ajuste de consignas y comandos manuales |
-| Observatorio | [p5.js](https://p5js.org/reference/) | Vista isométrica 2D de la incubadora, con estructura desplegable y posiciones inspeccionables | Separar capas, alternar temperatura/humedad, seleccionar posición y pausar el movimiento |
+| Observatorio | [Three.js](https://threejs.org/docs/) | Modelo 3D de la incubadora, con gabinete y posiciones inspeccionables | Girar y acercar la cámara, abrir el gabinete visualmente, alternar temperatura/humedad y seleccionar posiciones |
 | Historial | [Chart.js](https://www.chartjs.org/docs/latest/) | Líneas de temperatura y humedad sobre lecturas reales | Elegir magnitud, ventana de 30/120/240 muestras y consultar valores al pasar el cursor |
 | Grafana | Paneles nativos | Estado actual desde MQTT y tendencias, alarmas y operaciones de puerta desde PostgreSQL | Rango temporal y variables del dashboard |
 
-En el Observatorio la temperatura modifica el color, la humedad determina la cantidad de
+En el Observatorio el color distingue la capa elegida o una alarma crítica; la humedad determina la cantidad de
 partículas, el ventilador activa su circulación y el ángulo del servo inclina la
 bandeja. Son representaciones ilustrativas del estado, no una simulación física ni un
 mapa térmico. Sin lecturas mostramos un estado de espera y al perder la conexión
@@ -481,7 +485,7 @@ corresponden a las lecturas disponibles, no a un período fijo de 24 horas.
 
 La elección de librerías y el flujo de datos se explican en
 [client/README.md](client/README.md#visualización-avanzada). El
-[guion del video](docs/GUION_VIDEO.md) se centra en el Observatorio de p5.js
+[guion del video](docs/GUION_VIDEO.md) se centra en el Observatorio de Three.js
 reaccionando a lecturas reales; falta grabarlo y publicar aquí su enlace.
 
 ## HTTP vs. MQTT en SmartEgg
@@ -529,8 +533,8 @@ redes restringidas:
 | Backend → PostgreSQL | Conexión SQL | Persistencia de telemetría, alarmas y registros |
 | Backend → Mosquitto | MQTT 3.1.1 | Publicación de telemetría y estado |
 | Backend → frontend | HTTP REST | Autenticación, configuración, lotes, huevos, historial y reportes |
-| Backend → frontend | WebSocket | Telemetría en vivo |
-| Mosquitto → frontend | MQTT sobre WebSocket | Alarmas, disponibilidad y actuadores |
+| Backend → frontend | WebSocket | Lecturas procesadas como respaldo y eventos de acceso |
+| Mosquitto → frontend | MQTT sobre WebSocket | Telemetría en vivo, alarmas, disponibilidad y actuadores |
 | PostgreSQL → Grafana | SQL | Consultas históricas |
 | Mosquitto → Grafana | MQTT | Paneles en tiempo real |
 
@@ -544,7 +548,7 @@ flowchart LR
     ROOT["<b>smartegg/NODE-01</b>"]
 
     ROOT --> SEN(["sensores/"])
-    ROOT --> TEL["<b>telemetria</b><br/>QoS 0 · retained<br/>lectura completa<br/><i>→ Grafana</i>"]
+    ROOT --> TEL["<b>telemetria</b><br/>QoS 0 · live + retained<br/>lectura completa<br/><i>→ Frontend · Grafana</i>"]
     ROOT --> ACT(["actuadores/"])
     ROOT --> ALA(["alarmas/"])
     ROOT --> ACC(["acceso/"])
@@ -573,13 +577,13 @@ flowchart LR
 |---|---|---|---:|---|
 | `smartegg/{id}/sensores/temperatura` | Backend | Grafana | 0 | Sí |
 | `smartegg/{id}/sensores/humedad` | Backend | Grafana | 0 | Sí |
-| `smartegg/{id}/telemetria` | Backend | Grafana | 0 | Sí |
+| `smartegg/{id}/telemetria` | Backend | Frontend, Grafana | 0 | Sí, tras persistir; adelanto en vivo no retenido |
 | `smartegg/{id}/actuadores/estado` | Backend | Frontend, Grafana | 1 | Sí |
 | `smartegg/{id}/alarmas/critica` | Backend | Frontend, Grafana | 1 | Sí; vacío al resolverse |
 | `smartegg/{id}/acceso/eventos` | Backend | Grafana | 1 | No |
 | `smartegg/{id}/status` | Backend; Mosquitto publica el LWT | Frontend, Grafana | 1 | Sí |
 
-La cuenta MQTT del frontend sólo lee alarma crítica, status y actuadores;
+La cuenta MQTT del frontend sólo lee telemetría, alarma crítica, status y actuadores;
 los eventos de acceso llegan a la consola por el WebSocket de FastAPI. El
 healthcheck del broker usa aparte `smartegg/healthcheck` (publicador: chequeo
 de Compose; QoS 1; no retained; sin suscriptores de aplicación).
@@ -605,8 +609,9 @@ y `server/app/api/access.py`:
 | `status` | `{"status":"online","recorded_at":"2026-09-04T18:30:00Z"}` |
 
 `telemetria` puede llevar `null` en `door_open`, `system_enabled` o `sensor_ok`;
-`servo_angle` también puede ser `null`. El backend retiene el último valor
-periódico; publica **cero bytes**, no JSON, en `alarmas/critica` cuando ya no
+el adelanto serial omite `available_slots` y no es retenido. El snapshot
+persistido incluye ese campo y sí se retiene. `servo_angle` también puede ser
+`null`. El backend publica **cero bytes**, no JSON, en `alarmas/critica` cuando ya no
 hay alarma crítica. `status` tiene un Last Will retenido con
 `{"status":"offline","reason":"unexpected_disconnect"}` que Mosquitto
 emite al caer abruptamente la conexión. Un cierre normal publica otro mensaje
