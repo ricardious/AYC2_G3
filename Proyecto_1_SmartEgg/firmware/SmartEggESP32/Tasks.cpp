@@ -338,6 +338,8 @@ void sensorControlTask(void* parameters) {
 void communicationTask(void* parameters) {
   (void)parameters;
   TickType_t lastTelemetryTick = xTaskGetTickCount();
+  SystemState lastTelemetry{};
+  bool hasSentTelemetry = false;
   for (;;) {
     pollSerialCommands();
     pollAccessControl();
@@ -349,10 +351,24 @@ void communicationTask(void* parameters) {
     }
 
     const TickType_t now = xTaskGetTickCount();
-    if (static_cast<TickType_t>(now - lastTelemetryTick) >=
-        pdMS_TO_TICKS(config::kTelemetryPeriodMs)) {
-      emitProtocolFrame(MessageType::kTelemetry, 0,
-                        getSystemStateSnapshot());
+    const SystemState current = getSystemStateSnapshot();
+    const bool changed = !hasSentTelemetry ||
+        current.hasValidReading != lastTelemetry.hasValidReading ||
+        current.sensorOk != lastTelemetry.sensorOk ||
+        current.systemEnabled != lastTelemetry.systemEnabled ||
+        current.temperatureC != lastTelemetry.temperatureC ||
+        current.humidityPct != lastTelemetry.humidityPct ||
+        current.occupiedSlots != lastTelemetry.occupiedSlots ||
+        current.doorOpen != lastTelemetry.doorOpen ||
+        current.heaterOn != lastTelemetry.heaterOn ||
+        current.fanOn != lastTelemetry.fanOn ||
+        current.buzzerOn != lastTelemetry.buzzerOn ||
+        current.servoAngleDegrees != lastTelemetry.servoAngleDegrees;
+    if (changed || static_cast<TickType_t>(now - lastTelemetryTick) >=
+                       pdMS_TO_TICKS(config::kTelemetryPeriodMs)) {
+      emitProtocolFrame(MessageType::kTelemetry, 0, current);
+      lastTelemetry = current;
+      hasSentTelemetry = true;
       lastTelemetryTick = now;
     }
     vTaskDelay(pdMS_TO_TICKS(config::kCommunicationPeriodMs));
