@@ -14,10 +14,22 @@ export interface MqttActuatorState {
   recorded_at: string;
 }
 
+export interface MqttTelemetry {
+  temperature_c: number;
+  humidity_pct: number;
+  door_open: boolean | null;
+  system_enabled: boolean | null;
+  sensor_ok: boolean | null;
+  occupied_slots: number;
+  available_slots?: number;
+  recorded_at: string;
+}
+
 export type SmartEggMqttMessage =
   | { type: "alarm"; alarm: MqttCriticalAlarm | null }
   | { type: "status"; online: boolean }
-  | { type: "actuators"; actuators: MqttActuatorState };
+  | { type: "actuators"; actuators: MqttActuatorState }
+  | { type: "telemetry"; telemetry: MqttTelemetry };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -51,6 +63,28 @@ export function parseMqttMessage(
   if (suffix === "status") {
     if (data.status !== "online" && data.status !== "offline") return null;
     return { type: "status", online: data.status === "online" };
+  }
+
+  if (suffix === "telemetria") {
+    if (
+      typeof data.temperature_c !== "number" ||
+      !Number.isFinite(data.temperature_c) ||
+      typeof data.humidity_pct !== "number" ||
+      !Number.isFinite(data.humidity_pct) ||
+      !Number.isInteger(data.occupied_slots) ||
+      (data.occupied_slots as number) < 0 ||
+      (data.available_slots !== undefined &&
+        (!Number.isInteger(data.available_slots) ||
+          (data.available_slots as number) < 0)) ||
+      (data.door_open !== null && typeof data.door_open !== "boolean") ||
+      (data.system_enabled !== null && typeof data.system_enabled !== "boolean") ||
+      (data.sensor_ok !== null && typeof data.sensor_ok !== "boolean") ||
+      typeof data.recorded_at !== "string" ||
+      !Number.isFinite(Date.parse(data.recorded_at))
+    ) {
+      return null;
+    }
+    return { type: "telemetry", telemetry: data as unknown as MqttTelemetry };
   }
 
   if (suffix === "alarmas/critica") {

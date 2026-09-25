@@ -159,6 +159,9 @@ La ocupación física procede del campo `SLOTS` del firmware, generado por cuatr
 microinterruptores de presión, uno bajo cada soporte. Una posición detectada y una ficha
 registrada son estados distintos: la primera habilita el formulario y la segunda aporta
 el rótulo, lote y fecha de ingreso persistidos en FastAPI.
+La temperatura, humedad y ocupación visibles se actualizan con
+`smartegg/{codigo}/telemetria` por MQTT sobre WebSocket. REST carga el estado inicial y
+el historial; el WebSocket de FastAPI sigue disponible como respaldo si MQTT falla.
 
 `derive.ts` contiene funciones puras `(estado, config) → modelo de vista`, así
 que la lógica del panel es comprobable sin DOM.
@@ -337,22 +340,22 @@ diálogos.
 
 ## Visualización avanzada
 
-En **Observatorio** exploramos la incubadora con una vista isométrica 2D hecha
-con p5.js. Podemos separar la estructura, seleccionar una posición, cambiar
-entre temperatura y humedad y pausar el movimiento. Conservamos los temas claro,
-oscuro y automático de la consola.
+En **Observatorio** exploramos un modelo 3D de la incubadora hecho con Three.js.
+Podemos girar y acercar la cámara, abrir el gabinete visualmente, seleccionar
+una posición, alternar temperatura/humedad y pausar el movimiento. Conservamos
+los temas claro, oscuro y automático de la consola.
 
-La temperatura modifica el color, la humedad determina la cantidad de partículas,
+El color distingue la capa visual o una alarma crítica, y la humedad determina la cantidad de partículas;
 el ventilador activa su circulación y el ángulo del servo inclina la bandeja.
 Son representaciones ilustrativas del estado, no una simulación física ni un mapa
-térmico. Los valores vienen del estado real del backend y de sus actualizaciones
-WebSocket; MQTT actualiza las alarmas y los actuadores. Sin lecturas mostramos
+térmico. Los valores en vivo llegan por MQTT sobre WebSocket; REST carga el
+estado inicial y el WebSocket de FastAPI respalda la lectura procesada. MQTT
+también actualiza las alarmas y los actuadores. Sin lecturas mostramos
 un estado de espera; al perder la conexión detenemos el flujo animado.
 
-Elegimos [p5.js](https://p5js.org/reference/) por su dibujo 2D programable y su
-modo de instancia, que permite desmontar la escena al navegar. Tiene una curva
-de aprendizaje accesible para geometría, color y animación sin preparar modelos 3D.
-Respetamos la preferencia de movimiento reducido y limitamos la animación a 30 FPS.
+Elegimos [Three.js](https://threejs.org/docs/) por su cámara, materiales y
+controles de órbita para inspeccionar la incubadora desde varios ángulos.
+Desmontamos la escena al navegar y respetamos la preferencia de movimiento reducido.
 
 En **Historial** usamos [Chart.js](https://www.chartjs.org/docs/latest/) para
 gráficas de líneas con consulta de valores al pasar el cursor y una tabla
