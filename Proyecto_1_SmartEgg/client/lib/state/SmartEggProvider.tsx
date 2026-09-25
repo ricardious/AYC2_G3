@@ -276,6 +276,8 @@ export function SmartEggProvider({
   );
   const [accessMessage, setAccessMessage] = useState<string | null>(null);
   const mqttNodeCode = incubator?.code;
+  const mqttIncubatorId = incubator?.id;
+  const mqttCapacity = incubator?.capacity;
 
   useEffect(() => {
     const audio = new Audio(ALARM_SOUND_PATH);
@@ -341,12 +343,19 @@ export function SmartEggProvider({
 
   const applyReading = useCallback((reading: TelemetryReading) => {
     setDashboard((current) =>
-      current ? { ...current, latest: reading } : current,
+      current &&
+      (!current.latest ||
+        Date.parse(reading.recorded_at) >= Date.parse(current.latest.recorded_at))
+        ? { ...current, latest: reading }
+        : current,
     );
     setSeries((current) => {
       const nextPoint = point(reading);
       const last = current[current.length - 1];
-      if (last?.recordedAt === nextPoint.recordedAt) return current;
+      if (last?.recordedAt &&
+          Date.parse(last.recordedAt) >= Date.parse(nextPoint.recordedAt ?? "")) {
+        return current;
+      }
       return [...current, nextPoint].slice(-SERIES_LIMIT);
     });
   }, []);
@@ -483,7 +492,13 @@ export function SmartEggProvider({
       api.lots(token),
       api.eggs(incubator.id, token),
     ]);
-    setDashboard(next);
+    setDashboard((current) =>
+      current?.latest &&
+      (!next.latest ||
+        Date.parse(current.latest.recorded_at) > Date.parse(next.latest.recorded_at))
+        ? { ...next, latest: current.latest }
+        : next,
+    );
     setLots(nextLots);
     setEggs(nextEggs);
     if (next.latest) applyReading(next.latest);
@@ -555,7 +570,14 @@ export function SmartEggProvider({
     ])
       .then(([nextDashboard, history, nextLots, nextEggs]) => {
         if (cancelled) return;
-        setDashboard(nextDashboard);
+        setDashboard((current) =>
+          current?.latest &&
+          (!nextDashboard.latest ||
+            Date.parse(current.latest.recorded_at) >
+              Date.parse(nextDashboard.latest.recorded_at))
+            ? { ...nextDashboard, latest: current.latest }
+            : nextDashboard,
+        );
         setSeries(history.slice().reverse().map(point));
         setLots(nextLots);
         setEggs(nextEggs);
@@ -624,7 +646,7 @@ export function SmartEggProvider({
   }, [applyReading, demoActive, incubator, logout, token, updateConnection]);
 
   useEffect(() => {
-    if (demoActive || !token || !mqttNodeCode) return;
+    if (demoActive || !token || !mqttNodeCode || !mqttIncubatorId || !mqttCapacity) return;
 
     const mqttClient = mqtt.connect(mqttWebSocketUrl(), {
       clientId: `smartegg-web-${mqttNodeCode}-${Math.random().toString(16).slice(2, 10)}`,
@@ -643,6 +665,7 @@ export function SmartEggProvider({
           [`${prefix}/alarmas/critica`]: { qos: 1 },
           [`${prefix}/status`]: { qos: 1 },
           [`${prefix}/actuadores/estado`]: { qos: 1 },
+          [`${prefix}/telemetria`]: { qos: 0 },
         },
         (reason) => setMqttConnected(!reason),
       );
@@ -656,6 +679,23 @@ export function SmartEggProvider({
         setIncubator((current) =>
           current ? { ...current, is_online: message.online } : current,
         );
+      } else if (message.type === "telemetry") {
+        const reading = message.telemetry;
+        if (reading.occupied_slots > mqttCapacity) return;
+        applyReading({
+          id: -1,
+          incubator_id: mqttIncubatorId,
+          temperature_c: reading.temperature_c,
+          humidity_pct: reading.humidity_pct,
+          door_open: reading.door_open,
+          system_enabled: reading.system_enabled,
+          sensor_ok: reading.sensor_ok,
+          occupied_slots: reading.occupied_slots,
+          available_slots: reading.available_slots ??
+            Math.max(0, mqttCapacity - reading.occupied_slots),
+          source: "serial",
+          recorded_at: reading.recorded_at,
+        });
       } else if (message.type === "alarm") {
         setCriticalAlarm(message.alarm);
         if (message.alarm === null) {
@@ -685,7 +725,7 @@ export function SmartEggProvider({
       setMqttConnected(false);
       void mqttClient.endAsync(true);
     };
-  }, [demoActive, mqttNodeCode, token]);
+  }, [applyReading, demoActive, mqttCapacity, mqttIncubatorId, mqttNodeCode, token]);
 
   useEffect(() => {
     if (demoActive || !token || !incubator) return;
