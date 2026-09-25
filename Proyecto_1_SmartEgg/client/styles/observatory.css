@@ -224,7 +224,8 @@
   justify-content: center;
   text-align: center;
   padding: 32px 24px;
-  background: radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--color-primary) 7%, var(--color-background)), var(--color-background) 72%);
+  background: transparent;
+  pointer-events: none;
 }
 .obs-loading-model { width: min(210px, 55%); color: var(--color-primary); margin-bottom: 16px; }
 .obs-loading-kicker { font: 10px var(--font-mono); letter-spacing: .18em; color: var(--color-primary); }
@@ -245,6 +246,26 @@
 @keyframes obs-loading-scan { 0%, 100% { transform: translateY(0); opacity: .2; } 50% { transform: translateY(68px); opacity: .8; } }
 @media (prefers-reduced-motion: reduce) {
   .obs-loading-scan, .obs-loading-track span { animation: none; }
+}
+/* En el plano (1680 × 1000) el observatorio arranca en y=145: se ajusta al
+   alto restante para no desbordar el lienzo y activar el desplazamiento. */
+@media (min-width: 1440px) {
+  .observatory {
+    display: flex;
+    flex-direction: column;
+    height: 815px;
+  }
+  .obs-toolbar { padding: 16px 0; }
+  .obs-body { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  /* Fuera del flujo: el canvas toma el alto de la fila, no lo impone. */
+  .obs-canvas { position: absolute; inset: 0; height: auto; }
+  .obs-inspector { padding-top: 20px; padding-bottom: 16px; }
+  .obs-reading { margin-top: 10px; font-size: 64px; }
+  .obs-spectrum { margin-top: 14px; }
+  .obs-facts { margin: 16px 0; }
+  .obs-facts > div { padding: 9px 0; }
+  .obs-footer { padding-top: 12px; }
+  .obs-footer p { line-height: 1.6; }
 }
 @media (max-width: 767px) {
   .obs-toolbar {
