@@ -12,15 +12,15 @@ Definimos los topics de la siguiente forma:
 |---|---|---|---:|:---:|
 | `smartegg/{id}/sensores/temperatura` | Backend | Grafana | 0 | Sí |
 | `smartegg/{id}/sensores/humedad` | Backend | Grafana | 0 | Sí |
-| `smartegg/{id}/telemetria` | Backend | Grafana | 0 | Sí |
+| `smartegg/{id}/telemetria` | Backend | Frontend, Grafana | 0 | Sí para la última lectura persistida; no para el adelanto en vivo |
 | `smartegg/{id}/actuadores/estado` | Backend | Frontend, Grafana | 1 | Sí |
 | `smartegg/{id}/alarmas/critica` | Backend | Frontend, Grafana | 1 | Sí; se borra con payload vacío |
 | `smartegg/{id}/acceso/eventos` | Backend | Grafana | 1 | No |
 | `smartegg/{id}/status` | Backend/LWT | Frontend, Grafana | 1 | Sí |
 
 El frontend recibe los eventos de acceso por el WebSocket de FastAPI, no por
-`acceso/eventos`; su cuenta MQTT sólo puede leer `alarmas/critica`, `status` y
-`actuadores/estado`, tal como establece [`config/acl`](config/acl). El healthcheck
+`acceso/eventos`; su cuenta MQTT puede leer `telemetria`, `alarmas/critica`,
+`status` y `actuadores/estado`, tal como establece [`config/acl`](config/acl). El healthcheck
 de Compose publica `{"status":"ok"}` en `smartegg/healthcheck` con QoS 1,
 sin retención y sin suscriptores de aplicación. No es un estado del nodo.
 La prueba manual de [`README.md`](README.md) usa
@@ -66,7 +66,11 @@ También enviamos una lectura completa para tener todos los valores en un solo m
 ```
 
 `door_open`, `system_enabled` y `sensor_ok` pueden ser `null` cuando la trama
-de origen no informa ese estado; los campos siempre están presentes.
+de origen no informa ese estado. Para la ESP32 se publica primero una versión
+en vivo, no retenida, directamente al leer el serial y antes de escribir en la
+base de datos; esta versión omite `available_slots`. Después de persistirla se
+publica el snapshot completo y retenido. El frontend ignora mensajes más
+antiguos para que una escritura lenta no revierta la lectura actual.
 
 ### Estado de actuadores
 
