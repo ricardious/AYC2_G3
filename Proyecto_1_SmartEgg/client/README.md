@@ -357,12 +357,25 @@ Elegimos [Three.js](https://threejs.org/docs/) por su cámara, materiales y
 controles de órbita para inspeccionar la incubadora desde varios ángulos.
 Desmontamos la escena al navegar y respetamos la preferencia de movimiento reducido.
 
-En **Historial** usamos [Chart.js](https://www.chartjs.org/docs/latest/) para
-gráficas de líneas con consulta de valores al pasar el cursor y una tabla
-accesible. Ofrece escalas, adaptación al contenedor y tooltips sin implementarlos
-manualmente. Consultamos las últimas 240 lecturas mediante `fetch` a
-`GET /api/v1/incubators/{id}/telemetry`; el flujo en vivo actualiza esta ventana.
-Podemos ver temperatura o humedad y seleccionar las últimas 30, 120 o 240 muestras.
+En **Historial** usamos [Apache ECharts](https://echarts.apache.org/) (importado por
+módulos desde `echarts/core`, sólo los tipos de gráfica que usamos). Lo elegimos
+frente a Chart.js porque trae de serie zoom temporal, áreas y líneas de marca,
+mapas visuales, series personalizadas y medidores, y permite dar a las gráficas
+el mismo acabado que la consola (brillo, degradados, tipografía mono). Su curva
+de aprendizaje es mayor, pero toda la configuración es declarativa. Las gráficas
+usan datos reales consultados con `fetch`:
+
+| Gráfica | Tipo | Fuente |
+| --- | --- | --- |
+| 01 · Pulso del microclima | Líneas con doble eje, franjas del rango óptimo, umbral crítico, pulso de la última lectura y zoom temporal | `GET /incubators/{id}/telemetry` + lecturas en vivo por MQTT |
+| 02 · Espacio de fase | Dispersión humedad × temperatura; los puntos recientes brillan más y el recuadro marca la zona óptima | Mismas lecturas + `GET /incubators/{id}/config` |
+| 03 · Cronología de alarmas | Serie personalizada: cada episodio es un tramo en el carril de su tipo, coloreado por severidad | `GET /incubators/{id}/alarms` |
+| 04 · Bandeja y ocupación | Escalonada del ángulo de bandeja sobre el área de posiciones ocupadas | `GET /incubators/{id}/rotations` + `occupied_slots` de cada lectura |
+| 05 · Tiempo en rango | Anillos concéntricos de progreso (°C exterior, % interior) | Lecturas contra `GET /incubators/{id}/config` |
+
+La ventana (últimas 30, 120 o 240 lecturas) se actualiza con el flujo en vivo;
+alarmas y giros se vuelven a consultar cuando MQTT informa un cambio de alarma o
+de ángulo del servo. «Ver valores» abre la tabla accesible de las lecturas.
 Los promedios corresponden a las lecturas disponibles, no a un período fijo de 24 horas.
 
 Para el video de entrega (2–4 minutos), mostrar el Observatorio conectado al nodo,
