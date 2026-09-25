@@ -3,8 +3,9 @@ user smartegg
 topic read $SYS/#
 topic readwrite smartegg/#
 
-# Browser client. Only the three real-time channels consumed by the console.
+# Browser client. Read-only access to live telemetry and control status.
 user smartegg-frontend
+topic read smartegg/+/telemetria
 topic read smartegg/+/alarmas/critica
 topic read smartegg/+/status
 topic read smartegg/+/actuadores/estado
