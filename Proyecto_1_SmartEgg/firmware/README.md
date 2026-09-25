@@ -84,16 +84,62 @@ El huevo descansa sobre un soporte móvil que acciona la palanca; el interruptor
 presionar directamente el cascarón. El RC522 se alimenta con 3.3 V. Los servos usan una
 fuente externa de 5 V con GND común.
 
-## Preparación
+## Compilar y grabar la ESP32
 
-1. Instalar PlatformIO Core.
-2. Compilar y cargar desde la raíz del repositorio:
+Los comandos de esta sección se ejecutan **desde `Proyecto_1_SmartEgg`**, la carpeta
+que contiene `firmware/` y `docker-compose.yml`. El proyecto está configurado para
+una ESP32 DevKit (`esp32dev`) con ESP-IDF; no se abre ni se compila con Arduino IDE.
+
+### 1. Preparar la herramienta
+
+Se necesita `uvx` (incluido con `uv`) y un cable USB **de datos**. Los comandos
+`uvx platformio ...` ejecutan PlatformIO Core; no hace falta instalar las librerías
+de Arduino. En la primera ejecución, PlatformIO puede descargar la plataforma y
+las herramientas necesarias, por lo que se requiere conexión a Internet.
+
+### 2. Compilar sin conectar la placa
 
 ```bash
-uvx platformio run -d Proyecto_1_SmartEgg/firmware
-uvx platformio run -d Proyecto_1_SmartEgg/firmware -t upload
-uvx platformio run -d Proyecto_1_SmartEgg/firmware -t monitor
+uvx platformio run -d firmware
 ```
+
+Si termina con `SUCCESS`, el archivo listo para grabar queda en
+`firmware/.pio/build/esp32dev/firmware.bin`. Este paso solo compila: **no modifica
+la ESP32**.
+
+### 3. Grabar el firmware
+
+Conecte la ESP32 por USB y cierre cualquier monitor serial o backend que esté
+usando su puerto. Después ejecute:
+
+```bash
+uvx platformio run -d firmware -t upload
+```
+
+PlatformIO compila si hace falta, detecta el puerto y graba el programa. Si hay
+varios dispositivos seriales o no detecta el correcto, indique el puerto
+explícitamente; por ejemplo:
+
+```bash
+uvx platformio run -d firmware -t upload --upload-port /dev/ttyUSB0
+```
+
+Sustituya `/dev/ttyUSB0` por el puerto real de su ESP32. En Linux puede verlo con
+`ls -l /dev/serial/by-id/`; también puede usar directamente esa ruta estable con
+`--upload-port`. Si aparece un error de permisos, compruebe que su usuario tenga
+acceso al puerto serial. Si la carga no inicia, pruebe mantener presionado **BOOT**
+al comenzar la conexión y soltarlo cuando empiece la transferencia.
+
+### 4. Comprobar la salida serial
+
+```bash
+uvx platformio run -d firmware -t monitor
+```
+
+El monitor usa **115200 baudios**, configurados en `platformio.ini`. Para cerrar
+el monitor pulse `Ctrl+C`. Si no encuentra el puerto automáticamente, use
+`--monitor-port /dev/ttyUSB0` (cambiando la ruta por la de su placa). Cierre el
+monitor antes de iniciar el backend: ambos necesitan el mismo puerto USB.
 
 El UID hexadecimal que reporta el nodo se asigna como `rfid_uid` al Operador 1 u
 Operador 2 desde la API. El lector admite UID ISO/IEC 14443A de 4, 7 y 10 bytes.
