@@ -119,6 +119,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         reconnect_seconds=configured.serial_reconnect_seconds,
         default_incubator_code=configured.default_incubator_code,
         on_payload=serial_payload_handler,
+        on_live_payload=mqtt_publisher.publish_live_telemetry,
         on_access_event=serial_access_handler,
     )
 

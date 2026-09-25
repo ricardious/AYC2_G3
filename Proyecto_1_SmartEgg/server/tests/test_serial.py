@@ -107,6 +107,51 @@ def test_serial_bridge_opens_with_modem_control_lines_inactive(monkeypatch) -> N
     assert connection.input_was_reset is True
 
 
+def test_serial_bridge_forwards_live_reading_before_persistence_queue(monkeypatch) -> None:
+    order: list[str] = []
+    bridge = SerialBridge(
+        enabled=True,
+        port="/dev/test-serial",
+        baudrate=115200,
+        timeout=0.1,
+        reconnect_seconds=0.1,
+        default_incubator_code="NODE-01",
+        on_payload=lambda payload: None,
+        on_live_payload=lambda payload: order.append("mqtt"),
+    )
+    monkeypatch.setattr(bridge, "_enqueue_payload", lambda payload: order.append("db"))
+
+    class FakeConnection:
+        is_open = False
+
+        def open(self) -> None:
+            self.is_open = True
+
+        def reset_input_buffer(self) -> None:
+            pass
+
+        def readline(self) -> bytes:
+            bridge._stop.set()  # noqa: SLF001
+            return b"TEMP:37.5,HUM:58,SLOTS:2\n"
+
+        def close(self) -> None:
+            self.is_open = False
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args) -> None:
+            self.close()
+
+    monkeypatch.setattr(
+        "app.services.serial_bridge.serial.serial_for_url",
+        lambda *args, **kwargs: FakeConnection(),
+    )
+    bridge._run()  # noqa: SLF001
+
+    assert order == ["mqtt", "db"]
+
+
 def test_parse_rfid_serial_event() -> None:
     event = parse_serial_access_event("RFID:A1B2C3D4", "NODE-01")
     assert event.kind == "rfid"

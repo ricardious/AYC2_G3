@@ -128,6 +128,7 @@ class SerialBridge:
         reconnect_seconds: float,
         default_incubator_code: str,
         on_payload: Callable[[TelemetryCreate], None],
+        on_live_payload: Callable[[TelemetryCreate], None] | None = None,
         on_access_event: Callable[[SerialAccessEvent], None] | None = None,
     ) -> None:
         self.enabled = enabled
@@ -137,6 +138,7 @@ class SerialBridge:
         self.reconnect_seconds = reconnect_seconds
         self.default_incubator_code = default_incubator_code
         self.on_payload = on_payload
+        self.on_live_payload = on_live_payload
         self.on_access_event = on_access_event
         self.connected = False
         self.last_error: str | None = None
@@ -252,6 +254,16 @@ class SerialBridge:
                             payload = parse_serial_line(
                                 line, self.default_incubator_code
                             )
+                            # One receive timestamp for both the immediate MQTT
+                            # message and the eventually persisted reading.
+                            payload = payload.model_copy(
+                                update={"recorded_at": datetime.now(UTC)}
+                            )
+                            if self.on_live_payload is not None:
+                                try:
+                                    self.on_live_payload(payload)
+                                except Exception as exc:
+                                    self.last_error = f"Live telemetry callback: {exc}"
                             self._enqueue_payload(payload)
                             self.last_message_at = datetime.now(UTC)
                             self.last_error = None

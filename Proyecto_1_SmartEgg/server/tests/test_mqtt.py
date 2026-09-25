@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.services.mqtt import MqttPublisher, MqttSnapshot
+from app.schemas import TelemetryCreate
 
 
 class PublishResult:
@@ -167,6 +168,26 @@ def test_snapshot_clears_retained_alarm_when_none_is_active() -> None:
         if message[0] == "smartegg/NODE-01/alarmas/critica"
     )
     assert alarm[1:] == (b"", 1, True)
+
+
+def test_live_serial_telemetry_is_published_without_waiting_for_database() -> None:
+    publisher, fake = build_publisher()
+    publisher.publish_live_telemetry(
+        TelemetryCreate(
+            incubator_code="NODE-01",
+            temperature_c=37.6,
+            humidity_pct=58,
+            occupied_slots=3,
+            door_open=False,
+            source="serial",
+        )
+    )
+
+    topic, payload, qos, retained = fake.published[-1]
+    assert topic == "smartegg/NODE-01/telemetria"
+    assert (qos, retained) == (0, False)
+    assert json.loads(payload)["occupied_slots"] == 3
+    assert "available_slots" not in json.loads(payload)
 
 
 def test_api_telemetry_publishes_database_snapshot(
