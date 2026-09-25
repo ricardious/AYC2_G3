@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "chart.js": "^4.5.1",
+    "echarts": "^6.1.0",
     "mqtt": "^5.15.2",
     "next": "16.3.1",
     "p5": "^2.3.2",

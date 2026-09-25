@@ -11,7 +11,7 @@ export function HistoryScreen() {
       <StageBlock top={170} x={176} fillRight wide fluid>
         <HistoryOverview />
       </StageBlock>
-      <StageBlock top={300} x={176} fillRight wide fluid>
+      <StageBlock top={250} x={176} fillRight wide fluid>
         <HistoryCharts />
       </StageBlock>
     </>
