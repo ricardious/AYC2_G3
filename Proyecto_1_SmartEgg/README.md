@@ -24,6 +24,7 @@ y cómo se relaciona.
 - [Despliegue y operación](#despliegue-y-operación)
   - [Cuentas y permisos](#cuentas-y-permisos)
   - [Pruebas y evidencias](#pruebas-y-evidencias)
+- [Evidencia visual](#evidencia-visual)
 - [Visualización de datos](#visualización-de-datos)
 - [HTTP vs. MQTT en SmartEgg](#http-vs-mqtt-en-smartegg)
 - [Firmware ESP32](#firmware-esp32)
@@ -419,6 +420,25 @@ animaciones del firmware que se ejecutan en el equipo sin conectar la ESP32.
 Documentamos por separado la [prueba física](docs/PRUEBA_FISICA.md) del RC522,
 la cerradura, el final de carrera y las posiciones de huevos. El puerto serial
 es exclusivo: un monitor abierto y el backend no pueden leerlo al mismo tiempo.
+
+## Evidencia visual
+
+El circuito de Wokwi documenta las conexiones previstas; la fotografía muestra
+el servo instalado en la cerradura del prototipo.
+
+| Circuito de conexiones | Montaje de la cerradura |
+|---|---|
+| ![Circuito SmartEgg en Wokwi con ESP32, LCD, RC522, sensores y actuadores](docs/evidencias/diagrama-conexiones-wokwi.png) | ![Servo de cerradura instalado junto al mecanismo de la puerta](docs/evidencias/fisico/servo-cerradura-montaje.jpeg) |
+
+El Observatorio presenta el modelo 3D y las posiciones de huevos; Grafana muestra
+el estado del nodo recibido por MQTT.
+
+| Observatorio 3D | Grafana en tiempo real |
+|---|---|
+| ![Observatorio SmartEgg con un huevo registrado](docs/evidencias/plataforma/frontend-observatorio-huevo-registrado.png) | ![Panel de Grafana con temperatura, humedad, puerta y actuadores](docs/evidencias/plataforma/grafana-tiempo-real-con-datos.png) |
+
+El [índice de evidencias](docs/evidencias/README.md) reúne el resto de fotografías
+del montaje, pantallas de la plataforma, panel histórico y capturas de MQTT.
 
 ## Visualización de datos
 
