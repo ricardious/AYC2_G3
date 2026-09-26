@@ -4,6 +4,10 @@
 [`Config.h`](../SmartEggESP32/Config.h). Sirve para probar el firmware y para
 grabar el video sin depender del hardware.
 
+![Circuito SmartEgg en Wokwi](../../docs/evidencias/diagrama-conexiones-wokwi.png)
+
+[Abrir la captura del circuito](../../docs/evidencias/diagrama-conexiones-wokwi.png).
+
 ## Cómo se ejecuta
 
 Requiere la extensión **Wokwi for VS Code** y una licencia gratuita.

@@ -660,5 +660,5 @@ El nodo físico no usa Wi-Fi ni HTTP. Pines, montaje, carga y pruebas están en
 - [Enunciado del Proyecto 1](docs/enunciado/Proyecto_1_2S2026.pdf).
 - [Hoja de calificación de SmartEgg](docs/Hoja_Calificacion_Proyecto2_Fase2_SmartEgg.pdf).
 - [Hoja de calificación de la Práctica 1](docs/calificacion/Hoja_Calificacion_Practica1_SmartEgg.pdf), antecedente reutilizado por este proyecto.
-- [Guía de montaje](firmware/MONTAJE_PASO_A_PASO.md), [prueba física](docs/PRUEBA_FISICA.md) y [guion del video](docs/GUION_VIDEO.md).
+- [Guía de montaje](firmware/MONTAJE_PASO_A_PASO.md), [captura del circuito de Wokwi](docs/evidencias/diagrama-conexiones-wokwi.png), [prueba física](docs/PRUEBA_FISICA.md) y [guion del video](docs/GUION_VIDEO.md).
 - [Evidencias y pendientes verificables](docs/evidencias/README.md). Incluyen capturas del frontend y Grafana y el [video demostrativo del Observatorio](docs/evidencias/smartegg-observatorio-3d.mp4). La prueba física completa se documenta por separado.
