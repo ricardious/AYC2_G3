@@ -26,7 +26,7 @@
 10. Colocar y retirar un huevo de cada posición y comprobar que la ocupación cambie una
     sola vez por movimiento.
 
-## Resultado esperado
+## Resultado esperado.
 
 | Acción | Resultado |
 |---|---|
