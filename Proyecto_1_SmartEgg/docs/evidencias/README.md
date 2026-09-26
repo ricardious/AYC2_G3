@@ -47,26 +47,44 @@ continua del equipo y la pantalla, o el registro serial/MQTT del mismo momento.
 | [Grafana en vivo](plataforma/grafana-tiempo-real-con-datos.png) | Panel MQTT con temperatura, humedad, puerta, ocupación y actuadores. |
 | [Grafana histórico](plataforma/grafana-historico-con-datos.png) | Panel SQL con lecturas, alarmas y operaciones de acceso. |
 
+La conexión y publicación MQTT están documentadas en las capturas de MQTT
+Explorer anteriores. Los dos paneles de Grafana también están capturados con
+datos; las imágenes antiguas sin nodo se conservan solo como referencia del
+estado inicial.
+
 ## Video demostrativo
 
 El [video del Observatorio 3D](smartegg-observatorio-3d.mp4) (3 min 51 s) muestra
 el prototipo, la interfaz interactiva y la explicación del recorrido de los
-datos. La [prueba física](../PRUEBA_FISICA.md) conserva el recorrido detallado
-de RFID, puerta, sensores y actuadores.
+datos. Es el video entregado para el proyecto; no se requiere otro video para
+cada componente. La [prueba física](../PRUEBA_FISICA.md) es una guía para la
+demostración presencial de RFID, puerta y posiciones.
 
-## Capturas y demostraciones que faltan
+## Montaje físico
 
-- Demostración continua de la ESP32 transmitiendo y de los mismos valores
-  apareciendo en Grafana **Tiempo real**, **Histórico** y la web. Las capturas
-  anteriores muestran datos, pero no el origen físico ni la sincronización.
-- Broker MQTT: suscripción a los topics reales de temperatura, humedad y
-  estado, y publicación visible tras cambiar una condición física. No mostrar
-  contraseñas de `.env` en la captura.
+El [diagrama de conexiones de Wokwi](diagrama-conexiones-wokwi.png) muestra el
+circuito completo de la ESP32, sensores, actuadores, LCD y RC522. Su archivo
+editable es [`firmware/wokwi/diagram.json`](../../firmware/wokwi/diagram.json).
+
+| Fotografía | Qué muestra |
+|---|---|
+| [Servo de cerradura](fisico/servo-cerradura-montaje.jpeg) | Servo instalado junto al mecanismo de la puerta. |
+| [Relés y protoboard](fisico/cableado-reles-protoboard.jpeg) | Cableado interior, módulo de relés y protoboard del montaje. |
+| [Lector RFID](fisico/lector-rfid-cableado.jpeg) | Módulo RC522 y sus conexiones. |
+| [ESP32](fisico/esp32-conexiones.jpeg) | Placa ESP32 y conexiones del prototipo. |
+| [Sensor DHT11](fisico/sensor-dht11-interior.jpeg) | Sensor de temperatura y humedad instalado dentro de la incubadora. |
+| [Mecanismo de la bandeja](fisico/servo-bandeja-mecanismo.jpeg) | Servo y transmisión mecánica de la bandeja. |
+| [Ventilador](fisico/ventilador-interior.jpeg) | Ventilador instalado sobre los soportes de huevos. |
+| [Foco de calefacción](fisico/foco-calefaccion-interior.jpeg) | Bombilla instalada en el interior. |
+| [Marco de la puerta](fisico/detalle-marco-puerta.jpeg) | Detalle de la pieza instalada junto al marco. |
+
+Estas fotografías documentan el montaje; el movimiento de la cerradura y las
+lecturas se observan durante la demostración del equipo.
+
+## Captura pendiente
+
 - Commits verificables del proyecto en GitHub. El historial local o capturas
   de otra carpeta no sustituyen la evidencia de contribuciones del Proyecto 1.
-- Secuencia física: tarjeta autorizada y denegada, LCD, servo de cerradura,
-  final de carrera, lectura de posiciones, alarma y ventilador. La secuencia
-  está definida en [Prueba física](../PRUEBA_FISICA.md).
 
 Para completar una evidencia se guarda la captura original en esta carpeta y
 se añade aquí su origen y resultado observado. Se ocultan únicamente
