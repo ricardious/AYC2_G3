@@ -485,8 +485,9 @@ corresponden a las lecturas disponibles, no a un período fijo de 24 horas.
 
 La elección de librerías y el flujo de datos se explican en
 [client/README.md](client/README.md#visualización-avanzada). El
-[guion del video](docs/GUION_VIDEO.md) se centra en el Observatorio de Three.js
-reaccionando a lecturas reales; falta grabarlo y publicar aquí su enlace.
+[video demostrativo](docs/evidencias/smartegg-observatorio-3d.mp4) muestra el
+Observatorio de Three.js junto con el prototipo físico. El
+[guion](docs/GUION_VIDEO.md) describe las tomas y el recorrido de los datos.
 
 ## HTTP vs. MQTT en SmartEgg
 
@@ -660,4 +661,4 @@ El nodo físico no usa Wi-Fi ni HTTP. Pines, montaje, carga y pruebas están en
 - [Hoja de calificación de SmartEgg](docs/Hoja_Calificacion_Proyecto2_Fase2_SmartEgg.pdf).
 - [Hoja de calificación de la Práctica 1](docs/calificacion/Hoja_Calificacion_Practica1_SmartEgg.pdf), antecedente reutilizado por este proyecto.
 - [Guía de montaje](firmware/MONTAJE_PASO_A_PASO.md), [prueba física](docs/PRUEBA_FISICA.md) y [guion del video](docs/GUION_VIDEO.md).
-- [Evidencias y pendientes verificables](docs/evidencias/README.md). Las capturas disponibles documentan la interfaz; el video del Observatorio con datos reales permanece pendiente.
+- [Evidencias y pendientes verificables](docs/evidencias/README.md). Incluyen capturas del frontend y Grafana y el [video demostrativo del Observatorio](docs/evidencias/smartegg-observatorio-3d.mp4). La prueba física completa se documenta por separado.
