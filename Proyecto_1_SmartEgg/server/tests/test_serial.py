@@ -255,3 +255,40 @@ def test_rfid_database_failure_sends_denial(client, monkeypatch) -> None:
         }
     ]
     app.state.engine.dispose()
+
+
+def test_lost_door_close_does_not_block_next_card(
+    client, operator_headers, incubator
+) -> None:
+    """Un cierre perdido no puede dejar la puerta bloqueada hasta que caduque."""
+    del operator_headers, incubator
+    settings = client.app.state.settings
+    with client.app.state.session_factory() as db:
+        first = process_serial_access_event(
+            db, parse_serial_access_event("RFID:A1B2C3D4", "NODE-01"), settings
+        )
+        first_id = int(first.command["session_id"])
+        process_serial_access_event(
+            db,
+            parse_serial_access_event(
+                f"ACCESS:DOOR,SESSION:{first_id},STATE:OPEN", "NODE-01"
+            ),
+            settings,
+        )
+        # El ESP32 se reinicia con la puerta abierta: el cierre nunca llega.
+
+        second = process_serial_access_event(
+            db, parse_serial_access_event("RFID:A1B2C3D4", "NODE-01"), settings
+        )
+        assert second.command is not None
+        assert second.command["authorized"] is True
+        assert int(second.command["session_id"]) != first_id
+
+        stale = db.get(AccessSession, first_id)
+        assert stale is not None
+        assert stale.ended_reason == "replaced"
+        orphan = db.scalar(
+            select(DoorEvent).where(DoorEvent.access_session_id == first_id)
+        )
+        assert orphan is not None
+        assert orphan.closed_at is None
