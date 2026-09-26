@@ -52,6 +52,29 @@ Explorer anteriores. Los dos paneles de Grafana también están capturados con
 datos; las imágenes antiguas sin nodo se conservan solo como referencia del
 estado inicial.
 
+## Base de datos en Neon
+
+Las capturas de [`base-datos/`](base-datos/) muestran la rama `production` del
+proyecto SmartEgg y consultas de solo lectura sobre la base `neondb`. Permiten
+localizar las tablas y examinar registros existentes; la columna `source=serial`
+identifica el origen declarado de las lecturas, pero una captura aislada no
+demuestra por sí sola la transmisión física de la ESP32.
+
+| Captura | Qué muestra |
+|---|---|
+| [Tablas de la rama](base-datos/tablas-rama-production.png) | Proyecto, rama, base y lista de tablas del esquema `public`. |
+| [Estructura de operadores](base-datos/technicians-estructura.png) | Columnas y restricciones de `technicians`, sin exponer hashes ni UID. |
+| [Operadores y roles](base-datos/technicians-operadores-y-roles.png) | Dos cuentas `operator` y una `admin`, con edad y género registrados. |
+| [Lecturas](base-datos/telemetry-readings-lecturas.png) | Lecturas históricas con temperatura, humedad, ocupación, puerta, origen y marca temporal. |
+| [Tipos de alarma](base-datos/alarms-tipos-y-severidades.png) | Tipos y severidades visibles, con fecha de inicio y duración cuando están resueltas. |
+| [Alarmas recientes](base-datos/alarms-recientes-con-duracion.png) | Historial reciente de alarmas con inicio, resolución y duración. |
+| [Lotes y huevos](base-datos/lots-eggs-relacion.png) | Relación entre lote, huevo, incubadora, posición y fecha de registro. |
+| [Aperturas de puerta](base-datos/door-events-aperturas-operadores.png) | Operador, método de acceso, apertura, cierre y conteo de huevos por evento. |
+
+Las capturas de alarmas muestran condiciones `warning`; no acreditan por sí
+solas la recepción de una alarma `critical` por MQTT en el frontend. La prueba
+en vivo de ese recorrido sigue siendo necesaria.
+
 ## Video demostrativo
 
 El [video del Observatorio 3D](smartegg-observatorio-3d.mp4) (3 min 51 s) muestra
