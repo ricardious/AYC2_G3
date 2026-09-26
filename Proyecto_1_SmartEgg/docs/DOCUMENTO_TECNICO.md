@@ -1,6 +1,7 @@
 # Documento técnico · SmartEgg
 
-Proyecto 1 — Arquitectura de Computadoras y Ensambladores 2, Grupo 3.
+Proyecto 1 — Arquitectura de Computadoras y Ensambladores 2.
+Grupo 3
 
 ## Alcance y solución
 
