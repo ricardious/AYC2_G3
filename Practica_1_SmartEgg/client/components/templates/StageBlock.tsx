@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 
+import { useFitScale } from "@/lib/hooks/useFitScale";
 import { cx } from "@/lib/cx";
 import type { CSSVars } from "@/lib/smartegg/types";
 
@@ -15,6 +18,18 @@ interface StageBlockProps {
   fillRight?: boolean;
   /** Ocupa las dos columnas de la pila; para los que no caben en media. */
   wide?: boolean;
+  /**
+   * El instrumento se adapta al ancho en vez de medir lo suyo. Apaga el
+   * desplazamiento lateral: sin esto el `w-max` interior mide por contenido y
+   * un hijo `w-full` no tiene contra qué resolverse.
+   */
+  fluid?: boolean;
+  /**
+   * Ancho de diseño del instrumento. En pila se reduce hasta caber en vez de
+   * desplazarse. Sólo para los que no admiten reflujo; si el instrumento puede
+   * adaptarse, `fluid` es mejor porque no encoge su tipografía.
+   */
+  fit?: number;
   children: ReactNode;
 }
 
@@ -40,12 +55,22 @@ export function StageBlock({
   anchor = "left",
   fillRight,
   wide,
+  fluid,
+  fit,
   children,
 }: StageBlockProps) {
+  const { containerRef, contentRef, scale, height } = useFitScale(fit ?? 1);
+
   const style: CSSVars = {
     "--stage-top": `${top}px`,
     "--stage-x": `${x}px`,
   };
+
+  // El contragiro del especular y cualquier otro cálculo que dependa de la
+  // reducción leen `--fit-scale`; en el plano vale 1.
+  const fitStyle: CSSVars = fit
+    ? { "--fit-scale": scale, width: `${fit}px` }
+    : {};
 
   return (
     <div
@@ -58,7 +83,26 @@ export function StageBlock({
         fillRight ? "console:right-10" : null,
       )}
     >
-      <div className="w-max console:w-auto">{children}</div>
+      {fit ? (
+        <div ref={containerRef} className="w-full console:w-auto">
+          <div
+            style={height ? { height: height * scale } : undefined}
+            className="overflow-hidden console:h-auto console:overflow-visible"
+          >
+            <div
+              ref={contentRef}
+              style={fitStyle}
+              className="origin-top-left [transform:scale(var(--fit-scale,1))] console:w-auto console:[transform:none]"
+            >
+              {children}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className={cx(fluid ? "w-full" : "w-max", "console:w-auto")}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }

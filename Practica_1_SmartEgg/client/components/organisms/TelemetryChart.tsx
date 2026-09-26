@@ -17,7 +17,10 @@ export function TelemetryChart() {
   const humidity = seriesPath(series, "h", 44, 72, WIDTH, HEIGHT, PAD);
 
   return (
-    <section aria-label="Historial de 6 horas" className="w-[496px]">
+    <section
+      aria-label="Historial de 6 horas"
+      className="w-full max-w-[496px] console:w-[496px]"
+    >
       <div className="flex items-baseline justify-between">
         <SectionKicker>HISTORIAL · 6 H</SectionKicker>
         <div className="flex gap-4 font-mono text-[8px] tracking-[0.14em]">
@@ -28,15 +31,16 @@ export function TelemetryChart() {
 
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        preserveAspectRatio="none"
         aria-hidden="true"
-        className="mt-3 h-[132px] w-[496px] overflow-visible"
+        className="mt-3 h-[132px] w-full overflow-visible console:w-[496px]"
       >
-        <rect x="0" y="34" width={WIDTH} height="34" fill="rgba(240,164,74,.07)" />
-        <rect x="0" y="76" width={WIDTH} height="30" fill="rgba(95,227,232,.06)" />
+        <rect x="0" y="34" width={WIDTH} height="34" fill="var(--heat-band)" />
+        <rect x="0" y="76" width={WIDTH} height="30" fill="var(--accent-band)" />
         <path
           d={TELEMETRY_GRID_PATH}
           fill="none"
-          stroke="rgba(120,150,165,.12)"
+          stroke="var(--chart-grid)"
           strokeWidth="1"
         />
         <path
@@ -50,7 +54,7 @@ export function TelemetryChart() {
           d={temperature}
           fill="none"
           strokeWidth="1.2"
-          className="stroke-warning drop-shadow-[0_0_6px_rgba(240,164,74,.5)]"
+          className="stroke-warning drop-shadow-[0_0_6px_var(--heat-trace-glow)]"
         />
         <line
           x1={WIDTH}

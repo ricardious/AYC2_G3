@@ -85,7 +85,7 @@ export function SetpointSlider({
           onChange={(event) => onChange(Number(event.target.value))}
           className="absolute inset-0 h-[9px] w-full cursor-ew-resize appearance-none bg-transparent opacity-0 disabled:cursor-not-allowed"
         />
-        <span className="pointer-events-none absolute top-0 left-[var(--pct)] -ml-1 size-[9px] border border-[var(--accent)] bg-[#06080b] shadow-[0_0_8px_var(--accent)]" />
+        <span className="pointer-events-none absolute top-0 left-[var(--pct)] -ml-1 size-[9px] border border-[var(--accent)] bg-background shadow-[0_0_8px_var(--accent)]" />
       </div>
 
       <div className="mt-[7px] flex min-h-5 items-center justify-between font-mono text-[7.5px] tracking-[0.14em] text-foreground-fainter">

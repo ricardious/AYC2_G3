@@ -35,7 +35,10 @@ export function NodePanel() {
   ];
 
   return (
-    <section aria-label="Nodo" className="w-[330px]">
+    <section
+      aria-label="Nodo"
+      className="w-full max-w-[330px] console:w-[330px]"
+    >
       <SectionKicker>NODO</SectionKicker>
       <dl className="mt-[22px] font-mono text-[9px] leading-[2.6] tracking-[0.14em] text-neutral">
         {rows.map((row) => {

@@ -17,7 +17,7 @@ La consola ya no genera telemetría simulada. Al iniciar solicita las credencial
 técnico, carga el estado y las últimas 240 lecturas por REST y abre un WebSocket para las
 nuevas lecturas. Si el WebSocket se interrumpe, consulta `/state` cada 2 segundos y trata
 de reconectarlo; mientras está conectado conserva una sincronización REST cada 10
-segundos para actuadores, sensores y alarmas.
+segundos para actuadores, sensores, alarmas, lotes y fichas de huevos.
 
 Copie la configuración opcional:
 
@@ -68,7 +68,8 @@ components/
                EggChip · EggTooltip · EventRow · HeaderStat · NavItem
                ParticleField · SensorRow · SetpointSlider · StationEgg
   organisms/   ActuatorPanel · CriticalAlertBanner · EventFeed · HistoryCharts
-               HistoryOverview · HumidityColumn · IncubatorChamber · NodePanel
+               EggRegistrationDialog · HistoryOverview · HumidityColumn
+               IncubatorChamber · NodePanel
                ReportSheet · ReportSidebar · ScreenHeader · SelectionPanel
                SensorPanel · SetpointPanel · SideNav · SpecimenStation
                SpecimenStrip · StationSummary · TelemetryChart
@@ -103,16 +104,33 @@ lib/cx.ts       unión de clases condicionales
 Estado con **Context + `useReducer`**, sin dependencias externas, dividido en dos
 contextos:
 
-- `SmartEggContext` — pantalla activa, selección, hover y modo crítico.
-- `TelemetryContext` — serie en vivo y reloj, que se refrescan cada 2.2 s. Al
-  estar separados, el tick sólo re-renderiza medidores y gráficas.
+- `SmartEggContext` — pantalla activa, selección, lotes, fichas persistidas, formulario y
+  modo crítico.
+- `TelemetryContext` — serie en vivo y reloj derivados de las lecturas recibidas. Al estar
+  separados, cada trama sólo re-renderiza medidores y gráficas.
 
-La telemetría se genera con un LCG sembrado, de modo que el servidor y el
-cliente producen el mismo primer render (sin desajustes de hidratación); sólo el
-tick posterior introduce aleatoriedad real.
+La ocupación física procede del campo `SLOTS` del firmware. Una posición detectada y una
+ficha registrada son estados distintos: la primera habilita el formulario y la segunda
+aporta el rótulo, lote y fecha de ingreso persistidos en FastAPI.
 
 `derive.ts` contiene funciones puras `(estado, config) → modelo de vista`, así
 que la lógica del panel es comprobable sin DOM.
+
+### Registro e identificación de huevos
+
+En **Incubación**, una posición reportada como ocupada por el Arduino aparece como
+`SIN IDENTIFICAR` hasta que el técnico abre **Registrar huevo**. El formulario solicita:
+
+- código rotulado del huevo;
+- lote activo o datos mínimos para crear uno nuevo;
+- fecha y hora real de ingreso;
+- posición física confirmada por el sensor;
+- observaciones opcionales.
+
+Antes de enviar se valida la detección física, campos obligatorios, fechas futuras y lote
+seleccionado. El backend completa las reglas de unicidad, capacidad y posición ocupada.
+Los errores se mantienen dentro del formulario y, al guardar, la posición cambia a la
+ficha persistida sin recargar la página.
 
 ### Props públicas
 

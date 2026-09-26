@@ -1,5 +1,6 @@
 import { EggShape } from "@/components/atoms/EggShape";
 import { cx } from "@/lib/cx";
+import { slotIndex } from "@/lib/smartegg/derive";
 import type { EggView } from "@/lib/smartegg/types";
 
 import { EggTooltip } from "./EggTooltip";
@@ -26,10 +27,11 @@ export function ChamberEgg({
       onMouseLeave={() => onHoverChange(false)}
       onFocus={() => onHoverChange(true)}
       onBlur={() => onHoverChange(false)}
-      className="relative flex w-[60px] flex-col items-center"
+      className="group relative flex w-[60px] flex-col items-center"
     >
       <EggShape
         variant="chamber"
+        slot={slotIndex(egg.id)}
         empty={egg.empty}
         hot={egg.hot}
         critical={critical}

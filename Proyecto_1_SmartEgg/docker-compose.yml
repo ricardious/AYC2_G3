@@ -1,0 +1,170 @@
+services:
+  mqtt-password-init:
+    image: eclipse-mosquitto:2
+    restart: "no"
+    network_mode: none
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        umask 077
+        rm -f /mosquitto/secrets/passwords
+        mosquitto_passwd -b -c /mosquitto/secrets/passwords \
+          smartegg "$$MQTT_PASSWORD"
+        mosquitto_passwd -b /mosquitto/secrets/passwords \
+          smartegg-frontend "$$MQTT_FRONTEND_PASSWORD"
+        mosquitto_passwd -b /mosquitto/secrets/passwords \
+          smartegg-grafana "$$MQTT_GRAFANA_PASSWORD"
+        chown 1883:1883 /mosquitto/secrets/passwords
+    environment:
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+      MQTT_FRONTEND_PASSWORD: ${MQTT_FRONTEND_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
+      MQTT_GRAFANA_PASSWORD: ${MQTT_GRAFANA_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
+    volumes:
+      - mosquitto_secrets:/mosquitto/secrets
+
+  broker:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    depends_on:
+      mqtt-password-init:
+        condition: service_completed_successfully
+    environment:
+      MQTT_USERNAME: smartegg
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_WS_PORT:-9001}:9001"
+    volumes:
+      - ./mqtt/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mqtt/config/acl:/mosquitto/config/acl:ro
+      - ./mqtt/certs:/mosquitto/certs:ro
+      - mosquitto_secrets:/mosquitto/secrets:ro
+      - mosquitto_data:/mosquitto/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mosquitto_pub -h 127.0.0.1 -p 1883
+          -u "$$MQTT_USERNAME" -P "$$MQTT_PASSWORD"
+          -t 'smartegg/healthcheck' -m '{"status":"ok"}' -q 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - smartegg
+
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smartegg}
+      POSTGRES_USER: ${POSTGRES_USER:-smartegg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in .env}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:-grafana_reader}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?Define GRAFANA_DB_PASSWORD in .env}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - smartegg
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: smartegg-backend:local
+    restart: unless-stopped
+    init: true
+    depends_on:
+      database:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    environment:
+      SMARTEGG_DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-smartegg}:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in .env}@database:5432/${POSTGRES_DB:-smartegg}}
+      SMARTEGG_AUTO_CREATE_SCHEMA: "false"
+      SMARTEGG_JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET in .env}
+      SMARTEGG_DEVICE_API_KEY: ${DEVICE_API_KEY:?Define DEVICE_API_KEY in .env}
+      SMARTEGG_KIOSK_API_KEY: ${KIOSK_API_KEY:?Define KIOSK_API_KEY in .env}
+      SMARTEGG_ACCESS_SERVO_UNLOCK_DEGREES: ${ACCESS_SERVO_UNLOCK_DEGREES:-90}
+      SMARTEGG_ACCESS_SERVO_LOCK_DEGREES: ${ACCESS_SERVO_LOCK_DEGREES:-0}
+      SMARTEGG_CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000"]}
+      SMARTEGG_TIMEZONE: ${TIMEZONE:-America/Guatemala}
+      SMARTEGG_INITIAL_TECHNICIANS: ${INITIAL_TECHNICIANS:-[]}
+      SMARTEGG_INITIAL_INCUBATORS: ${INITIAL_INCUBATORS:-[]}
+      SMARTEGG_SERIAL_ENABLED: "false"
+      SMARTEGG_DEFAULT_INCUBATOR_CODE: ${DEFAULT_INCUBATOR_CODE:-NODE-01}
+      SMARTEGG_MQTT_ENABLED: "true"
+      SMARTEGG_MQTT_HOST: broker
+      SMARTEGG_MQTT_PORT: 1883
+      SMARTEGG_MQTT_USERNAME: smartegg
+      SMARTEGG_MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
+      SMARTEGG_MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-smartegg-backend}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - smartegg
+
+  grafana:
+    image: grafana/grafana:13.2.0
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Define GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: ${GRAFANA_ANONYMOUS_ENABLED:-false}
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_PLUGINS_PREINSTALL: grafana-mqtt-datasource@1.3.6
+      GRAFANA_POSTGRES_HOST: ${GRAFANA_POSTGRES_HOST:-database}
+      GRAFANA_POSTGRES_PORT: ${GRAFANA_POSTGRES_PORT:-5432}
+      GRAFANA_POSTGRES_DATABASE: ${GRAFANA_POSTGRES_DATABASE:-${POSTGRES_DB:-smartegg}}
+      GRAFANA_POSTGRES_USER: ${GRAFANA_DB_USER:-grafana_reader}
+      GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_DB_PASSWORD:?Define GRAFANA_DB_PASSWORD in .env}
+      GRAFANA_POSTGRES_SSL_MODE: ${GRAFANA_POSTGRES_SSL_MODE:-disable}
+      GRAFANA_MQTT_URI: ${GRAFANA_MQTT_URI:-tcp://broker:1883}
+      GRAFANA_MQTT_USERNAME: smartegg-grafana
+      GRAFANA_MQTT_PASSWORD: ${MQTT_GRAFANA_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - smartegg
+
+volumes:
+  postgres_data:
+  mosquitto_data:
+  mosquitto_secrets:
+  grafana_data:
+
+networks:
+  smartegg:
+    name: smartegg

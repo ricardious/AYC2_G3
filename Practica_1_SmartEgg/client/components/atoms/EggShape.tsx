@@ -1,4 +1,5 @@
 import { cx } from "@/lib/cx";
+import type { CSSVars } from "@/lib/smartegg/types";
 
 export type EggShapeVariant = "chamber" | "chip" | "station";
 
@@ -15,6 +16,13 @@ const SPECULAR: Record<EggShapeVariant, string> = {
   chip: "",
   station:
     "egg-specular [--specular-alpha:0.5] after:left-[18px] after:top-[18px] after:w-[18px] after:h-8 after:[filter:blur(3px)]",
+};
+
+/** La ficha de la tira es un elemento de lista, no una escena: no se mueve. */
+const IDLE: Record<EggShapeVariant, boolean> = {
+  chamber: true,
+  chip: false,
+  station: true,
 };
 
 type Tone = "hot" | "critical" | "normal";
@@ -42,6 +50,11 @@ interface EggShapeProps {
   hot?: boolean;
   /** Alarma térmica: halo rojo. */
   critical?: boolean;
+  /**
+   * Posición en la bandeja. Desfasa el balanceo para que las cuatro piezas
+   * no se muevan al unísono, que es lo que delata la animación.
+   */
+  slot?: number;
   className?: string;
 }
 
@@ -51,25 +64,40 @@ export function EggShape({
   empty = false,
   hot = false,
   critical = false,
+  slot = 0,
   className,
 }: EggShapeProps) {
   const tone: Tone = hot ? "hot" : critical ? "critical" : "normal";
+  const moves = IDLE[variant] && !empty;
+
+  // Primos entre sí para que los ciclos tarden en volver a coincidir.
+  const style: CSSVars = moves
+    ? { animationDelay: `${-1.7 * (slot % 4) - 0.3}s` }
+    : {};
 
   return (
+    // Capa exterior: el gesto de interacción. Separada de la del balanceo
+    // porque las dos animan `transform` y la animación gana a la transición.
     <div
       aria-hidden="true"
       className={cx(
-        "relative egg-shape border",
+        "relative transition-transform duration-300 ease-out",
         SIZE[variant],
-        empty
-          ? "border-dashed border-[rgba(120,150,165,.45)]"
-          : cx(
-              "egg-fill border-[rgba(255,255,255,.18)]",
-              GLOW[variant][tone],
-              SPECULAR[variant],
-            ),
+        !empty && "group-hover:-translate-y-[3px]",
         className,
       )}
-    />
+    >
+      {/* Capa interior: el balanceo continuo y la pintura de la cáscara. */}
+      <div
+        style={style}
+        className={cx(
+          "egg-shape h-full w-full",
+          moves && (critical ? "animate-egg-alarm" : "animate-egg-idle"),
+          empty
+            ? "border border-dashed border-[var(--egg-empty-border)]"
+            : cx("egg-fill", GLOW[variant][tone], SPECULAR[variant]),
+        )}
+      />
+    </div>
   );
 }

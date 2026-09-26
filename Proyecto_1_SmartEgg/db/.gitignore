@@ -1,0 +1,6 @@
+# Local database files and bind-mounted runtime data
+data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3

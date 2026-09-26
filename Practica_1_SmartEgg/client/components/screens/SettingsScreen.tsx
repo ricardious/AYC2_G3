@@ -11,10 +11,10 @@ import { StageBlock } from "@/components/templates/StageBlock";
 export function SettingsScreen() {
   return (
     <>
-      <StageBlock top={190} x={176} wide>
+      <StageBlock top={190} x={176} wide fluid>
         <SetpointPanel />
       </StageBlock>
-      <StageBlock top={190} x={686} anchor="right">
+      <StageBlock top={190} x={686} anchor="right" fluid>
         <NodePanel />
       </StageBlock>
     </>

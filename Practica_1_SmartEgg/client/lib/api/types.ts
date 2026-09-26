@@ -24,6 +24,48 @@ export interface Incubator {
   created_at: string;
 }
 
+export interface Lot {
+  id: number;
+  code: string;
+  species: string;
+  origin: string | null;
+  started_on: string;
+  expected_hatch_on: string | null;
+  status: "active" | "completed" | "cancelled";
+  notes: string | null;
+  created_at: string;
+  egg_count: number;
+}
+
+export interface LotCreate {
+  code: string;
+  species: string;
+  origin?: string | null;
+  started_on: string;
+  expected_hatch_on?: string | null;
+  notes?: string | null;
+}
+
+export interface Egg {
+  id: number;
+  code: string;
+  lot_id: number;
+  incubator_id: number;
+  slot_number: number;
+  registered_at: string;
+  status: "incubating" | "hatched" | "removed" | "discarded";
+  notes: string | null;
+}
+
+export interface EggCreate {
+  code: string;
+  lot_id: number;
+  incubator_id: number;
+  slot_number: number;
+  registered_at?: string | null;
+  notes?: string | null;
+}
+
 export interface IncubatorConfig {
   incubator_id: number;
   temperature_min_c: number;

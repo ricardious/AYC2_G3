@@ -10,9 +10,15 @@ import { useOccupiedSlots, useSmartEgg } from "@/lib/state/hooks";
  * un espacio libre. Panel derecho en el plano, hoja inferior fija en la pila.
  */
 export function SelectionPanel() {
-  const { selection, critical, actions } = useSmartEgg();
+  const { selection, critical, eggs, lots, actions } = useSmartEgg();
   const occupiedSlots = useOccupiedSlots();
-  const detail = buildSelectionDetail(selection, critical, occupiedSlots);
+  const detail = buildSelectionDetail(
+    selection,
+    critical,
+    occupiedSlots,
+    eggs,
+    lots,
+  );
 
   if (!detail) return null;
 
@@ -21,7 +27,7 @@ export function SelectionPanel() {
   return (
     <aside
       aria-label={`Detalle · ${detail.title}`}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-primary/28 bg-panel px-5 pt-5 pb-7 shadow-[0_-30px_80px_-30px_#000] console:absolute console:inset-x-auto console:top-[118px] console:right-10 console:bottom-auto console:w-[318px] console:border console:px-6 console:pt-6 console:shadow-[-30px_0_80px_-30px_#000]"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-primary/28 bg-panel px-5 pt-5 pb-7 shadow-[var(--panel-shadow)] console:absolute console:inset-x-auto console:top-[118px] console:right-10 console:bottom-auto console:w-[318px] console:border console:px-6 console:pt-6 console:shadow-[var(--panel-shadow)]"
     >
       <div className="flex items-start justify-between">
         <div>

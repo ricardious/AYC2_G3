@@ -33,33 +33,28 @@
 /* ------------------------------------------------------------- escenario */
 
 @utility console-backdrop {
-  background: radial-gradient(
-    120% 90% at 50% 8%,
-    #0d1319 0%,
-    #080b10 45%,
-    #05070a 100%
-  );
+  background: var(--console-backdrop);
 }
 
 @utility console-grid {
   background-image: linear-gradient(
-      rgba(95, 227, 232, 0.045) 1px,
+      var(--console-grid-line) 1px,
       transparent 1px
     ),
-    linear-gradient(90deg, rgba(95, 227, 232, 0.045) 1px, transparent 1px);
+    linear-gradient(90deg, var(--console-grid-line) 1px, transparent 1px);
   background-size: 120px 120px;
 }
 
 @utility console-glow {
   background: radial-gradient(
     60% 45% at 50% 45%,
-    rgba(95, 227, 232, 0.07),
+    var(--console-glow-color),
     transparent 70%
   );
 }
 
 @utility console-vignette {
-  box-shadow: inset 0 0 260px 90px rgba(0, 0, 0, 0.85);
+  box-shadow: var(--console-vignette-shadow);
 }
 
 /* ----------------------------------------------------------------- huevo */
@@ -68,105 +63,109 @@
   border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
 }
 
+/* Cuatro capas, de arriba abajo del apilado: rebote, oclusión y forma. El
+   especular va aparte, en `egg-specular`, porque tiene que poder girar solo.
+
+   Los degradados van a color con alfa 0 y no a `transparent`: `transparent`
+   es negro transparente y al interpolar en sRGB ensucia el borde de gris. */
 @utility egg-fill {
-  background: radial-gradient(
-    ellipse at 32% 26%,
-    #f4f1e6,
-    #d9cfba 42%,
-    #8d8271 78%,
-    #4a4740
-  );
+  background:
+    /* Luz rebotada en el canto en sombra: sin esto el lado oscuro se apaga en
+       un gris plano y la cáscara se lee como un óvalo pintado. Va pegada al
+       borde y con caída corta — extendida hacia el centro deja de leerse
+       como un rebote y mancha el cuerpo. */
+    radial-gradient(
+      ellipse 54% 50% at 94% 86%,
+      var(--egg-bounce),
+      var(--egg-bounce-0) 58%
+    ),
+    /* Oclusión donde la cáscara se acerca a la bandeja. */
+    radial-gradient(
+      ellipse 52% 22% at 50% 101%,
+      var(--egg-occ),
+      var(--egg-occ-0) 78%
+    ),
+    /* Forma: la luz entra por arriba a la izquierda. */
+    radial-gradient(
+      ellipse 96% 92% at 31% 24%,
+      var(--egg-hi) 0%,
+      var(--egg-mid) 34%,
+      var(--egg-lo) 73%,
+      var(--egg-core) 100%
+    );
 }
 
 @utility egg-glow {
-  box-shadow:
-    0 10px 26px rgba(0, 0, 0, 0.6),
-    inset -6px -8px 18px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--egg-shadow);
 }
 
 @utility egg-glow-alarm {
-  box-shadow:
-    0 0 26px rgba(255, 90, 77, 0.35),
-    inset -6px -8px 18px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--egg-shadow-alarm);
 }
 
 @utility egg-glow-hot {
-  box-shadow:
-    0 0 0 2px rgba(95, 227, 232, 0.55),
-    0 0 34px rgba(95, 227, 232, 0.55),
-    inset -6px -8px 18px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--egg-shadow-hot);
 }
 
 @utility egg-glow-chip {
-  box-shadow: 0 0 22px rgba(95, 227, 232, 0.5);
+  box-shadow: var(--egg-shadow-chip);
 }
 
-/* Brillo especular; `--specular-alpha` ajusta la intensidad. */
+/* Brillo especular; `--specular-alpha` ajusta la intensidad.
+
+   Va en su propio elemento y no en `egg-fill` porque la luz pertenece a la
+   sala, no al huevo: cuando el servo inclina la bandeja el cuerpo gira y el
+   brillo se queda donde estaba. Fuera de la cámara `--tilt` no existe y el
+   contragiro vale cero. */
 @utility egg-specular {
   &::after {
     content: "";
     position: absolute;
     border-radius: 50%;
-    background: linear-gradient(
-      150deg,
-      rgba(255, 255, 255, var(--specular-alpha, 0.55)),
-      transparent
-    );
+    background: linear-gradient(150deg, var(--egg-spec), var(--egg-spec-0) 72%);
+    opacity: var(--specular-alpha, 0.55);
+    transform: rotate(calc(-1 * var(--tilt, 0deg)));
+    transition: transform 1200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
 @utility rail-metal {
-  background: linear-gradient(180deg, #2a333b, #141a20);
+  background: var(--material-rail);
 }
 
 /* ----------------------------------------------------------- incubadora */
 
 @utility chamber-shell {
-  background: linear-gradient(
-    150deg,
-    rgba(30, 38, 46, 0.9),
-    rgba(12, 16, 21, 0.94)
-  );
-  box-shadow:
-    0 40px 90px -30px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 rgba(220, 240, 245, 0.09);
+  background: var(--material-shell);
+  box-shadow: var(--material-shell-shadow);
 }
 
 @utility chamber-glass {
-  background: linear-gradient(
-    160deg,
-    rgba(120, 160, 175, 0.1),
-    rgba(20, 28, 35, 0.35) 45%,
-    rgba(95, 227, 232, 0.06)
-  );
+  background: var(--material-glass);
 }
 
 @utility chamber-plate {
-  background: linear-gradient(
-    180deg,
-    rgba(24, 31, 38, 0.95),
-    rgba(10, 14, 18, 0.95)
-  );
+  background: var(--material-plate);
 }
 
 @utility edge-light {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(200, 235, 240, 0.6),
+    var(--material-edge-light),
     transparent
   );
 }
 
 @utility glass-sheen {
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0.07), transparent);
+  background: linear-gradient(100deg, var(--material-sheen), transparent);
 }
 
 @utility tray-hairline {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(160, 190, 205, 0.4),
+    var(--material-tray-line),
     transparent
   );
 }
@@ -175,7 +174,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(95, 227, 232, 0.5),
+    var(--accent-beam),
     transparent
   );
 }
@@ -183,7 +182,7 @@
 @utility heat-plume {
   background: radial-gradient(
     ellipse at 50% 0%,
-    rgba(240, 164, 74, 0.3),
+    var(--heat-plume-color),
     transparent 70%
   );
 }
@@ -191,7 +190,7 @@
 @utility alarm-plume {
   background: radial-gradient(
     ellipse at 50% 0%,
-    rgba(255, 90, 77, 0.42),
+    var(--alarm-plume-color),
     transparent 70%
   );
 }
@@ -199,38 +198,30 @@
 @utility flow-bars {
   background-image: repeating-linear-gradient(
     90deg,
-    rgba(95, 227, 232, 0.45) 0 1px,
+    var(--accent-bars) 0 1px,
     transparent 1px 6px
   );
 }
 
 @utility heat-bar {
-  background: linear-gradient(180deg, rgba(240, 164, 74, 0.22), transparent);
+  background: linear-gradient(180deg, var(--heat-bar-color), transparent);
 }
 
 /* ------------------------------------------------------------- humedad */
 
 @utility humidity-tube {
-  background: linear-gradient(
-    180deg,
-    rgba(95, 227, 232, 0.03),
-    rgba(95, 227, 232, 0.09)
-  );
+  background: var(--humidity-tube);
 }
 
 @utility humidity-fill {
-  background: linear-gradient(
-    180deg,
-    rgba(95, 227, 232, 0.55),
-    rgba(95, 227, 232, 0.14)
-  );
-  box-shadow: 0 0 22px rgba(95, 227, 232, 0.35) inset;
+  background: var(--humidity-fill);
+  box-shadow: var(--humidity-fill-glow);
 }
 
 @utility humidity-graduations {
   background-image: repeating-linear-gradient(
     180deg,
-    rgba(180, 210, 220, 0.28) 0 1px,
+    var(--humidity-grad-line) 0 1px,
     transparent 1px 21px
   );
 }
@@ -240,7 +231,7 @@
 @utility platform-face {
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(95, 227, 232, 0.1),
+    var(--accent-face),
     transparent 68%
   );
 }
@@ -248,7 +239,7 @@
 @utility platform-sweep {
   background: conic-gradient(
     from 0deg,
-    rgba(95, 227, 232, 0.2),
+    var(--accent-sweep),
     transparent 25%,
     transparent 100%
   );
@@ -257,29 +248,19 @@
 /* ------------------------------------------------- estación y reportes */
 
 @utility bench-surface {
-  background: linear-gradient(
-    180deg,
-    rgba(22, 29, 36, 0.7),
-    rgba(9, 12, 16, 0.8)
-  );
-  box-shadow: 0 60px 120px -50px #000;
+  background: var(--material-bench);
+  box-shadow: var(--material-bench-shadow);
 }
 
 @utility bench-pad {
   background: radial-gradient(
     ellipse at 50% 40%,
-    rgba(95, 227, 232, 0.14),
+    var(--accent-halo),
     transparent 70%
   );
 }
 
 @utility report-surface {
-  background: linear-gradient(
-    170deg,
-    rgba(226, 238, 241, 0.13),
-    rgba(150, 175, 185, 0.06)
-  );
-  box-shadow:
-    0 70px 130px -40px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  background: var(--material-report);
+  box-shadow: var(--material-report-shadow);
 }

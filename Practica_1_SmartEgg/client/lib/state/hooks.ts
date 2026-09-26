@@ -37,13 +37,13 @@ export function useTelemetry(): TelemetryContextValue {
 
 /** Egg presentation models, shared by every screen that renders specimens. */
 export function useEggViews(): EggView[] {
-  const { hoveredEgg, selection, dashboard } = useSmartEgg();
+  const { hoveredEgg, selection, dashboard, eggs, lots } = useSmartEgg();
   const occupiedSlots = normalizeOccupiedSlots(
     dashboard?.latest?.occupied_slots,
   );
   return useMemo(
-    () => buildEggViews(hoveredEgg, selection, occupiedSlots),
-    [hoveredEgg, occupiedSlots, selection],
+    () => buildEggViews(hoveredEgg, selection, occupiedSlots, eggs, lots),
+    [eggs, hoveredEgg, lots, occupiedSlots, selection],
   );
 }
 

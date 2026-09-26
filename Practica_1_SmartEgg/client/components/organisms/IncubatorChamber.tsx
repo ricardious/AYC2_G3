@@ -53,7 +53,7 @@ export function IncubatorChamber() {
           <g
             fill="none"
             strokeWidth="1.1"
-            className="stroke-primary opacity-[var(--airflow)] drop-shadow-[0_0_5px_rgba(95,227,232,.7)]"
+            className="stroke-primary opacity-[var(--airflow)] drop-shadow-[0_0_5px_var(--accent-flow)]"
           >
             <path
               d="M 40 300 C 40 210 110 190 150 168 C 196 142 250 150 300 132 C 350 114 410 130 424 200"
@@ -76,7 +76,7 @@ export function IncubatorChamber() {
           <g
             fill="none"
             strokeWidth="1"
-            className="animate-heat stroke-[rgba(240,164,74,.55)]"
+            className="animate-heat stroke-[var(--heat-line)]"
           >
             <path d="M 150 60 q 14 -16 28 0 t 28 0" />
             <path d="M 196 44 q 14 -16 28 0 t 28 0" />
@@ -138,7 +138,7 @@ export function IncubatorChamber() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 h-[470px] w-[548px] overflow-visible"
         >
-          <g stroke="rgba(150,180,195,.35)" fill="none" strokeWidth="1">
+          <g stroke="var(--color-rule-soft)" fill="none" strokeWidth="1">
             <path d="M 120 70 L 40 70 L -60 70" />
             <path d="M 430 96 L 520 96 L 640 96" />
             <path d="M 452 250 L 540 250 L 640 250" />

@@ -14,9 +14,13 @@ import {
 import { ApiError, api, websocketUrl } from "@/lib/api/client";
 import type {
   DashboardState,
+  Egg,
+  EggCreate,
   Incubator,
   IncubatorConfig,
   IncubatorConfigUpdate,
+  Lot,
+  LotCreate,
   Technician,
   TelemetryReading,
   WebSocketMessage,
@@ -39,18 +43,22 @@ interface ConsoleState {
   screen: ScreenId;
   selection: Selection;
   hoveredEgg: string | null;
+  registrationSlot: number | null;
 }
 
 type ConsoleAction =
   | { type: "navigate"; screen: ScreenId }
   | { type: "select"; selection: Exclude<Selection, null> }
   | { type: "clearSelection" }
+  | { type: "openRegistration"; slot: number }
+  | { type: "closeRegistration" }
   | { type: "hover"; egg: string | null };
 
 const INITIAL_STATE: ConsoleState = {
   screen: "control",
   selection: null,
   hoveredEgg: null,
+  registrationSlot: null,
 };
 
 function reducer(state: ConsoleState, action: ConsoleAction): ConsoleState {
@@ -61,6 +69,10 @@ function reducer(state: ConsoleState, action: ConsoleAction): ConsoleState {
       return { ...state, selection: action.selection };
     case "clearSelection":
       return { ...state, selection: null };
+    case "openRegistration":
+      return { ...state, registrationSlot: action.slot, selection: null };
+    case "closeRegistration":
+      return { ...state, registrationSlot: null };
     case "hover":
       return { ...state, hoveredEgg: action.egg };
     default:
@@ -77,9 +89,11 @@ export type ConnectionStatus =
 export interface SmartEggActions {
   navigate: (screen: ScreenId) => void;
   selectComponent: (id: ComponentId) => void;
-  pickEgg: (egg: Pick<EggView, "id" | "empty">) => void;
+  pickEgg: (egg: Pick<EggView, "id" | "empty" | "registered">) => void;
   hoverEgg: (id: string | null) => void;
   clearSelection: () => void;
+  openEggRegistration: (slot: number) => void;
+  closeEggRegistration: () => void;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
@@ -87,6 +101,8 @@ export interface SmartEggActions {
   updateIncubatorConfig: (
     payload: IncubatorConfigUpdate,
   ) => Promise<IncubatorConfig>;
+  createLot: (payload: LotCreate) => Promise<Lot>;
+  registerEgg: (payload: EggCreate) => Promise<Egg>;
 }
 
 export interface SmartEggContextValue extends ConsoleState {
@@ -96,6 +112,8 @@ export interface SmartEggContextValue extends ConsoleState {
   technician: Technician | null;
   incubator: Incubator | null;
   dashboard: DashboardState | null;
+  lots: Lot[];
+  eggs: Egg[];
   connection: ConnectionStatus;
   error: string | null;
   loginPending: boolean;
@@ -145,6 +163,8 @@ export function SmartEggProvider({
   const [technician, setTechnician] = useState<Technician | null>(null);
   const [incubator, setIncubator] = useState<Incubator | null>(null);
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
+  const [lots, setLots] = useState<Lot[]>([]);
+  const [eggs, setEggs] = useState<Egg[]>([]);
   const [series, setSeries] = useState<SeriesPoint[]>([]);
   const [connection, setConnection] =
     useState<ConnectionStatus>("connecting");
@@ -203,8 +223,14 @@ export function SmartEggProvider({
       setError(null);
       return;
     }
-    const next = await api.state(incubator.id, token);
+    const [next, nextLots, nextEggs] = await Promise.all([
+      api.state(incubator.id, token),
+      api.lots(token),
+      api.eggs(incubator.id, token),
+    ]);
     setDashboard(next);
+    setLots(nextLots);
+    setEggs(nextEggs);
     if (next.latest) applyReading(next.latest);
     setError(null);
   }, [applyReading, incubator, token]);
@@ -269,11 +295,15 @@ export function SmartEggProvider({
     Promise.all([
       api.state(incubator.id, token),
       api.telemetry(incubator.id, token),
+      api.lots(token),
+      api.eggs(incubator.id, token),
     ])
-      .then(([nextDashboard, history]) => {
+      .then(([nextDashboard, history, nextLots, nextEggs]) => {
         if (cancelled) return;
         setDashboard(nextDashboard);
         setSeries(history.slice().reverse().map(point));
+        setLots(nextLots);
+        setEggs(nextEggs);
         setError(null);
         updateConnection("polling");
       })
@@ -378,8 +408,11 @@ export function SmartEggProvider({
     setTechnician(null);
     setIncubator(null);
     setDashboard(null);
+    setLots([]);
+    setEggs([]);
     setSeries([]);
     setError(null);
+    dispatch({ type: "closeRegistration" });
     updateConnection("offline");
   }, [updateConnection]);
 
@@ -421,27 +454,85 @@ export function SmartEggProvider({
     [incubator, token],
   );
 
+  const createLot = useCallback(
+    async (payload: LotCreate) => {
+      if (!token) throw new Error("No hay una sesión autenticada");
+      const created = await api.createLot(payload, token);
+      setLots((current) => [created, ...current]);
+      return created;
+    },
+    [token],
+  );
+
+  const registerEgg = useCallback(
+    async (payload: EggCreate) => {
+      if (!token || !incubator) {
+        throw new Error("No hay una incubadora autenticada");
+      }
+      if (payload.incubator_id !== incubator.id) {
+        throw new Error("La posición no pertenece a la incubadora activa");
+      }
+      const created = await api.registerEgg(payload, token);
+      setEggs((current) => [
+        ...current.filter((egg) => egg.id !== created.id),
+        created,
+      ]);
+      setDashboard((current) =>
+        current
+          ? {
+              ...current,
+              occupancy: {
+                ...current.occupancy,
+                occupied: current.occupancy.occupied + 1,
+                available: Math.max(0, current.occupancy.available - 1),
+              },
+            }
+          : current,
+      );
+      return created;
+    },
+    [incubator, token],
+  );
+
   const actions = useMemo<SmartEggActions>(
     () => ({
       navigate: (screen) => dispatch({ type: "navigate", screen }),
       selectComponent: (id) =>
         dispatch({ type: "select", selection: { type: "component", id } }),
       pickEgg: (egg) =>
-        dispatch({
-          type: "select",
-          selection: egg.empty
-            ? { type: "slot", id: egg.id }
-            : { type: "egg", id: egg.id },
-        }),
+        egg.empty || egg.registered
+          ? dispatch({
+              type: "select",
+              selection: egg.empty
+                ? { type: "slot", id: egg.id }
+                : { type: "egg", id: egg.id },
+            })
+          : dispatch({
+              type: "openRegistration",
+              slot: Number(egg.id.replace("slot-", "")),
+            }),
       hoverEgg: (egg) => dispatch({ type: "hover", egg }),
       clearSelection: () => dispatch({ type: "clearSelection" }),
+      openEggRegistration: (slot) =>
+        dispatch({ type: "openRegistration", slot }),
+      closeEggRegistration: () => dispatch({ type: "closeRegistration" }),
       login,
       logout,
       refresh,
       downloadDailyReport,
       updateIncubatorConfig,
+      createLot,
+      registerEgg,
     }),
-    [downloadDailyReport, login, logout, refresh, updateIncubatorConfig],
+    [
+      createLot,
+      downloadDailyReport,
+      login,
+      logout,
+      refresh,
+      registerEgg,
+      updateIncubatorConfig,
+    ],
   );
 
   const effectiveConfig = useMemo<SmartEggConfig>(
@@ -463,6 +554,8 @@ export function SmartEggProvider({
       technician,
       incubator,
       dashboard,
+      lots,
+      eggs,
       connection,
       error,
       loginPending,
@@ -476,6 +569,8 @@ export function SmartEggProvider({
       technician,
       incubator,
       dashboard,
+      lots,
+      eggs,
       connection,
       error,
       loginPending,

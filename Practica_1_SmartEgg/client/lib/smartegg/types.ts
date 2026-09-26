@@ -41,6 +41,8 @@ export interface EggView {
   line3: string;
   stateColor: string;
   empty: boolean;
+  /** Existe una ficha persistida para el huevo detectado en esta posición. */
+  registered: boolean;
   /** Hovered or currently selected — drives the cyan highlight treatment. */
   hot: boolean;
   /** Hovered specifically — drives the chamber tooltip. */

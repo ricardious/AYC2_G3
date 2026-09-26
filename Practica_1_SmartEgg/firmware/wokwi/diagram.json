@@ -3,69 +3,627 @@
   "author": "Equipo SmartEgg",
   "editor": "wokwi",
   "parts": [
-    { "id": "uno", "type": "wokwi-arduino-uno", "top": 300, "left": 340, "attrs": {} },
-
-    { "id": "swPower", "type": "wokwi-slide-switch", "top": 60, "left": 20, "attrs": {} },
-    { "id": "swDoor", "type": "wokwi-pushbutton", "top": 200, "left": 20, "attrs": { "color": "red" } },
-    { "id": "slot1", "type": "wokwi-pushbutton", "top": 340, "left": 20, "attrs": { "color": "blue" } },
-    { "id": "slot2", "type": "wokwi-pushbutton", "top": 480, "left": 20, "attrs": { "color": "blue" } },
-    { "id": "slot3", "type": "wokwi-pushbutton", "top": 620, "left": 20, "attrs": { "color": "blue" } },
-    { "id": "slot4", "type": "wokwi-pushbutton", "top": 760, "left": 20, "attrs": { "color": "blue" } },
-
-    { "id": "dht1", "type": "wokwi-dht22", "top": 40, "left": 750, "attrs": {} },
-    { "id": "r1", "type": "wokwi-resistor", "top": 40, "left": 950, "attrs": { "value": "10000" } },
-
-    { "id": "lcd1", "type": "wokwi-lcd1602", "top": 240, "left": 750, "attrs": { "pins": "i2c", "i2cAddress": "0x27" } },
-
-    { "id": "relayHeater", "type": "wokwi-relay-module", "top": 450, "left": 750, "attrs": {} },
-    { "id": "relayFan", "type": "wokwi-relay-module", "top": 450, "left": 950, "attrs": {} },
-
-    { "id": "servo1", "type": "wokwi-servo", "top": 650, "left": 750, "attrs": {} },
-    { "id": "buzzer1", "type": "wokwi-buzzer", "top": 650, "left": 950, "attrs": { "volume": "0.1" } }
+    {
+      "id": "uno",
+      "type": "wokwi-arduino-uno",
+      "top": 380,
+      "left": 430,
+      "attrs": {}
+    },
+    {
+      "id": "slot1",
+      "type": "wokwi-pushbutton",
+      "top": 170,
+      "left": 470,
+      "attrs": {
+        "color": "blue",
+        "label": "1"
+      }
+    },
+    {
+      "id": "slot2",
+      "type": "wokwi-pushbutton",
+      "top": 170,
+      "left": 370,
+      "attrs": {
+        "color": "blue",
+        "label": "2"
+      }
+    },
+    {
+      "id": "slot3",
+      "type": "wokwi-pushbutton",
+      "top": 170,
+      "left": 270,
+      "attrs": {
+        "color": "blue",
+        "label": "3"
+      }
+    },
+    {
+      "id": "slot4",
+      "type": "wokwi-pushbutton",
+      "top": 170,
+      "left": 170,
+      "attrs": {
+        "color": "blue",
+        "label": "4"
+      }
+    },
+    {
+      "id": "swDoor",
+      "type": "wokwi-pushbutton",
+      "top": 170,
+      "left": 570,
+      "attrs": {
+        "color": "red",
+        "label": "puerta"
+      }
+    },
+    {
+      "id": "swPower",
+      "type": "wokwi-slide-switch",
+      "top": 175,
+      "left": 680,
+      "attrs": {}
+    },
+    {
+      "id": "r1",
+      "type": "wokwi-resistor",
+      "top": 95,
+      "left": 818,
+      "attrs": {
+        "value": "10000"
+      }
+    },
+    {
+      "id": "dht1",
+      "type": "wokwi-dht22",
+      "top": 150,
+      "left": 820,
+      "attrs": {}
+    },
+    {
+      "id": "servo1",
+      "type": "wokwi-servo",
+      "top": 420,
+      "left": 790,
+      "attrs": {}
+    },
+    {
+      "id": "buzzer1",
+      "type": "wokwi-buzzer",
+      "top": 560,
+      "left": 800,
+      "attrs": {
+        "volume": "0.1"
+      }
+    },
+    {
+      "id": "relayFan",
+      "type": "wokwi-relay-module",
+      "top": 680,
+      "left": 790,
+      "attrs": {}
+    },
+    {
+      "id": "relayHeater",
+      "type": "wokwi-relay-module",
+      "top": 770,
+      "left": 790,
+      "attrs": {}
+    },
+    {
+      "id": "lcd1",
+      "type": "wokwi-lcd1602",
+      "top": 700,
+      "left": 250,
+      "attrs": {
+        "pins": "i2c",
+        "i2cAddress": "0x27"
+      }
+    },
+    {
+      "id": "t1",
+      "type": "wokwi-text",
+      "top": 24,
+      "left": 150,
+      "attrs": {
+        "text": "SmartEgg · diagrama de conexiones",
+        "fontSize": "26",
+        "color": "#0f172a",
+        "bold": "1"
+      }
+    },
+    {
+      "id": "t2",
+      "type": "wokwi-text",
+      "top": 60,
+      "left": 150,
+      "attrs": {
+        "text": "Arduino Uno R3 · pines según firmware/SmartEggFirmware/Config.h",
+        "fontSize": "15",
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "t3",
+      "type": "wokwi-text",
+      "top": 84,
+      "left": 150,
+      "attrs": {
+        "text": "Entradas en INPUT_PULLUP: cada contacto cierra contra la barra común de GND",
+        "fontSize": "15",
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "t4",
+      "type": "wokwi-text",
+      "top": 130,
+      "left": 170,
+      "attrs": {
+        "text": "Espacios 1-4  ·  D12  D11  D10  D9",
+        "fontSize": "14",
+        "color": "#1d4ed8"
+      }
+    },
+    {
+      "id": "t5",
+      "type": "wokwi-text",
+      "top": 130,
+      "left": 570,
+      "attrs": {
+        "text": "Puerta · D3",
+        "fontSize": "14",
+        "color": "#b91c1c"
+      }
+    },
+    {
+      "id": "t6",
+      "type": "wokwi-text",
+      "top": 130,
+      "left": 662,
+      "attrs": {
+        "text": "ON/OFF · D2",
+        "fontSize": "14",
+        "color": "#b91c1c"
+      }
+    },
+    {
+      "id": "t7",
+      "type": "wokwi-text",
+      "top": 66,
+      "left": 818,
+      "attrs": {
+        "text": "Pull-up 10 kΩ",
+        "fontSize": "13",
+        "color": "#166534"
+      }
+    },
+    {
+      "id": "t8",
+      "type": "wokwi-text",
+      "top": 160,
+      "left": 918,
+      "attrs": {
+        "text": "DHT11 (huella DHT22)",
+        "fontSize": "14",
+        "color": "#166534"
+      }
+    },
+    {
+      "id": "t9",
+      "type": "wokwi-text",
+      "top": 182,
+      "left": 918,
+      "attrs": {
+        "text": "DATA → D4",
+        "fontSize": "13",
+        "color": "#166534"
+      }
+    },
+    {
+      "id": "t10",
+      "type": "wokwi-text",
+      "top": 470,
+      "left": 968,
+      "attrs": {
+        "text": "Servo bandeja · D8",
+        "fontSize": "14",
+        "color": "#9a3412"
+      }
+    },
+    {
+      "id": "t11",
+      "type": "wokwi-text",
+      "top": 596,
+      "left": 872,
+      "attrs": {
+        "text": "Buzzer activo · D7",
+        "fontSize": "14",
+        "color": "#9a3412"
+      }
+    },
+    {
+      "id": "t12",
+      "type": "wokwi-text",
+      "top": 616,
+      "left": 872,
+      "attrs": {
+        "text": "→ 2N2222 + 1N4007",
+        "fontSize": "13",
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "t13",
+      "type": "wokwi-text",
+      "top": 700,
+      "left": 926,
+      "attrs": {
+        "text": "Relé CH2 ventilador · D6",
+        "fontSize": "14",
+        "color": "#9a3412"
+      }
+    },
+    {
+      "id": "t14",
+      "type": "wokwi-text",
+      "top": 720,
+      "left": 926,
+      "attrs": {
+        "text": "COM/NO → ventilador 5 V",
+        "fontSize": "13",
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "t15",
+      "type": "wokwi-text",
+      "top": 790,
+      "left": 926,
+      "attrs": {
+        "text": "Relé CH1 calefacción · D5",
+        "fontSize": "14",
+        "color": "#9a3412"
+      }
+    },
+    {
+      "id": "t16",
+      "type": "wokwi-text",
+      "top": 812,
+      "left": 926,
+      "attrs": {
+        "text": "COM/NO → bombilla 110 V",
+        "fontSize": "13",
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "t17",
+      "type": "wokwi-text",
+      "top": 668,
+      "left": 250,
+      "attrs": {
+        "text": "LCD 1602 I2C 0x27 · A4 SDA / A5 SCL",
+        "fontSize": "14",
+        "color": "#7c2d12"
+      }
+    },
+    {
+      "id": "t18",
+      "type": "wokwi-text",
+      "top": 916,
+      "left": 300,
+      "attrs": {
+        "text": "Riel común de 5 V y GND hacia todos los módulos",
+        "fontSize": "13",
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "t19",
+      "type": "wokwi-text",
+      "top": 938,
+      "left": 300,
+      "attrs": {
+        "text": "Etapa de potencia (transistor, diodos, bombilla y ventilador): docs/imgs/etapa-potencia.png",
+        "fontSize": "13",
+        "color": "#475569"
+      }
+    }
   ],
   "connections": [
-    ["uno:5V", "dht1:VCC", "red", []],
-    ["uno:GND.1", "dht1:GND", "black", []],
-    ["uno:4", "dht1:SDA", "green", []],
-    ["uno:5V", "r1:1", "red", []],
-    ["r1:2", "dht1:SDA", "green", []],
-
-    ["uno:A4", "lcd1:SDA", "green", []],
-    ["uno:A5", "lcd1:SCL", "yellow", []],
-    ["uno:5V", "lcd1:VCC", "red", []],
-    ["uno:GND.2", "lcd1:GND", "black", []],
-
-    ["uno:5", "relayHeater:IN", "orange", []],
-    ["uno:5V", "relayHeater:VCC", "red", []],
-    ["uno:GND.3", "relayHeater:GND", "black", []],
-
-    ["uno:6", "relayFan:IN", "orange", []],
-    ["uno:5V", "relayFan:VCC", "red", []],
-    ["uno:GND.1", "relayFan:GND", "black", []],
-
-    ["uno:8", "servo1:PWM", "orange", []],
-    ["uno:5V", "servo1:V+", "red", []],
-    ["uno:GND.2", "servo1:GND", "black", []],
-
-    ["uno:7", "buzzer1:1", "orange", []],
-    ["uno:5V", "buzzer1:2", "red", []],
-
-    ["uno:2", "swPower:2", "purple", []],
-    ["swPower:1", "uno:GND.3", "black", []],
-
-    ["uno:3", "swDoor:1.l", "purple", []],
-    ["swDoor:2.l", "uno:GND.1", "black", []],
-
-    ["uno:9", "slot1:1.l", "purple", []],
-    ["slot1:2.l", "uno:GND.2", "black", []],
-
-    ["uno:10", "slot2:1.l", "purple", []],
-    ["slot2:2.l", "uno:GND.3", "black", []],
-
-    ["uno:11", "slot3:1.l", "purple", []],
-    ["slot3:2.l", "uno:GND.1", "black", []],
-
-    ["uno:12", "slot4:1.l", "purple", []],
-    ["slot4:2.l", "uno:GND.2", "black", []]
+    [
+      "slot1:2.l",
+      "uno:9",
+      "purple",
+      [
+        "v28",
+        "h123"
+      ]
+    ],
+    [
+      "slot2:2.l",
+      "uno:10",
+      "purple",
+      [
+        "v48",
+        "h213.5"
+      ]
+    ],
+    [
+      "slot3:2.l",
+      "uno:11",
+      "purple",
+      [
+        "v68",
+        "h304"
+      ]
+    ],
+    [
+      "slot4:2.l",
+      "uno:12",
+      "purple",
+      [
+        "v88",
+        "h394.5"
+      ]
+    ],
+    [
+      "swDoor:2.r",
+      "uno:3",
+      "purple",
+      [
+        "v98",
+        "h20"
+      ]
+    ],
+    [
+      "swPower:2",
+      "uno:2",
+      "purple",
+      [
+        "v101",
+        "h-29.5"
+      ]
+    ],
+    [
+      "slot4:1.r",
+      "slot3:1.l",
+      "black",
+      []
+    ],
+    [
+      "slot3:1.r",
+      "slot2:1.l",
+      "black",
+      []
+    ],
+    [
+      "slot2:1.r",
+      "slot1:1.l",
+      "black",
+      []
+    ],
+    [
+      "slot1:1.r",
+      "swDoor:1.l",
+      "black",
+      []
+    ],
+    [
+      "swDoor:1.r",
+      "swPower:1",
+      "black",
+      [
+        "h10",
+        "v26"
+      ]
+    ],
+    [
+      "slot4:1.l",
+      "uno:GND.1",
+      "black",
+      [
+        "h-20",
+        "v167",
+        "h395.5"
+      ]
+    ],
+    [
+      "r1:1",
+      "dht1:VCC",
+      "red",
+      [
+        "h-18",
+        "v179.35",
+        "h35"
+      ]
+    ],
+    [
+      "r1:2",
+      "dht1:SDA",
+      "green",
+      [
+        "h23.2",
+        "v189.35",
+        "h-55.5"
+      ]
+    ],
+    [
+      "dht1:SDA",
+      "uno:4",
+      "green",
+      [
+        "v25.1",
+        "h-197"
+      ]
+    ],
+    [
+      "dht1:VCC",
+      "servo1:V+",
+      "red",
+      [
+        "v5.1",
+        "h-61",
+        "v209.5"
+      ]
+    ],
+    [
+      "dht1:GND",
+      "servo1:GND",
+      "black",
+      [
+        "v35.1",
+        "h-81.8",
+        "v170"
+      ]
+    ],
+    [
+      "uno:8",
+      "servo1:PWM",
+      "orange",
+      [
+        "v-45",
+        "h159"
+      ]
+    ],
+    [
+      "uno:7",
+      "buzzer1:2",
+      "orange",
+      [
+        "v-37",
+        "h135",
+        "v320",
+        "h126",
+        "v-28"
+      ]
+    ],
+    [
+      "uno:6",
+      "relayFan:IN",
+      "orange",
+      [
+        "v-29",
+        "h117.5"
+      ]
+    ],
+    [
+      "uno:5",
+      "relayHeater:IN",
+      "orange",
+      [
+        "v-21",
+        "h100"
+      ]
+    ],
+    [
+      "servo1:V+",
+      "relayFan:VCC",
+      "red",
+      [
+        "h-16",
+        "v219.5"
+      ]
+    ],
+    [
+      "relayFan:VCC",
+      "relayHeater:VCC",
+      "red",
+      [
+        "h-16",
+        "v90"
+      ]
+    ],
+    [
+      "servo1:GND",
+      "relayFan:GND",
+      "black",
+      [
+        "h-8",
+        "v239"
+      ]
+    ],
+    [
+      "relayFan:GND",
+      "relayHeater:GND",
+      "black",
+      [
+        "h-8",
+        "v90"
+      ]
+    ],
+    [
+      "buzzer1:1",
+      "relayFan:GND",
+      "black",
+      [
+        "v16",
+        "h-45"
+      ]
+    ],
+    [
+      "uno:5V",
+      "lcd1:VCC",
+      "red",
+      [
+        "v78.5",
+        "h-390",
+        "v91.5"
+      ]
+    ],
+    [
+      "uno:GND.2",
+      "lcd1:GND",
+      "black",
+      [
+        "v88.5",
+        "h-387.5",
+        "v72"
+      ]
+    ],
+    [
+      "uno:A4",
+      "lcd1:SDA",
+      "green",
+      [
+        "v284.5",
+        "h-440",
+        "v-105"
+      ]
+    ],
+    [
+      "uno:A5",
+      "lcd1:SCL",
+      "gold",
+      [
+        "v296.5",
+        "h-461.5",
+        "v-107.5"
+      ]
+    ],
+    [
+      "lcd1:VCC",
+      "relayHeater:VCC",
+      "red",
+      [
+        "h-54",
+        "v148.5",
+        "h574"
+      ]
+    ],
+    [
+      "lcd1:GND",
+      "relayHeater:GND",
+      "black",
+      [
+        "h-42",
+        "v170",
+        "h570"
+      ]
+    ]
   ]
 }

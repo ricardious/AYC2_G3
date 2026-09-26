@@ -1,0 +1,274 @@
+{
+  "version": 1,
+  "author": "Equipo SmartEgg",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 340, "left": 560, "attrs": {} },
+    {
+      "type": "wokwi-resistor",
+      "id": "rSlot4",
+      "top": 215.15,
+      "left": 297.6,
+      "attrs": { "value": "10000" }
+    },
+    { "type": "wokwi-slide-switch", "id": "slot4", "top": 175, "left": 398, "attrs": {} },
+    {
+      "type": "wokwi-resistor",
+      "id": "rSlot2",
+      "top": 265.15,
+      "left": 297.6,
+      "attrs": { "value": "10000" }
+    },
+    { "type": "wokwi-slide-switch", "id": "slot2", "top": 225, "left": 398, "attrs": {} },
+    {
+      "type": "wokwi-resistor",
+      "id": "rSlot3",
+      "top": 320.15,
+      "left": 297.6,
+      "attrs": { "value": "10000" }
+    },
+    { "type": "wokwi-slide-switch", "id": "slot3", "top": 280, "left": 398, "attrs": {} },
+    {
+      "type": "wokwi-resistor",
+      "id": "rSlot1",
+      "top": 375.15,
+      "left": 297.6,
+      "attrs": { "value": "10000" }
+    },
+    { "type": "wokwi-slide-switch", "id": "slot1", "top": 335, "left": 398, "attrs": {} },
+    {
+      "type": "wokwi-servo",
+      "id": "servoLock",
+      "top": 448.4,
+      "left": 137.2,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servoTray",
+      "top": 563.6,
+      "left": 137.2,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relayHeater",
+      "top": 700,
+      "left": 302,
+      "rotate": 180,
+      "attrs": { "transistor": "pnp" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relayFan",
+      "top": 790,
+      "left": 302,
+      "rotate": 180,
+      "attrs": { "transistor": "pnp" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer1",
+      "top": 880,
+      "left": 350.5,
+      "rotate": 270,
+      "attrs": { "volume": "0.1" }
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": 950,
+      "left": 345.1,
+      "rotate": 270,
+      "attrs": { "temperature": "37.5", "humidity": "58" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": 227.2,
+      "left": 792.8,
+      "attrs": { "pins": "i2c", "i2cAddress": "0x27" }
+    },
+    {
+      "type": "board-mfrc522",
+      "id": "rfid1",
+      "top": 520,
+      "left": 800,
+      "attrs": { "uid": "A1:B2:C3:D4" }
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "swPower",
+      "top": 700,
+      "left": 790,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "swDoor",
+      "top": 760,
+      "left": 790,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rLed",
+      "top": 930,
+      "left": 760,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledStatus",
+      "top": 840,
+      "left": 830,
+      "attrs": { "color": "green", "label": "activo" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t1",
+      "top": 36,
+      "left": 298,
+      "attrs": {
+        "text": "SmartEgg · Proyecto 1 · nodo ESP32",
+        "fontSize": "26",
+        "color": "#0f172a",
+        "bold": "1"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t2",
+      "top": 84,
+      "left": 298,
+      "attrs": {
+        "text": "Pines según firmware/SmartEggESP32/Config.h",
+        "fontSize": "15",
+        "color": "#475569"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t3",
+      "top": 114,
+      "left": 298,
+      "attrs": {
+        "text": "Posiciones · orden de pines: 36 · 34 · 35 · 32\nRiel de 3.3 V encadenado entre los cuatro pull-ups de 10 kΩ",
+        "fontSize": "13",
+        "color": "#1d4ed8"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t5",
+      "top": 441.6,
+      "left": 48,
+      "attrs": {
+        "text": "Actuadores · pines 33 · 25 · 26 · 27 · 14 · 13",
+        "fontSize": "14",
+        "color": "#9a3412"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t6",
+      "top": 1075,
+      "left": 298,
+      "attrs": {
+        "text": "GND y 5 V bajan encadenados de un módulo al siguiente y cierran contra la placa",
+        "fontSize": "13",
+        "color": "#475569"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t7",
+      "top": 201.6,
+      "left": 796.8,
+      "attrs": { "text": "LCD 1602 I2C 0x27 · SDA 21 / SCL 22", "fontSize": "14", "color": "#7c2d12" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t8",
+      "top": 470,
+      "left": 800,
+      "attrs": {
+        "text": "RC522 · MOSI 23 · MISO 19 · SCK 18 · SS 5 · RST 4\nClic en el lector para presentar una tarjeta",
+        "fontSize": "13",
+        "color": "#7c2d12"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t10",
+      "top": 700,
+      "left": 840,
+      "attrs": { "text": "Switch general · 17\nPuerta · 16", "fontSize": "14", "color": "#b91c1c" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t11",
+      "top": 855,
+      "left": 890,
+      "attrs": { "text": "LED de estado · 2", "fontSize": "13", "color": "#166534" }
+    }
+  ],
+  "connections": [
+    [ "slot4:2", "esp:VP", "purple", [ "v11.8", "h150.61" ] ],
+    [ "slot2:2", "esp:34", "purple", [ "v11.67", "h124", "v136.53" ] ],
+    [ "slot3:2", "esp:35", "purple", [ "v12.4", "h114", "v90.4" ] ],
+    [ "slot1:2", "esp:32", "purple", [ "v5.4", "h104", "v52" ] ],
+    [ "rSlot4:2", "slot4:2", "green", [] ],
+    [ "rSlot2:2", "slot2:2", "green", [] ],
+    [ "rSlot3:2", "slot3:2", "green", [] ],
+    [ "rSlot1:2", "slot1:2", "green", [] ],
+    [ "rSlot4:1", "rSlot2:1", "red", [] ],
+    [ "rSlot2:1", "rSlot3:1", "red", [] ],
+    [ "rSlot3:1", "rSlot1:1", "red", [] ],
+    [ "rSlot4:1", "esp:3V3", "red", [ "v-48", "h255", "v196" ] ],
+    [ "slot4:1", "slot2:1", "black", [ "h-10.9", "v50" ] ],
+    [ "slot2:1", "slot3:1", "black", [ "h-10.9", "v55" ] ],
+    [ "slot3:1", "slot1:1", "black", [ "h-10.9", "v55" ] ],
+    [ "slot1:1", "servoLock:GND", "black", [ "v149.4", "h-97.3" ] ],
+    [ "servoLock:PWM", "esp:33", "orange", [ "h70", "v-35", "*" ] ],
+    [ "servoTray:PWM", "esp:25", "orange", [ "h80", "v-165", "*" ] ],
+    [ "relayHeater:IN", "esp:26", "orange", [ "h90", "v-265", "*" ] ],
+    [ "relayFan:IN", "esp:27", "orange", [ "h100", "v-345", "*" ] ],
+    [ "buzzer1:2", "esp:14", "orange", [ "h110", "v-448", "*" ] ],
+    [ "dht1:SDA", "esp:15", "green", [ "h120", "v-509", "*" ] ],
+    [ "servoLock:GND", "servoTray:GND", "black", [ "h19", "v140", "*" ] ],
+    [ "servoTray:GND", "relayHeater:GND", "black", [ "h144", "v95.4" ] ],
+    [ "relayHeater:GND", "relayFan:GND", "black", [ "h19", "v90", "*" ] ],
+    [ "relayFan:GND", "buzzer1:1", "black", [ "h19", "v113", "*" ] ],
+    [ "buzzer1:1", "dht1:GND", "black", [ "h19", "v61", "*" ] ],
+    [ "dht1:GND", "esp:GND.1", "black", [ "h115", "v-500", "*" ] ],
+    [ "esp:5V", "dht1:VCC", "red", [ "h-8", "v480", "*" ] ],
+    [ "dht1:VCC", "relayFan:VCC", "red", [ "h7", "v-193", "*" ] ],
+    [ "relayFan:VCC", "relayHeater:VCC", "red", [ "h7", "v-90", "*" ] ],
+    [ "relayHeater:VCC", "servoTray:V+", "red", [ "h7", "v-119", "*" ] ],
+    [ "servoTray:V+", "servoLock:V+", "red", [ "h38.4", "v-115.2" ] ],
+    [ "lcd1:GND", "esp:GND.2", "black", [ "h-104", "v7", "*" ] ],
+    [ "lcd1:SCL", "esp:22", "gold", [ "h-114", "v-2", "*" ] ],
+    [ "lcd1:SDA", "esp:21", "green", [ "h-124", "v36", "*" ] ],
+    [ "lcd1:VCC", "esp:5V", "red", [ "h-132", "v228", "h-167", "v-58", "*" ] ],
+    [ "rfid1:MOSI", "esp:23", "blue", [ "h-46", "v-202", "*" ] ],
+    [ "rfid1:GND", "esp:GND.3", "black", [ "h-106", "v-183", "*" ] ],
+    [ "rfid1:MISO", "esp:19", "blue", [ "h-96", "v-154", "*" ] ],
+    [ "rfid1:SCK", "esp:18", "blue", [ "h-86", "v-125", "*" ] ],
+    [ "rfid1:SDA", "esp:5", "blue", [ "h-76", "v-106", "*" ] ],
+    [ "rfid1:RST", "esp:4", "blue", [ "h-66", "v-135", "*" ] ],
+    [ "rfid1:3.3V", "esp:3V3", "red", [ "h-36", "v-443", "h-214", "v184", "*" ] ],
+    [ "swPower:2", "esp:17", "purple", [ "h-40", "v-253", "*" ] ],
+    [ "swDoor:2", "esp:16", "purple", [ "h-44", "v-303", "*" ] ],
+    [ "swPower:1", "swDoor:1", "black", [ "h-11.9", "v60" ] ],
+    [ "swDoor:1", "rfid1:GND", "black", [ "h-21.5", "v-158.95" ] ],
+    [ "esp:2", "rLed:1", "orange", [] ],
+    [ "rLed:2", "ledStatus:A", "orange", [] ],
+    [ "ledStatus:C", "swDoor:1", "black", [ "h-67.4", "v-114" ] ]
+  ],
+  "dependencies": {}
+}

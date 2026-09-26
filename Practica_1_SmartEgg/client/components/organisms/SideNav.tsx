@@ -2,6 +2,7 @@
 
 import { SmartEggLogo } from "@/components/atoms/SmartEggLogo";
 import { NavItem } from "@/components/molecules/NavItem";
+import { ThemeSwitcher } from "@/components/molecules/ThemeSwitcher";
 import { NAV_ITEMS } from "@/lib/smartegg/catalog";
 import { nodeStatus } from "@/lib/smartegg/derive";
 import type { CSSVars } from "@/lib/smartegg/types";
@@ -35,7 +36,7 @@ export function SideNav() {
 
         <div
           style={statusStyle}
-          className="flex shrink-0 items-center gap-3 font-mono text-[9px] tracking-[0.14em] text-foreground-fainter console:order-last console:mt-auto console:flex-col console:items-start console:gap-0 console:pb-[30px] console:pl-[22px] console:text-[8px] console:leading-[1.9]"
+          className="flex shrink-0 items-center gap-3 font-mono text-[9px] tracking-[0.14em] text-foreground-fainter console:order-last console:flex-col console:items-start console:gap-0 console:pb-[30px] console:pl-[22px] console:text-[8px] console:leading-[1.9]"
         >
           <span className="hidden sm:block">NODO 01</span>
           <span className="hidden sm:block">LOTE A</span>
@@ -43,8 +44,10 @@ export function SideNav() {
         </div>
       </div>
 
-      {/* La tira se desplaza en vez de partirse en dos filas. */}
-      <div className="flex gap-1 overflow-x-auto px-5 [scrollbar-width:none] console:mt-[54px] console:flex-col console:gap-0.5 console:overflow-visible console:px-0 [&::-webkit-scrollbar]:hidden">
+      {/* En pila la tira se parte en filas: cinco secciones no caben en el
+          ancho de un teléfono y desplazarlas dejaba las dos últimas fuera de
+          alcance, sin nada que indicara que seguían ahí. */}
+      <div className="flex flex-wrap gap-x-1 gap-y-0.5 px-5 console:mt-[54px] console:flex-col console:flex-nowrap console:gap-0.5 console:px-0">
         {NAV_ITEMS.map((item) => (
           <NavItem
             key={item.id}
@@ -53,6 +56,10 @@ export function SideNav() {
             onSelect={() => actions.navigate(item.id)}
           />
         ))}
+      </div>
+
+      <div className="px-5 py-3 console:mt-auto console:px-[22px] console:pt-0 console:pb-3">
+        <ThemeSwitcher />
       </div>
     </nav>
   );

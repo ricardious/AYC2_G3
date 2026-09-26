@@ -27,73 +27,83 @@ export function TemperatureGauge() {
   const style: CSSVars = { "--accent": reading.color };
 
   return (
-    <section aria-label="Temperatura" className="w-[290px]" style={style}>
+    <section
+      aria-label="Temperatura"
+      className="w-full console:w-[290px]"
+      style={style}
+    >
       <SectionKicker tone="amber">TEMPERATURA</SectionKicker>
 
-      <svg
-        viewBox="0 0 290 168"
-        aria-hidden="true"
-        className="mt-1.5 h-[168px] w-[290px] overflow-visible"
-      >
-        <path
-          d={GAUGE_OUTLINE_PATH}
-          fill="none"
-          stroke="rgba(140,160,175,.14)"
-          strokeWidth="1"
-        />
-        <path
-          d={GAUGE_TRACK_PATH}
-          fill="none"
-          stroke="rgba(140,160,175,.09)"
-          strokeWidth="14"
-        />
-        <path
-          d={GAUGE_OPTIMAL_PATH}
-          fill="none"
-          stroke="rgba(111,226,160,.3)"
-          strokeWidth="14"
-        />
-        <path
-          d={GAUGE_TRACK_PATH}
-          fill="none"
-          strokeWidth="2"
-          strokeDasharray={gaugeDashArray(fraction)}
-          className="stroke-[var(--accent)] text-[var(--accent)] drop-shadow-[0_0_8px_currentColor]"
-        />
-        <path
-          d={GAUGE_TICKS_PATH}
-          fill="none"
-          stroke="rgba(160,180,195,.35)"
-          strokeWidth="1"
-        />
-        <circle
-          cx={needle.cx}
-          cy={needle.cy}
-          r="4"
-          className="fill-[var(--accent)]"
-        />
-        <text
-          x="26"
-          y="166"
-          className="fill-foreground-fainter font-mono text-[8px] tracking-[1px]"
+      {/* En pila el disco mide menos que la fila. Se centra junto con su
+          lectura —que se posiciona respecto a él— mientras el rótulo y los
+          campos se quedan en el margen, a la misma línea que el resto de los
+          instrumentos. */}
+      <div className="mx-auto w-[290px] console:mx-0">
+        <svg
+          viewBox="0 0 290 168"
+          aria-hidden="true"
+          className="mt-1.5 h-[168px] w-[290px] overflow-visible"
         >
-          35
-        </text>
-        <text
-          x="252"
-          y="166"
-          className="fill-foreground-fainter font-mono text-[8px] tracking-[1px]"
-        >
-          41
-        </text>
-      </svg>
+          <path
+            d={GAUGE_OUTLINE_PATH}
+            fill="none"
+            stroke="var(--gauge-outline)"
+            strokeWidth="1"
+          />
+          <path
+            d={GAUGE_TRACK_PATH}
+            fill="none"
+            stroke="var(--gauge-track)"
+            strokeWidth="14"
+          />
+          <path
+            d={GAUGE_OPTIMAL_PATH}
+            fill="none"
+            stroke="var(--gauge-optimal)"
+            strokeWidth="14"
+          />
+          <path
+            d={GAUGE_TRACK_PATH}
+            fill="none"
+            strokeWidth="2"
+            strokeDasharray={gaugeDashArray(fraction)}
+            className="stroke-[var(--accent)] text-[var(--accent)] drop-shadow-[0_0_8px_currentColor]"
+          />
+          <path
+            d={GAUGE_TICKS_PATH}
+            fill="none"
+            stroke="var(--gauge-ticks)"
+            strokeWidth="1"
+          />
+          <circle
+            cx={needle.cx}
+            cy={needle.cy}
+            r="4"
+            className="fill-[var(--accent)]"
+          />
+          <text
+            x="26"
+            y="166"
+            className="fill-foreground-fainter font-mono text-[8px] tracking-[1px]"
+          >
+            35
+          </text>
+          <text
+            x="252"
+            y="166"
+            className="fill-foreground-fainter font-mono text-[8px] tracking-[1px]"
+          >
+            41
+          </text>
+        </svg>
 
-      <div className="-mt-[72px] ml-[82px] w-[126px] text-center">
-        <div className="text-[44px] leading-none font-light tracking-[-0.01em] text-[var(--accent)]">
-          {reading.label}
-        </div>
-        <div className="mt-1 font-mono text-[9px] tracking-[0.2em] text-neutral">
-          °C
+        <div className="-mt-[72px] ml-[82px] w-[126px] text-center">
+          <div className="text-[44px] leading-none font-light tracking-[-0.01em] text-[var(--accent)]">
+            {reading.label}
+          </div>
+          <div className="mt-1 font-mono text-[9px] tracking-[0.2em] text-neutral">
+            °C
+          </div>
         </div>
       </div>
 

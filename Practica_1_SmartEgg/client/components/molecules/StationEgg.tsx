@@ -1,5 +1,6 @@
 import { EggShape } from "@/components/atoms/EggShape";
 import { cx } from "@/lib/cx";
+import { slotIndex } from "@/lib/smartegg/derive";
 import type { CSSVars, EggView } from "@/lib/smartegg/types";
 
 interface StationEggProps {
@@ -39,6 +40,7 @@ export function StationEgg({
         />
         <EggShape
           variant="station"
+          slot={slotIndex(egg.id)}
           empty={egg.empty}
           hot={egg.hot}
           critical={critical}
