@@ -104,10 +104,19 @@ editable es [`firmware/wokwi/diagram.json`](../../firmware/wokwi/diagram.json).
 Estas fotografías documentan el montaje; el movimiento de la cerradura y las
 lecturas se observan durante la demostración del equipo.
 
-## Captura pendiente
+## Commits del equipo en GitHub
 
-- Commits verificables del proyecto en GitHub. El historial local o capturas
-  de otra carpeta no sustituyen la evidencia de contribuciones del Proyecto 1.
+Las capturas de [`commits/`](commits/) muestran el historial de la rama
+`develop` filtrado por `Proyecto_1_SmartEgg` y por integrante. Cada una deja
+visibles al menos tres commits del proyecto, con su título y hash abreviado.
+
+| Integrante | Captura |
+|---|---|
+| Alex Ricardo Castañeda Rodríguez | [Historial de Ricardo](commits/commits-alex-ricardo-castaneda.png) |
+| Carlos Javier Pérez Pocón | [Historial de Carlos](commits/commits-carlos-perez.png) |
+| José Adrián Orozco Ramírez | [Historial de José](commits/commits-jose-orozco.png) |
+| Alex Oswaldo López Alquejay | [Historial de Alex](commits/commits-alex-lopez.png) |
+| Kevin Rodrigo Sandoval Hernández | [Historial de Kevin](commits/commits-kevin-sandoval.png) |
 
 Para completar una evidencia se guarda la captura original en esta carpeta y
 se añade aquí su origen y resultado observado. Se ocultan únicamente
