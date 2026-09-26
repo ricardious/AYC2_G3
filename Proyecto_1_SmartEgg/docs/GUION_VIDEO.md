@@ -34,4 +34,5 @@ brevemente aquí si ayuda a relacionar un estado visible con el prototipo.
   servo de cerradura y alarma pueden quedar para la evidencia física completa;
   no desplazan la demostración del Observatorio requerida para este video.
 
-El enlace al video final se incorporará al README principal cuando esté publicado.
+El [video final del Observatorio 3D](evidencias/smartegg-observatorio-3d.mp4)
+está disponible en el repositorio y enlazado desde el README principal.
