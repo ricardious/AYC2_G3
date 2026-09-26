@@ -36,6 +36,7 @@ from ..schemas import (
     TechnicianRead,
 )
 from ..security import create_access_token, get_current_technician
+from ..services.serial_access import close_stale_access_sessions
 
 router = APIRouter(prefix="/access", tags=["physical access"])
 
@@ -106,23 +107,7 @@ async def authorize_rfid(
         raise HTTPException(status_code=401, detail="RFID card is not authorized")
 
     now = datetime.now(UTC)
-    active_sessions = list(
-        db.scalars(
-            select(AccessSession).where(
-                AccessSession.incubator_id == incubator.id,
-                AccessSession.ended_at.is_(None),
-            )
-        )
-    )
-    for active in active_sessions:
-        if as_utc(active.expires_at) <= now:
-            active.ended_at = now
-            active.ended_reason = "expired"
-        else:
-            raise HTTPException(
-                status_code=409,
-                detail="The incubator already has an active access session",
-            )
+    close_stale_access_sessions(db, incubator.id, now)
 
     settings = request.app.state.settings
     access_session = AccessSession(

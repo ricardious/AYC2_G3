@@ -46,6 +46,44 @@ def _as_utc(value: datetime) -> datetime:
     return value.astimezone(UTC)
 
 
+def close_stale_access_sessions(db: Session, incubator_id: int, now: datetime) -> None:
+    """Cierra las sesiones que el nodo ya no tiene abiertas.
+
+    El nodo sólo envía una tarjeta cuando no tiene ninguna sesión en curso, así
+    que una sesión abierta en la base de datos a esa altura es un cierre que se
+    perdió (reinicio del ESP32, puerto serie caído, backend reiniciado). Antes
+    bloqueaba la puerta hasta que caducaba el token, ocho horas.
+    """
+    open_sessions = db.scalars(
+        select(AccessSession).where(
+            AccessSession.incubator_id == incubator_id,
+            AccessSession.ended_at.is_(None),
+        )
+    )
+    for stale in open_sessions:
+        stale.ended_at = now
+        if _as_utc(stale.expires_at) <= now:
+            stale.ended_reason = "expired"
+            continue
+        stale.ended_reason = "replaced"
+        # Si llegó a abrirse, la apertura queda registrada aunque no se sepa
+        # cuándo cerró.
+        if stale.door_opened_at is not None:
+            db.add(
+                DoorEvent(
+                    incubator_id=incubator_id,
+                    operator_id=stale.technician_id,
+                    access_session_id=stale.id,
+                    access_method=stale.method,
+                    event_type="inspection",
+                    opened_at=stale.door_opened_at,
+                    closed_at=None,
+                    eggs_added=0,
+                    eggs_removed=0,
+                )
+            )
+
+
 def build_serial_access_denial(
     event: SerialAccessEvent, reason: str, settings: Settings
 ) -> SerialAccessOutcome:
@@ -97,23 +135,7 @@ def _authorize_rfid(
     technician, incubator = authorization
 
     now = datetime.now(UTC)
-    active_sessions = list(
-        db.scalars(
-            select(AccessSession).where(
-                AccessSession.incubator_id == incubator.id,
-                AccessSession.ended_at.is_(None),
-            )
-        )
-    )
-    for active in active_sessions:
-        if _as_utc(active.expires_at) <= now:
-            active.ended_at = now
-            active.ended_reason = "expired"
-        else:
-            denied = build_serial_access_denial(
-                event, "session_already_active", settings
-            )
-            return replace(denied, incubator_id=incubator.id)
+    close_stale_access_sessions(db, incubator.id, now)
 
     session = AccessSession(
         token_id=secrets.token_urlsafe(32),
