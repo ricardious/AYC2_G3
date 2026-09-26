@@ -278,7 +278,31 @@ Para abrir el monitor serial desde la raíz del repositorio:
 uvx platformio run -d Proyecto_1_SmartEgg/firmware -t monitor
 ```
 
-## 13. Lista de comprobación rápida
+## 13. Correspondencia con el montaje fotografiado
+
+Las [fotografías del prototipo](../docs/evidencias/README.md#montaje-físico)
+identifican los componentes instalados. Esta tabla indica qué conexión debe
+comprobarse en cada uno según `SmartEggESP32/Config.h`; la foto no permite
+certificar por sí sola el voltaje, la continuidad ni el pin exacto.
+
+| Fotografía | Comprobación eléctrica o mecánica |
+|---|---|
+| [ESP32 y conexiones](../docs/evidencias/fisico/esp32-conexiones.jpeg) | Identificar `3V3`, `5V` y GND; medirlos antes de energizar los periféricos. |
+| [RC522](../docs/evidencias/fisico/lector-rfid-cableado.jpeg) | Confirmar 3.3 V, GND, SS 5, RST 4 y SPI 18/19/23. |
+| [DHT11](../docs/evidencias/fisico/sensor-dht11-interior.jpeg) | Confirmar alimentación de 3.3 V, GND y DATA en GPIO 15. |
+| [Servo de cerradura](../docs/evidencias/fisico/servo-cerradura-montaje.jpeg) | Revisar señal en GPIO 33, 5 V externos, GND común y recorrido libre de la cerradura. |
+| [Servo de bandeja](../docs/evidencias/fisico/servo-bandeja-mecanismo.jpeg) | Revisar señal en GPIO 25, 5 V externos y que la transmisión no se atasque. |
+| [Relés y protoboard](../docs/evidencias/fisico/cableado-reles-protoboard.jpeg) | Verificar IN1 26, IN2 27, alimentación de bobinas y separación VCC/JD-VCC antes de conectar cargas. |
+| [Ventilador](../docs/evidencias/fisico/ventilador-interior.jpeg) | Seguir su alimentación hasta COM2/NO2 y comprobar el voltaje nominal de la carga. |
+| [Foco de calefacción](../docs/evidencias/fisico/foco-calefaccion-interior.jpeg) | Verificar que la carga depende de COM1/NO1; no energizar cableado de red expuesto. |
+| [Marco de puerta](../docs/evidencias/fisico/detalle-marco-puerta.jpeg) | Comprobar que la puerta cerrada presiona la palanca y que COM/NO llegan a GND/GPIO 16. |
+
+La inspección visual se completa con multímetro y con las lecturas de la
+[prueba física](../docs/PRUEBA_FISICA.md). Si un cable cambia respecto a esta
+tabla, se actualiza primero el mapa y se verifica contra `Config.h` antes de
+grabar o energizar el nodo.
+
+## 14. Lista de comprobación rápida
 
 - [ ] RC522 conectado a 3.3 V, nunca a 5 V.
 - [ ] Todos los GND están unidos.
