@@ -1,4 +1,4 @@
-# Proyecto 1 — SmartEgg
+# Proyecto 2 — SmartEgg
 # Grupo 3
 
 Desarrollamos SmartEgg como una incubadora inteligente IoT a partir de la
