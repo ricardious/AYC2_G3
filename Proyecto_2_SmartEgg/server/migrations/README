@@ -1,0 +1,4 @@
+Migraciones de la base relacional de SmartEgg.
+
+La URL se obtiene de `SMARTEGG_DATABASE_URL`; nunca se almacenan credenciales reales
+en esta carpeta. Ejecute `uv run alembic upgrade head` antes de iniciar la API.

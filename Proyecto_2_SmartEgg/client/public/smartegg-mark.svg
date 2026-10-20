@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72" fill="none">
+  <!-- Sin marco: la marca va sobre la pestaña, así que el trazo tiene que
+       sostenerse en claro y en oscuro. El teal medio funciona en los dos; la
+       consulta lo sube a cian de marca donde el navegador la respeta. -->
+  <style>
+    .shell { stroke: #17838d; }
+    .strata { stroke: #17838d; }
+    @media (prefers-color-scheme: dark) {
+      .shell { stroke: #d7eef0; }
+      .strata { stroke: #5fe3e8; }
+    }
+  </style>
+  <path class="shell" d="M32 6C43.5 6 53 26.4 53 44C53 56.6 43.5 66 32 66C20.5 66 11 56.6 11 44C11 26.4 20.5 6 32 6Z" stroke-width="4"/>
+  <g class="strata" stroke-width="4.4" stroke-linecap="round">
+    <path d="M24.5 30h15" stroke-opacity=".34"/>
+    <path d="M20 38.5h24" stroke-opacity=".56"/>
+    <path d="M17 47h30" stroke-opacity=".82"/>
+    <path d="M19.5 55h25"/>
+  </g>
+</svg>
