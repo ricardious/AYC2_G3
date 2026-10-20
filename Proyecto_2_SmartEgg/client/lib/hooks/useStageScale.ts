@@ -1,0 +1,86 @@
+"use client";
+
+import { useCallback, useState } from "react";
+
+import {
+  STAGE_GUTTER,
+  STAGE_HEIGHT,
+  STAGE_MAX_SCALE,
+  STAGE_MAX_STRETCH,
+  STAGE_MIN_SCALE,
+  STAGE_WIDTH,
+} from "@/lib/smartegg/catalog";
+
+import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
+
+export interface StageMetrics {
+  scale: number;
+  /** Ancho del plano. 1680 es el suelo; el sobrante es `--stage-slack`. */
+  width: number;
+}
+
+/** Ancho de la barra de desplazamiento, medida una vez. */
+let scrollbar: number | null = null;
+
+function scrollbarWidth(): number {
+  if (scrollbar !== null) return scrollbar;
+  const probe = document.createElement("div");
+  probe.style.cssText =
+    "position:absolute;top:-9999px;width:100px;height:100px;overflow:scroll";
+  document.body.appendChild(probe);
+  scrollbar = probe.offsetWidth - probe.clientWidth;
+  probe.remove();
+  return scrollbar;
+}
+
+/**
+ * Escala y ancho del plano, que CSS no puede calcular: no sabe dividir el
+ * viewport entre una longitud para obtener el número que pide `scale()`.
+ *
+ * El ajuste mide los dos ejes —con sólo el ancho, el plano desborda cualquier
+ * ventana de menos de 1000 px de alto— y después estira el ancho hasta
+ * cubrirla, porque ajustar sólo al alto deja bandas vacías a los lados.
+ *
+ * Por debajo de `STAGE_MIN_SCALE` el plano ya no encoge: en una ventana baja
+ * desborda y la caja que lo envuelve se desplaza. Ese desplazamiento saca una
+ * barra vertical que se come ancho real, así que el estirado la descuenta o
+ * aparecería también una horizontal.
+ */
+export function useStageScale(): StageMetrics {
+  const [metrics, setMetrics] = useState<StageMetrics>({
+    scale: STAGE_MAX_SCALE,
+    width: STAGE_WIDTH,
+  });
+
+  const measure = useCallback(() => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const fit = Math.min(
+      (width - STAGE_GUTTER) / STAGE_WIDTH,
+      (height - STAGE_GUTTER) / STAGE_HEIGHT,
+    );
+    const scale = Math.min(STAGE_MAX_SCALE, Math.max(STAGE_MIN_SCALE, fit));
+
+    const scrolls = STAGE_HEIGHT * scale > height;
+    const usable = width - (scrolls ? scrollbarWidth() : 0);
+    const stageWidth = Math.min(
+      STAGE_WIDTH * STAGE_MAX_STRETCH,
+      Math.max(STAGE_WIDTH, usable / scale),
+    );
+
+    setMetrics((previous) =>
+      previous.scale === scale && previous.width === stageWidth
+        ? previous
+        : { scale, width: stageWidth },
+    );
+  }, []);
+
+  useIsomorphicLayoutEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [measure]);
+
+  return metrics;
+}

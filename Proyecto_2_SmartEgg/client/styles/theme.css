@@ -1,0 +1,455 @@
+/* Tokens de la consola SmartEgg. El tema claro es la base; `.dark` fuerza
+   oscuridad y `.system` sigue la preferencia del sistema operativo. */
+
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where(.system, .system *) {
+      @slot;
+    }
+  }
+}
+
+@theme {
+  /* Disposición ------------------------------------------------------- */
+
+  --breakpoint-console: 1440px;
+
+  /* Tema claro: valores base -----------------------------------------
+
+     El claro no es el oscuro invertido: es papel de laboratorio. Los grises
+     llevan croma muy bajo (≤0.02) para que lean como neutros y no como niebla
+     azul, y el cian de marca baja de luminosidad para sostenerse sobre blanco.  */
+
+  --color-background-base: oklch(98.2% 0.004 240);
+
+  --color-foreground-base: oklch(22% 0.022 250);
+  --color-foreground-bright-base: oklch(15% 0.025 250);
+  --color-foreground-muted-base: oklch(40% 0.018 245);
+  --color-foreground-soft-base: oklch(46% 0.016 245);
+  --color-foreground-faint-base: oklch(47% 0.016 245);
+  --color-foreground-fainter-base: oklch(50% 0.014 245);
+  --color-foreground-idle-base: oklch(45% 0.016 245);
+  --color-foreground-paper-base: oklch(38% 0.02 245);
+
+  --color-primary-base: oklch(47% 0.115 202);
+  --color-primary-soft-base: oklch(37% 0.09 204);
+  --color-primary-dim-base: oklch(49% 0.082 202);
+  --color-primary-link-base: oklch(40% 0.115 202);
+
+  --color-warning-base: oklch(48% 0.145 62);
+  --color-warning-dim-base: oklch(47% 0.09 62);
+  --color-success-base: oklch(45% 0.135 158);
+  --color-danger-base: oklch(51% 0.2 27);
+  --color-danger-soft-base: oklch(45% 0.17 27);
+  --color-danger-text-base: oklch(40% 0.06 27);
+  --color-neutral-base: oklch(46% 0.016 245);
+
+  --color-divider-base: oklch(30% 0.015 250 / 0.2);
+  --color-divider-soft-base: oklch(30% 0.015 250 / 0.14);
+  --color-divider-chip-base: oklch(30% 0.015 250 / 0.3);
+  --color-rule-base: oklch(32% 0.02 245 / 0.26);
+  --color-rule-soft-base: oklch(32% 0.02 245 / 0.34);
+  --color-hairline-base: oklch(32% 0.02 245 / 0.42);
+  --color-frame-base: oklch(35% 0.025 240 / 0.36);
+  --color-frame-soft-base: oklch(35% 0.025 240 / 0.22);
+  --color-glass-base: oklch(40% 0.03 235 / 0.14);
+  --color-panel-base: oklch(100% 0 0 / 0.88);
+  --color-dot-idle-base: oklch(50% 0.015 245 / 0.55);
+
+  /* Movimiento ------------------------------------------------------- */
+
+  --animate-pulse-slow: se-pulse 2.4s ease-in-out infinite;
+  --animate-pulse-heater: se-pulse 3s ease-in-out infinite;
+  --animate-pulse-servo: se-pulse 3.4s ease-in-out infinite;
+  --animate-pulse-sensor: se-pulse 2.6s ease-in-out infinite;
+  --animate-pulse-alarm: se-pulse 1s ease-in-out infinite;
+  --animate-pulse-alert: se-pulse 1.1s ease-in-out infinite;
+
+  --animate-breathe: se-breathe 6s ease-in-out infinite;
+  --animate-breathe-alarm: se-breathe 2.2s ease-in-out infinite;
+
+  --animate-scan: se-scan 9s linear infinite;
+  --animate-sweep: se-spin 14s linear infinite;
+
+  --animate-flow-a: se-dash 7s linear infinite;
+  --animate-flow-b: se-dash 9s linear infinite;
+  --animate-flow-c: se-dash 11s linear infinite;
+  --animate-flow-bars: se-dash 3s linear infinite;
+
+  --animate-heat: se-heat 4.5s ease-in-out infinite;
+  --animate-heat-lamp: se-heat 4s ease-in-out infinite;
+
+  /* El espécimen respira: un balanceo mínimo basta para que la bandeja deje
+     de parecer una lámina. La alarma lo vuelve inquieto. */
+  --animate-egg-idle: se-egg-idle 7s ease-in-out infinite;
+  --animate-egg-alarm: se-egg-alarm 1.7s ease-in-out infinite;
+}
+
+/* Las utilidades (`text-primary`, `border-divider`, …) apuntan a los valores
+   base para que cambiar de tema sólo implique reasignar variables. */
+@theme inline {
+  --color-background: var(--color-background-base);
+
+  --color-foreground: var(--color-foreground-base);
+  --color-foreground-bright: var(--color-foreground-bright-base);
+  --color-foreground-muted: var(--color-foreground-muted-base);
+  --color-foreground-soft: var(--color-foreground-soft-base);
+  --color-foreground-faint: var(--color-foreground-faint-base);
+  --color-foreground-fainter: var(--color-foreground-fainter-base);
+  --color-foreground-idle: var(--color-foreground-idle-base);
+  --color-foreground-paper: var(--color-foreground-paper-base);
+
+  --color-primary: var(--color-primary-base);
+  --color-primary-soft: var(--color-primary-soft-base);
+  --color-primary-dim: var(--color-primary-dim-base);
+  --color-primary-link: var(--color-primary-link-base);
+
+  --color-warning: var(--color-warning-base);
+  --color-warning-dim: var(--color-warning-dim-base);
+  --color-success: var(--color-success-base);
+  --color-danger: var(--color-danger-base);
+  --color-danger-soft: var(--color-danger-soft-base);
+  --color-danger-text: var(--color-danger-text-base);
+  --color-neutral: var(--color-neutral-base);
+
+  --color-divider: var(--color-divider-base);
+  --color-divider-soft: var(--color-divider-soft-base);
+  --color-divider-chip: var(--color-divider-chip-base);
+  --color-rule: var(--color-rule-base);
+  --color-rule-soft: var(--color-rule-soft-base);
+  --color-hairline: var(--color-hairline-base);
+  --color-frame: var(--color-frame-base);
+  --color-frame-soft: var(--color-frame-soft-base);
+  --color-glass: var(--color-glass-base);
+  --color-panel: var(--color-panel-base);
+  --color-dot-idle: var(--color-dot-idle-base);
+
+  --font-display: var(--font-space-grotesk), Helvetica, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), monospace;
+}
+
+@layer theme {
+  :root,
+  :host {
+    color-scheme: light;
+
+    /* Escenario -----------------------------------------------------
+
+       Sobre blanco la profundidad no viene de oscurecer el fondo sino de
+       elevar las superficies: el degradado se mantiene alto de clave y la
+       viñeta casi desaparece, para que las esquinas no se ensucien.  */
+
+    --console-backdrop: radial-gradient(
+      120% 85% at 50% -5%,
+      oklch(100% 0 0) 0%,
+      oklch(98.6% 0.005 235) 42%,
+      oklch(95.8% 0.011 240) 100%
+    );
+    --console-grid-line: oklch(55% 0.07 235 / 0.085);
+    --console-glow-color: oklch(82% 0.045 215 / 0.13);
+    --console-vignette-shadow: inset 0 0 160px 30px oklch(55% 0.03 245 / 0.045);
+    --panel-shadow:
+      0 24px 64px -22px oklch(40% 0.05 255 / 0.22),
+      0 2px 8px oklch(40% 0.05 255 / 0.06);
+
+    /* Materiales: metal claro, no gris plano. El rango de luminosidad es
+       corto y el croma mínimo; el volumen lo dan el filo blanco superior y
+       la sombra proyectada. */
+
+    --material-rail: linear-gradient(
+      180deg,
+      oklch(95% 0.004 240),
+      oklch(89% 0.008 245)
+    );
+    --material-shell: linear-gradient(
+      150deg,
+      oklch(98.5% 0.003 240),
+      oklch(92% 0.01 246)
+    );
+    --material-shell-shadow:
+      0 36px 70px -32px oklch(38% 0.05 255 / 0.3),
+      inset 0 1px 0 oklch(100% 0 0),
+      inset 0 0 0 1px oklch(45% 0.03 245 / 0.18);
+    --material-glass: linear-gradient(
+      160deg,
+      oklch(96% 0.008 240 / 0.88),
+      oklch(93% 0.013 245 / 0.86) 45%,
+      oklch(90% 0.022 225 / 0.86)
+    );
+    --material-plate: linear-gradient(
+      180deg,
+      oklch(93% 0.008 246),
+      oklch(87% 0.013 249)
+    );
+    /* En claro el filo se dibuja con una línea oscura: un blanco sobre
+       blanco no describe ningún borde. */
+    --material-edge-light: oklch(42% 0.04 245 / 0.45);
+    --material-sheen: oklch(100% 0 0 / 0.5);
+    --material-tray-line: oklch(38% 0.03 245 / 0.52);
+    --material-bench: linear-gradient(
+      180deg,
+      oklch(98% 0.004 240 / 0.95),
+      oklch(91% 0.014 246 / 0.95)
+    );
+    --material-bench-shadow: 0 52px 95px -48px oklch(38% 0.05 255 / 0.4);
+    --material-report: linear-gradient(
+      170deg,
+      oklch(100% 0 0),
+      oklch(97.5% 0.004 240)
+    );
+    --material-report-shadow:
+      0 60px 110px -45px oklch(38% 0.05 255 / 0.32),
+      inset 0 1px 0 oklch(100% 0 0);
+
+    /* Acentos de instrumento -----------------------------------------
+
+       El cian neón del oscuro no existe sobre blanco: se vuelve invisible.
+       En claro cada acento baja de luminosidad y sube de opacidad hasta
+       pesar lo mismo que su equivalente encendido. */
+
+    --accent-beam: oklch(52% 0.12 200 / 0.66);
+    --accent-bars: oklch(50% 0.12 200 / 0.62);
+    --accent-flow: oklch(50% 0.12 200 / 0.58);
+    --accent-face: oklch(62% 0.11 200 / 0.12);
+    --accent-halo: oklch(62% 0.11 200 / 0.16);
+    --accent-sweep: oklch(58% 0.12 200 / 0.24);
+    --accent-band: oklch(60% 0.1 200 / 0.14);
+    --accent-mark: oklch(45% 0.11 202 / 0.68);
+
+    --humidity-tube: linear-gradient(
+      180deg,
+      oklch(70% 0.07 200 / 0.06),
+      oklch(62% 0.1 200 / 0.14)
+    );
+    --humidity-fill: linear-gradient(
+      180deg,
+      oklch(58% 0.12 200 / 0.72),
+      oklch(72% 0.1 200 / 0.3)
+    );
+    --humidity-fill-glow: 0 0 22px oklch(50% 0.12 200 / 0.18) inset;
+    --humidity-grad-line: oklch(45% 0.03 240 / 0.34);
+
+    --heat-plume-color: oklch(70% 0.16 60 / 0.2);
+    --heat-bar-color: oklch(70% 0.16 62 / 0.26);
+    --heat-band: oklch(75% 0.14 62 / 0.16);
+    --heat-line: oklch(54% 0.16 60 / 0.75);
+    --heat-trace-glow: oklch(70% 0.16 62 / 0.35);
+
+    --alarm-plume-color: oklch(62% 0.2 27 / 0.3);
+    --alarm-glow-color: oklch(58% 0.2 27 / 0.28);
+
+    /* Instrumentos: pistas, retículas y marcas de escala. */
+    --gauge-outline: oklch(45% 0.02 245 / 0.32);
+    --gauge-track: oklch(45% 0.02 245 / 0.26);
+    --gauge-optimal: oklch(58% 0.14 158 / 0.42);
+    --gauge-ticks: oklch(40% 0.02 245 / 0.62);
+    --chart-grid: oklch(45% 0.02 245 / 0.26);
+    --optimal-band-line: oklch(50% 0.14 158 / 0.62);
+    --optimal-band-fill: oklch(70% 0.13 158 / 0.16);
+    --playhead-glow: oklch(45% 0.03 245 / 0.35);
+
+    /* Espécimen ------------------------------------------------------
+
+       La cáscara es el mismo objeto en los dos temas; lo que cambia es la luz
+       que la baña. El volumen ya no lo dibuja una sombra interior genérica
+       sino cuatro capas del propio material: forma, oclusión en la base,
+       rebote en el terminador y especular. El rebote es lo que impide que el
+       lado en sombra muera en un gris plano — aquí es frío, porque el huevo
+       está dentro de una cámara blanca. */
+
+    --egg-hi: oklch(97% 0.018 92);
+    --egg-mid: oklch(88% 0.032 88);
+    --egg-lo: oklch(60% 0.045 74);
+    --egg-core: oklch(47% 0.042 70);
+
+    --egg-bounce: oklch(90% 0.015 235 / 0.45);
+    --egg-bounce-0: oklch(90% 0.015 235 / 0);
+    --egg-occ: oklch(38% 0.04 68 / 0.46);
+    --egg-occ-0: oklch(38% 0.04 68 / 0);
+    --egg-spec: oklch(100% 0 0 / 0.92);
+    --egg-spec-0: oklch(100% 0 0 / 0);
+
+    /* Sombra proyectada en dos tiempos: un contacto corto y oscuro que pega
+       el huevo a la bandeja, y una difusa que lo separa del fondo. */
+    --egg-shadow:
+      0 2px 4px -1px oklch(38% 0.04 250 / 0.3),
+      0 11px 20px -7px oklch(40% 0.04 250 / 0.3);
+    --egg-shadow-alarm:
+      0 2px 4px -1px oklch(38% 0.04 250 / 0.26),
+      0 0 24px var(--alarm-glow-color);
+    --egg-shadow-hot:
+      0 0 0 2px oklch(55% 0.12 200 / 0.6),
+      0 2px 4px -1px oklch(38% 0.04 250 / 0.26),
+      0 0 26px oklch(60% 0.12 200 / 0.35);
+    --egg-shadow-chip: 0 0 16px oklch(58% 0.12 200 / 0.4);
+    --egg-empty-border: oklch(45% 0.03 245 / 0.55);
+
+    --particle-color: oklch(58% 0.06 220 / 0.4);
+    /* El velo del modal: sobre una consola blanca un negro al 78 % apaga la
+       pantalla entera, así que en claro es un gris frío translúcido. */
+    --scrim: oklch(45% 0.03 250 / 0.4);
+
+    @variant dark {
+      color-scheme: dark;
+
+      --color-background-base: oklch(13.97% 0.0575 275.98);
+
+      --color-foreground-base: oklch(90% 0.018 215);
+      --color-foreground-bright-base: oklch(95% 0.025 195);
+      --color-foreground-muted-base: oklch(75% 0.025 215);
+      --color-foreground-soft-base: oklch(67% 0.025 215);
+      --color-foreground-faint-base: oklch(62% 0.03 215);
+      --color-foreground-fainter-base: oklch(58% 0.026 215);
+      --color-foreground-idle-base: oklch(60% 0.023 215);
+      --color-foreground-paper-base: oklch(65% 0.035 215);
+
+      --color-primary-base: oklch(84% 0.14 195);
+      --color-primary-soft-base: oklch(91% 0.075 195);
+      --color-primary-dim-base: oklch(62% 0.085 195);
+      --color-primary-link-base: oklch(89% 0.105 195);
+
+      --color-warning-base: oklch(76% 0.14 68);
+      --color-warning-dim-base: oklch(64% 0.1 68);
+      --color-success-base: oklch(79% 0.15 155);
+      --color-danger-base: oklch(68% 0.22 27);
+      --color-danger-soft-base: oklch(75% 0.16 27);
+      --color-danger-text-base: oklch(75% 0.055 27);
+      --color-neutral-base: oklch(62% 0.02 215);
+
+      --color-divider-base: oklch(72% 0.04 215 / 0.13);
+      --color-divider-soft-base: oklch(72% 0.04 215 / 0.1);
+      --color-divider-chip-base: oklch(72% 0.04 215 / 0.22);
+      --color-rule-base: oklch(78% 0.045 205 / 0.2);
+      --color-rule-soft-base: oklch(78% 0.045 205 / 0.25);
+      --color-hairline-base: oklch(78% 0.045 205 / 0.3);
+      --color-frame-base: oklch(76% 0.04 210 / 0.22);
+      --color-frame-soft-base: oklch(76% 0.04 210 / 0.14);
+      --color-glass-base: oklch(78% 0.055 205 / 0.16);
+      --color-panel-base: oklch(16% 0.025 240 / 0.94);
+      --color-dot-idle-base: oklch(60% 0.035 210 / 0.5);
+
+      --console-backdrop: radial-gradient(
+        120% 90% at 50% 8%,
+        #0d1319 0%,
+        #080b10 45%,
+        #05070a 100%
+      );
+      --console-grid-line: rgba(95, 227, 232, 0.045);
+      --console-glow-color: rgba(95, 227, 232, 0.07);
+      --console-vignette-shadow: inset 0 0 260px 90px rgba(0, 0, 0, 0.85);
+      --panel-shadow: 0 30px 100px rgba(0, 0, 0, 0.6);
+
+      --material-rail: linear-gradient(180deg, #2a333b, #141a20);
+      --material-shell: linear-gradient(
+        150deg,
+        rgba(30, 38, 46, 0.9),
+        rgba(12, 16, 21, 0.94)
+      );
+      --material-shell-shadow:
+        0 40px 90px -30px rgba(0, 0, 0, 0.9),
+        inset 0 1px 0 rgba(220, 240, 245, 0.09);
+      --material-glass: linear-gradient(
+        160deg,
+        rgba(120, 160, 175, 0.1),
+        rgba(20, 28, 35, 0.35) 45%,
+        rgba(95, 227, 232, 0.06)
+      );
+      --material-plate: linear-gradient(
+        180deg,
+        rgba(24, 31, 38, 0.95),
+        rgba(10, 14, 18, 0.95)
+      );
+      --material-edge-light: rgba(200, 235, 240, 0.6);
+      --material-sheen: rgba(255, 255, 255, 0.07);
+      --material-tray-line: rgba(160, 190, 205, 0.4);
+      --material-bench: linear-gradient(
+        180deg,
+        rgba(22, 29, 36, 0.7),
+        rgba(9, 12, 16, 0.8)
+      );
+      --material-bench-shadow: 0 60px 120px -50px #000;
+      --material-report: linear-gradient(
+        170deg,
+        rgba(226, 238, 241, 0.13),
+        rgba(150, 175, 185, 0.06)
+      );
+      --material-report-shadow:
+        0 70px 130px -40px rgba(0, 0, 0, 0.9),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+      --accent-beam: rgba(95, 227, 232, 0.5);
+      --accent-bars: rgba(95, 227, 232, 0.45);
+      --accent-flow: rgba(95, 227, 232, 0.7);
+      --accent-face: rgba(95, 227, 232, 0.1);
+      --accent-halo: rgba(95, 227, 232, 0.14);
+      --accent-sweep: rgba(95, 227, 232, 0.2);
+      --accent-band: rgba(95, 227, 232, 0.06);
+      --accent-mark: rgba(95, 227, 232, 0.35);
+
+      --humidity-tube: linear-gradient(
+        180deg,
+        rgba(95, 227, 232, 0.03),
+        rgba(95, 227, 232, 0.09)
+      );
+      --humidity-fill: linear-gradient(
+        180deg,
+        rgba(95, 227, 232, 0.55),
+        rgba(95, 227, 232, 0.14)
+      );
+      --humidity-fill-glow: 0 0 22px rgba(95, 227, 232, 0.35) inset;
+      --humidity-grad-line: rgba(180, 210, 220, 0.28);
+
+      --heat-plume-color: rgba(240, 164, 74, 0.3);
+      --heat-bar-color: rgba(240, 164, 74, 0.22);
+      --heat-band: rgba(240, 164, 74, 0.07);
+      --heat-line: rgba(240, 164, 74, 0.55);
+      --heat-trace-glow: rgba(240, 164, 74, 0.5);
+
+      --alarm-plume-color: rgba(255, 90, 77, 0.42);
+      --alarm-glow-color: rgba(255, 90, 77, 0.35);
+
+      --gauge-outline: rgba(140, 160, 175, 0.14);
+      --gauge-track: rgba(140, 160, 175, 0.09);
+      --gauge-optimal: rgba(111, 226, 160, 0.3);
+      --gauge-ticks: rgba(160, 180, 195, 0.35);
+      --chart-grid: rgba(120, 150, 165, 0.12);
+      --optimal-band-line: rgba(111, 226, 160, 0.4);
+      --optimal-band-fill: rgba(111, 226, 160, 0.13);
+      --playhead-glow: rgba(255, 255, 255, 0.85);
+
+      /* En la cámara oscura la única luz de relleno es la de los
+         instrumentos, así que el rebote del terminador es cian. */
+      --egg-hi: oklch(96% 0.02 92);
+      --egg-mid: oklch(85% 0.035 88);
+      --egg-lo: oklch(47% 0.04 72);
+      --egg-core: oklch(31% 0.03 66);
+
+      --egg-bounce: oklch(72% 0.055 205 / 0.5);
+      --egg-bounce-0: oklch(72% 0.055 205 / 0);
+      --egg-occ: oklch(10% 0.02 60 / 0.62);
+      --egg-occ-0: oklch(10% 0.02 60 / 0);
+      --egg-spec: oklch(100% 0 0 / 0.88);
+      --egg-spec-0: oklch(100% 0 0 / 0);
+
+      --egg-shadow:
+        0 2px 5px -1px rgba(0, 0, 0, 0.75),
+        0 12px 24px -8px rgba(0, 0, 0, 0.8);
+      --egg-shadow-alarm:
+        0 2px 5px -1px rgba(0, 0, 0, 0.7),
+        0 0 26px var(--alarm-glow-color);
+      --egg-shadow-hot:
+        0 0 0 2px rgba(95, 227, 232, 0.55),
+        0 2px 5px -1px rgba(0, 0, 0, 0.7),
+        0 0 34px rgba(95, 227, 232, 0.55);
+      --egg-shadow-chip: 0 0 22px rgba(95, 227, 232, 0.5);
+      --egg-empty-border: rgba(120, 150, 165, 0.45);
+
+      --particle-color: rgba(160, 220, 230, 0.75);
+      --scrim: rgba(0, 0, 0, 0.78);
+    }
+  }
+}
