@@ -362,11 +362,13 @@ void initializeHardware() {
   configureOutput(config::kFanRelayPin);
   configureOutput(config::kBuzzerPin);
   configureOutput(config::kStatusLedPin);
+  configureOutput(config::kLockLedPin);
 
   setHeater(false);
   setFan(false);
   setBuzzer(false);
   setStatusLed(false);
+  setLockLed(false);
   initializeServos();
   setTrayAngle(0);
   setAccessAngle(config::kAccessLockedDegrees);
@@ -397,6 +399,10 @@ void setBuzzer(bool enabled) {
 
 void setStatusLed(bool enabled) {
   gpio_set_level(gpio(config::kStatusLedPin), enabled ? 1 : 0);
+}
+
+void setLockLed(bool enabled) {
+  gpio_set_level(gpio(config::kLockLedPin), enabled ? 1 : 0);
 }
 
 void setTrayAngle(int8_t signedAngleDegrees) {

@@ -88,6 +88,27 @@ void applyManualCommand(const ControlCommand& command,
                         SystemState& state,
                         TickType_t now,
                         TickType_t& lastRotationTick) {
+  // Lock and unlock are accepted even with the power switch off, so the
+  // camera verdict is never lost.
+  if (command.type == CommandType::kSystemLock) {
+    const bool locked = command.value > 0;
+    if (locked != state.locked) {
+      state.locked = locked;
+      if (locked) {
+        manualOverrides = {-1, -1, -1};
+      }
+      postProtocolMessage(
+          MessageType::kEvent,
+          static_cast<uint8_t>(locked ? EventCode::kSystemLocked
+                                      : EventCode::kSystemUnlocked));
+    }
+    return;
+  }
+  if (state.locked) {
+    postProtocolMessage(MessageType::kError,
+                        static_cast<uint8_t>(ErrorCode::kSystemLocked));
+    return;
+  }
   if (!state.systemEnabled) {
     postProtocolMessage(
         MessageType::kError,
@@ -229,6 +250,7 @@ void applyAutomaticControl(SystemState& state) {
     postProtocolMessage(MessageType::kState, 0);
   }
   setStatusLed(state.systemEnabled && state.sensorOk);
+  setLockLed(state.locked);
 }
 
 void processPeriodicRotation(SystemState& state,
@@ -363,7 +385,8 @@ void communicationTask(void* parameters) {
         current.heaterOn != lastTelemetry.heaterOn ||
         current.fanOn != lastTelemetry.fanOn ||
         current.buzzerOn != lastTelemetry.buzzerOn ||
-        current.servoAngleDegrees != lastTelemetry.servoAngleDegrees;
+        current.servoAngleDegrees != lastTelemetry.servoAngleDegrees ||
+        current.locked != lastTelemetry.locked;
     if (changed || static_cast<TickType_t>(now - lastTelemetryTick) >=
                        pdMS_TO_TICKS(config::kTelemetryPeriodMs)) {
       emitProtocolFrame(MessageType::kTelemetry, 0, current);
