@@ -1,0 +1,4 @@
+
+# Dataset de visión: progreso local del script de captura y checkpoints de Jupyter
+**/dataset/**/.progreso.json
+.ipynb_checkpoints/
