@@ -152,6 +152,7 @@ enum class Screen : uint8_t {
   kDisabled,
   kSensorFault,
   kAccess,
+  kLocked,
 };
 
 Screen currentScreen = Screen::kBoot;
@@ -308,6 +309,15 @@ void composeDisabled(const SystemState& state) {
   if (state.doorOpen) {
     put(1, 15, static_cast<char>(kGlyphDoorOpen));
   }
+}
+
+// The camera saw something that is not an egg. The second row alternates the
+// cause with the way out (an authorized RFID card) about every two seconds.
+void composeLocked(const SystemState& state) {
+  (void)state;
+  putText(0, 0, "!! BLOQUEADO !!");
+  putText(1, 0, (animationFrame / 13U) % 2U == 0U ? "OBJETO DETECTADO"
+                                                  : "PASE SU TARJETA");
 }
 
 // The headline is static and fills the row exactly, so the failure is readable
@@ -689,6 +699,8 @@ void render(const SystemState& state) {
   Screen screen;
   if (accessFeedbackActive) {
     screen = Screen::kAccess;
+  } else if (state.locked) {
+    screen = Screen::kLocked;
   } else if (!state.systemEnabled) {
     screen = Screen::kDisabled;
   } else if (!state.sensorOk) {
@@ -725,6 +737,9 @@ void render(const SystemState& state) {
         break;
       case Screen::kAccess:
         composeAccessFeedback(accessFeedback, operatorName, accessFrame);
+        break;
+      case Screen::kLocked:
+        composeLocked(state);
         break;
       default:
         composeRunning(state);

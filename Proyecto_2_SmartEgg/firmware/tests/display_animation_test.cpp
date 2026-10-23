@@ -119,4 +119,24 @@ int main() {
   assert(lcdGlyphs[4][4] == 17);  // Power symbol, not a text spinner.
   smartegg::display::render(state);
   assert(lcdGlyphs[4][4] == 31);  // The original bell is available again.
+
+  smartegg::SystemState locked = state;
+  locked.locked = true;
+  smartegg::display::render(locked);
+  expectText(0, 0, "!! BLOQUEADO !!");
+  bool showedCause = false;
+  bool showedCard = false;
+  for (int frame = 0; frame < 30; ++frame) {
+    advanceFrames(1, locked);
+    showedCause = showedCause ||
+        memcmp(lcdRows[1], "OBJETO DETECTADO", 16) == 0;
+    showedCard = showedCard || memcmp(lcdRows[1], "PASE SU TARJETA", 15) == 0;
+  }
+  assert(showedCause && showedCard);
+
+  // RFID feedback still wins so the operator sees the card being checked.
+  smartegg::display::showAccessFeedback(
+      smartegg::display::AccessFeedback::kReading, 15000);
+  smartegg::display::render(locked);
+  expectText(0, 1, "TARJETA LEIDA");
 }
