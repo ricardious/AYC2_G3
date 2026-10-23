@@ -205,6 +205,24 @@ Luego use `POST /api/v1/auth/login` y envíe el token como
 `Authorization: Bearer <token>`. La creación de incubadora, lote y huevos se realiza desde
 Swagger o los endpoints siguientes.
 
+## Control por MQTT
+
+El enunciado de la Fase 3 prohíbe controlar sensores y actuadores mediante una API: la
+API REST solo consulta y administra (cuentas, lotes, huevos, reportes). Todo cambio que
+afecta al nodo se publica en el broker y el backend lo valida con los mismos esquemas
+Pydantic, lo registra en PostgreSQL y lo reenvía a la ESP32:
+
+| Topic | Payload | Efecto |
+|---|---|---|
+| `smartegg/{id}/comandos/actuador` | `{"kind":"fan","enabled":true,"mode":"manual"}` | Actualiza `actuator_states` y envía `{"type":"actuator",...}` |
+| `smartegg/{id}/comandos/rotar` | `{"angle_degrees":30,"direction":"left"}` | Registra `rotation_events` y envía `{"type":"rotate","angle_degrees":-30}` |
+| `smartegg/{id}/comandos/config` | Campos de `IncubatorConfigUpdate` | Actualiza `incubator_configs` y envía `{"type":"config",...}` |
+| `smartegg/{id}/comandos/resultado` | `{"command":"rotar","ok":true,"delivered":true,"request_id":"..."}` | Respuesta del backend; `delivered:false` si el gateway está desconectado |
+
+Con `SMARTEGG_NODE_TRANSPORT=gateway` (valor de Compose) el backend no abre el USB: recibe
+las tramas del [gateway](../gateway/README.md) en `gateway/rx` y le envía los comandos en
+`gateway/tx`. Con `serial` conserva el puente USB directo de la Fase 2.
+
 ## Contrato de API
 
 Todos los endpoints funcionales usan el prefijo `/api/v1`. Los endpoints del dashboard
@@ -216,20 +234,20 @@ requieren JWT. Los endpoints físicos `/access/rfid/authorize` y
 | Auth | `POST /auth/bootstrap`, `POST /auth/login`, `GET /auth/me`, `GET/POST/PATCH /auth/technicians`, `PUT /auth/technicians/{id}/incubators` |
 | Acceso RFID | `POST /access/rfid/authorize`, `POST /access/sessions/{id}/door`, `POST .../{id}/cancel`, `GET .../{id}`, `WS /access/ws/{code}` |
 | Incubadoras | `POST/GET /incubators`, `GET /incubators/{id}/state` |
-| Configuración | `GET/PUT /incubators/{id}/config` |
+| Configuración | `GET /incubators/{id}/config` (el cambio llega por MQTT: `comandos/config`) |
 | Lotes | `POST/GET /lots`, `GET/PATCH /lots/{id}` |
 | Huevos | `POST/GET /eggs`, `GET/PATCH /eggs/{id}` |
 | Ocupación | `GET /incubators/{id}/occupancy` |
 | Sensores | `GET /incubators/{id}/sensors`, `PATCH .../sensors/{sensor_id}` |
 | Telemetría | `POST /telemetry`, `GET .../telemetry`, `GET .../latest`, `GET .../stats` |
-| Actuadores | `GET .../actuators`, `POST .../actuators/{kind}/commands` |
-| Rotación | `POST/GET /incubators/{id}/rotations` |
+| Actuadores | `GET .../actuators` (el control llega por MQTT: `comandos/actuador`) |
+| Rotación | `GET /incubators/{id}/rotations` (la rotación manual llega por MQTT: `comandos/rotar`) |
 | Alarmas | `GET .../alarms`, `POST .../alarms/{alarm_id}/acknowledge` |
 | Puerta | `POST/GET .../door-events`, `PATCH .../door-events/{event_id}/close` |
 | Perfiles | `GET /me/diagnostics`, `GET /admin/diagnostics?operator_id={id}` |
 | Reporte | `GET /reports`, `GET /reports/incubators/{id}/daily.pdf?day=AAAA-MM-DD&operator_id={id}` |
 | Tiempo real | `WS /ws/incubators/{id}?token=<JWT>` |
-| Serial | `GET /serial/status` |
+| Serial | `GET /serial/status` (USB directo o gateway MQTT, según `SMARTEGG_NODE_TRANSPORT`) |
 
 El contrato exacto, ejemplos, restricciones y respuestas 422 siempre se mantienen en
 `/openapi.json` y Swagger. El endpoint agregado `state` entrega en una petición el nodo,
@@ -368,8 +386,8 @@ La configuración inicial sigue los requisitos explícitos del objetivo y la rú
 
 El frontend de referencia muestra “2 H”, pero el objetivo medible del PDF ordena rotación
 “cada 2 minutos”; se priorizó el requisito explícito y evaluable. Todos los valores quedan
-persistidos y pueden ajustarse mediante `PUT /incubators/{id}/config` sin rediseñar el
-backend.
+persistidos y pueden ajustarse publicando en `smartegg/{id}/comandos/config` sin rediseñar
+el backend.
 
 ## Simulador y pruebas
 

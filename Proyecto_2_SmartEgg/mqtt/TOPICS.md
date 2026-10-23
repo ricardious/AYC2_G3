@@ -17,6 +17,13 @@ Definimos los topics de la siguiente forma:
 | `smartegg/{id}/alarmas/critica` | Backend | Frontend, Grafana | 1 | Sí; se borra con payload vacío |
 | `smartegg/{id}/acceso/eventos` | Backend | Grafana | 1 | No |
 | `smartegg/{id}/status` | Backend/LWT | Frontend, Grafana | 1 | Sí |
+| `smartegg/{id}/gateway/rx` | Gateway | Backend | 1 | No |
+| `smartegg/{id}/gateway/tx` | Backend | Gateway | 1 | No |
+| `smartegg/{id}/gateway/status` | Gateway/LWT | Backend, Frontend | 1 | Sí |
+| `smartegg/{id}/comandos/actuador` | Frontend | Backend | 1 | No |
+| `smartegg/{id}/comandos/rotar` | Frontend | Backend | 1 | No |
+| `smartegg/{id}/comandos/config` | Frontend | Backend | 1 | No |
+| `smartegg/{id}/comandos/resultado` | Backend | Frontend | 1 | No |
 
 El frontend recibe los eventos de acceso por el WebSocket de FastAPI, no por
 `acceso/eventos`; su cuenta MQTT puede leer `telemetria`, `alarmas/critica`,
@@ -170,3 +177,74 @@ Ejemplos de las variantes del puente serial:
 
 La ruta HTTP publica `access_cancelled` con `operator_id` adicional, porque
 conoce al operador de la sesión.
+
+## Gateway USB ↔ MQTT
+
+La ESP32 no usa Wi-Fi: [`gateway/gateway.py`](../gateway/README.md) corre en la
+laptop conectada por USB y es el único puente entre el serial y el broker.
+
+### Tramas del nodo (`gateway/rx`)
+
+Cada mensaje es una línea serial tal como la emite el firmware, en texto plano:
+
+```text
+MSG:1,TEMP:37.52,HUM:58.1,DOOR:0,SLOTS:3,HEATER:0,FAN:1,SERVO:-45,BUZZER:0,POWER:1,SENSOR:1
+```
+
+```text
+RFID:A1B2C3D4
+```
+
+El backend las interpreta con el mismo parser del puente serial de la Fase 2.
+
+### Comandos al nodo (`gateway/tx`)
+
+Sólo el backend publica aquí; el gateway escribe cada mensaje en el serial
+seguido de un salto de línea:
+
+```json
+{"type":"actuator","kind":"fan","enabled":true,"mode":"manual","value":null}
+```
+
+### Estado del gateway (`gateway/status`)
+
+```json
+{"status":"online","serial":"connected","port":"/dev/ttyUSB0","recorded_at":"2026-10-23T18:40:34Z"}
+```
+
+`serial` pasa a `disconnected` si se desconecta el USB. El Last Will retenido es
+`{"status":"offline","reason":"unexpected_disconnect"}`. El backend considera el
+nodo conectado sólo con `status: online` y `serial: connected`.
+
+## Comandos de control
+
+MQTT es el único canal de control. El navegador publica en `comandos/{tipo}`; el
+backend valida, registra y reenvía al nodo. La cuenta del navegador no puede
+escribir en `gateway/tx`, así que ningún comando llega a la ESP32 sin pasar por
+el backend. `request_id` es opcional y vuelve en el resultado.
+
+```json
+{"kind":"heater","enabled":false,"mode":"automatic","request_id":"k3x9-a1"}
+```
+
+```json
+{"angle_degrees":30,"direction":"left"}
+```
+
+```json
+{"temperature_min_c":37.2,"temperature_max_c":38.1,"humidity_min_pct":52,"humidity_max_pct":62,"critical_temperature_c":39.5,"rotation_interval_seconds":300,"rotation_angle_degrees":40}
+```
+
+Respuesta en `comandos/resultado`:
+
+```json
+{"command":"actuador","request_id":"k3x9-a1","ok":true,"delivered":true,"recorded_at":"2026-10-23T18:40:52Z"}
+```
+
+```json
+{"command":"rotar","ok":false,"error":"invalid_payload","detail":"Input should be less than or equal to 90","recorded_at":"2026-10-23T18:40:53Z"}
+```
+
+`error` vale `invalid_payload` (no cumple el esquema), `rejected` (nodo o
+actuador desconocido, JSON inválido) o `backend_error`. `delivered: false`
+indica que el cambio quedó registrado pero el gateway estaba desconectado.
