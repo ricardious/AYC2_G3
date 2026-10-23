@@ -306,41 +306,11 @@ def test_configuration_commands_and_additional_technician(
     )
     assert technician.status_code == 201, technician.text
 
-    config_url = f"/api/v1/incubators/{incubator['id']}/config"
-    invalid = client.put(
-        config_url,
-        headers=auth_headers,
-        json={
-            "temperature_min_c": 38,
-            "temperature_max_c": 37,
-            "humidity_min_pct": 50,
-            "humidity_max_pct": 65,
-            "critical_temperature_c": 39,
-            "rotation_interval_seconds": 120,
-            "rotation_angle_degrees": 45,
-        },
-    )
-    assert invalid.status_code == 422
-
-    config = client.get(config_url, headers=auth_headers).json()
+    config = client.get(
+        f"/api/v1/incubators/{incubator['id']}/config", headers=auth_headers
+    ).json()
     assert config["temperature_min_c"] == 37
     assert config["rotation_interval_seconds"] == 120
-
-    actuator = client.post(
-        f"/api/v1/incubators/{incubator['id']}/actuators/fan/commands",
-        headers=auth_headers,
-        json={"enabled": True, "mode": "manual"},
-    )
-    assert actuator.status_code == 200
-    assert actuator.json()["enabled"] is True
-
-    rotation = client.post(
-        f"/api/v1/incubators/{incubator['id']}/rotations",
-        headers=auth_headers,
-        json={"angle_degrees": 45, "direction": "left"},
-    )
-    assert rotation.status_code == 201
-    assert rotation.json()["source"] == "manual"
     serial_status = client.get("/api/v1/serial/status", headers=auth_headers)
     assert serial_status.json()["connected"] is False
 

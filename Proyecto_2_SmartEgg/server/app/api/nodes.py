@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -17,12 +17,10 @@ from ..models import (
     TelemetryReading,
 )
 from ..schemas import (
-    ActuatorCommand,
     ActuatorRead,
     AlarmRead,
     DashboardState,
     IncubatorConfigRead,
-    IncubatorConfigUpdate,
     IncubatorCreate,
     IncubatorRead,
     Occupancy,
@@ -104,29 +102,6 @@ def get_config(
     return get_incubator_or_404(db, incubator_id).config
 
 
-@router.put("/{incubator_id}/config", response_model=IncubatorConfigRead)
-def update_config(
-    payload: IncubatorConfigUpdate,
-    incubator_id: int,
-    request: Request,
-    db: Session = Depends(get_db),
-    _admin: Technician = Depends(require_admin),
-) -> IncubatorConfig:
-    config = get_incubator_or_404(db, incubator_id).config
-    for key, value in payload.model_dump().items():
-        setattr(config, key, value)
-    config.updated_at = datetime.now(UTC)
-    db.commit()
-    db.refresh(config)
-    try:
-        request.app.state.serial_bridge.send_command(
-            {"type": "config", **payload.model_dump()}
-        )
-    except RuntimeError:
-        pass
-    return config
-
-
 @router.get("/{incubator_id}/sensors", response_model=list[SensorRead])
 def list_sensors(
     incubator_id: int,
@@ -180,43 +155,6 @@ def list_actuators(
             .order_by(ActuatorState.kind)
         )
     )
-
-
-@router.post("/{incubator_id}/actuators/{kind}/commands", response_model=ActuatorRead)
-def command_actuator(
-    payload: ActuatorCommand,
-    incubator_id: int,
-    kind: str,
-    request: Request,
-    db: Session = Depends(get_db),
-    _admin: Technician = Depends(require_admin),
-) -> ActuatorState:
-    if kind not in {"heater", "fan", "servo", "buzzer"}:
-        raise HTTPException(status_code=422, detail="Unknown actuator kind")
-    actuator = db.scalar(
-        select(ActuatorState).where(
-            ActuatorState.incubator_id == incubator_id, ActuatorState.kind == kind
-        )
-    )
-    if actuator is None:
-        get_incubator_or_404(db, incubator_id)
-        actuator = ActuatorState(incubator_id=incubator_id, kind=kind)
-        db.add(actuator)
-    actuator.enabled, actuator.mode, actuator.value = (
-        payload.enabled,
-        payload.mode,
-        payload.value,
-    )
-    actuator.updated_at = datetime.now(UTC)
-    db.commit()
-    db.refresh(actuator)
-    try:
-        request.app.state.serial_bridge.send_command(
-            {"type": "actuator", "kind": kind, **payload.model_dump()}
-        )
-    except RuntimeError:
-        pass
-    return actuator
 
 
 @router.get("/{incubator_id}/alarms", response_model=list[AlarmRead])

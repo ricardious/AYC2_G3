@@ -46,6 +46,7 @@ import {
   type MqttActuatorState,
   type MqttCriticalAlarm,
 } from "@/lib/mqtt/messages";
+import { CommandChannel, commandResultTopic } from "@/lib/mqtt/commands";
 import { mqttWebSocketUrl } from "@/lib/mqtt/url";
 import { canNavigate, canOpenDoor } from "@/lib/auth/permissions";
 import { createDemoState, DEMO_AVAILABLE } from "./demo";
@@ -281,6 +282,7 @@ export function SmartEggProvider({
   const [alarmSoundBlocked, setAlarmSoundBlocked] = useState(false);
   const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
   const connectionRef = useRef<ConnectionStatus>("connecting");
+  const commandsRef = useRef<CommandChannel | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loginPending, setLoginPending] = useState(false);
   const [rfidConnection, setRfidConnection] = useState<RfidConnectionStatus>(
@@ -700,6 +702,8 @@ export function SmartEggProvider({
       protocolVersion: 4,
     });
     const prefix = `smartegg/${mqttNodeCode}`;
+    const commands = new CommandChannel(mqttClient, mqttNodeCode);
+    commandsRef.current = commands;
 
     mqttClient.on("connect", () => {
       mqttClient.subscribe(
@@ -708,11 +712,16 @@ export function SmartEggProvider({
           [`${prefix}/status`]: { qos: 1 },
           [`${prefix}/actuadores/estado`]: { qos: 1 },
           [`${prefix}/telemetria`]: { qos: 0 },
+          [commandResultTopic(mqttNodeCode)]: { qos: 1 },
         },
         (reason) => setMqttConnected(!reason),
       );
     });
     mqttClient.on("message", (topic, payload) => {
+      if (topic === commandResultTopic(mqttNodeCode)) {
+        commands.resolve(payload);
+        return;
+      }
       const message = parseMqttMessage(topic, payload, mqttNodeCode);
       if (!message) return;
 
@@ -765,6 +774,7 @@ export function SmartEggProvider({
 
     return () => {
       setMqttConnected(false);
+      commandsRef.current = null;
       void mqttClient.endAsync(true);
     };
   }, [applyReading, demoActive, mqttCapacity, mqttIncubatorId, mqttNodeCode, token]);
@@ -930,7 +940,13 @@ export function SmartEggProvider({
       if (!token || !incubator) {
         throw new Error("No hay una incubadora autenticada para configurar");
       }
-      const updated = await api.updateConfig(incubator.id, payload, token);
+      const channel = commandsRef.current;
+      if (!channel) throw new Error("Sin conexión con el broker MQTT");
+      const result = await channel.send("config", payload);
+      if (!result.ok) {
+        throw new Error(`Configuración rechazada: ${result.detail ?? result.error}`);
+      }
+      const updated = await api.config(incubator.id, token);
       setDashboard((current) =>
         current ? { ...current, config: updated } : current,
       );

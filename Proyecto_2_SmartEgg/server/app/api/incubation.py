@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -15,14 +15,12 @@ from ..schemas import (
     LotRead,
     LotUpdate,
     Occupancy,
-    RotationCommand,
     RotationRead,
 )
 from ..security import (
     ensure_incubator_access,
     ensure_owner_or_admin,
     get_current_technician,
-    require_admin,
 )
 
 router = APIRouter(tags=["incubation"], dependencies=[Depends(get_current_technician)])
@@ -243,43 +241,6 @@ def occupancy(
         occupied=occupied,
         available=incubator.capacity - occupied,
     )
-
-
-@router.post(
-    "/incubators/{incubator_id}/rotations",
-    response_model=RotationRead,
-    status_code=status.HTTP_201_CREATED,
-)
-def rotate(
-    payload: RotationCommand,
-    incubator_id: int,
-    request: Request,
-    db: Session = Depends(get_db),
-    _admin: Technician = Depends(require_admin),
-) -> RotationEvent:
-    if db.get(Incubator, incubator_id) is None:
-        raise HTTPException(status_code=404, detail="Incubator not found")
-    event = RotationEvent(
-        incubator_id=incubator_id,
-        angle_degrees=payload.angle_degrees,
-        direction=payload.direction,
-        source="manual",
-    )
-    db.add(event)
-    db.commit()
-    db.refresh(event)
-    signed_angle = (
-        payload.angle_degrees
-        if payload.direction == "right"
-        else -payload.angle_degrees
-    )
-    try:
-        request.app.state.serial_bridge.send_command(
-            {"type": "rotate", "angle_degrees": signed_angle}
-        )
-    except RuntimeError:
-        pass
-    return event
 
 
 @router.get("/incubators/{incubator_id}/rotations", response_model=list[RotationRead])

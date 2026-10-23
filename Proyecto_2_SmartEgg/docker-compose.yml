@@ -15,11 +15,14 @@ services:
           smartegg-frontend "$$MQTT_FRONTEND_PASSWORD"
         mosquitto_passwd -b /mosquitto/secrets/passwords \
           smartegg-grafana "$$MQTT_GRAFANA_PASSWORD"
+        mosquitto_passwd -b /mosquitto/secrets/passwords \
+          smartegg-gateway "$$MQTT_GATEWAY_PASSWORD"
         chown 1883:1883 /mosquitto/secrets/passwords
     environment:
       MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
       MQTT_FRONTEND_PASSWORD: ${MQTT_FRONTEND_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
       MQTT_GRAFANA_PASSWORD: ${MQTT_GRAFANA_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
+      MQTT_GATEWAY_PASSWORD: ${MQTT_GATEWAY_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
     volumes:
       - mosquitto_secrets:/mosquitto/secrets
 
@@ -101,6 +104,7 @@ services:
       SMARTEGG_TIMEZONE: ${TIMEZONE:-America/Guatemala}
       SMARTEGG_INITIAL_TECHNICIANS: ${INITIAL_TECHNICIANS:-[]}
       SMARTEGG_INITIAL_INCUBATORS: ${INITIAL_INCUBATORS:-[]}
+      SMARTEGG_NODE_TRANSPORT: ${NODE_TRANSPORT:-gateway}
       SMARTEGG_SERIAL_ENABLED: "false"
       SMARTEGG_DEFAULT_INCUBATOR_CODE: ${DEFAULT_INCUBATOR_CODE:-NODE-01}
       SMARTEGG_MQTT_ENABLED: "true"

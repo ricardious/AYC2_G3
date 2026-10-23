@@ -13,6 +13,8 @@ from .config import Settings, get_settings
 from .database import Base, build_session_factory, create_engine
 from .services.bootstrap import ensure_initial_incubators, ensure_initial_technicians
 from .services.broadcast import AccessConnectionManager, ConnectionManager
+from .services.commands import CommandListener
+from .services.gateway_link import GatewayLink
 from .services.mqtt import MqttPublisher, build_mqtt_snapshot
 from .services.serial_access import (
     build_serial_access_denial,
@@ -111,16 +113,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
 
     mqtt_publisher = MqttPublisher(configured)
-    serial_bridge = SerialBridge(
-        enabled=configured.serial_enabled,
-        port=configured.serial_port,
-        baudrate=configured.serial_baudrate,
-        timeout=configured.serial_timeout_seconds,
-        reconnect_seconds=configured.serial_reconnect_seconds,
-        default_incubator_code=configured.default_incubator_code,
-        on_payload=serial_payload_handler,
-        on_live_payload=mqtt_publisher.publish_live_telemetry,
-        on_access_event=serial_access_handler,
+    serial_bridge: SerialBridge
+    if configured.node_transport == "gateway":
+        serial_bridge = GatewayLink(
+            configured,
+            on_payload=serial_payload_handler,
+            on_live_payload=mqtt_publisher.publish_live_telemetry,
+            on_access_event=serial_access_handler,
+        )
+    else:
+        serial_bridge = SerialBridge(
+            enabled=configured.serial_enabled,
+            port=configured.serial_port,
+            baudrate=configured.serial_baudrate,
+            timeout=configured.serial_timeout_seconds,
+            reconnect_seconds=configured.serial_reconnect_seconds,
+            default_incubator_code=configured.default_incubator_code,
+            on_payload=serial_payload_handler,
+            on_live_payload=mqtt_publisher.publish_live_telemetry,
+            on_access_event=serial_access_handler,
+        )
+
+    command_listener = CommandListener(
+        configured, session_factory, send_to_node=serial_bridge.send_command
     )
 
     @asynccontextmanager
@@ -133,7 +148,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         main_loop = asyncio.get_running_loop()
         mqtt_publisher.start()
         serial_bridge.start()
+        command_listener.start()
         yield
+        command_listener.stop()
         serial_bridge.stop()
         mqtt_publisher.stop()
         engine.dispose()
@@ -153,6 +170,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.access_broadcast = access_broadcast
     app.state.mqtt = mqtt_publisher
     app.state.serial_bridge = serial_bridge
+    app.state.commands = command_listener
     app.add_middleware(
         CORSMiddleware,
         allow_origins=configured.cors_origins,

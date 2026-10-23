@@ -3,12 +3,25 @@ user smartegg
 topic read $SYS/#
 topic readwrite smartegg/#
 
-# Browser client. Read-only access to live telemetry and control status.
+# Laptop gateway attached to the ESP32 over USB. It forwards serial lines and
+# receives the commands addressed to the node.
+user smartegg-gateway
+topic write smartegg/+/gateway/rx
+topic readwrite smartegg/+/gateway/status
+topic read smartegg/+/gateway/tx
+
+# Browser client. Reads live state and publishes control commands, which the
+# backend validates before forwarding them to the node.
 user smartegg-frontend
 topic read smartegg/+/telemetria
 topic read smartegg/+/alarmas/critica
 topic read smartegg/+/status
 topic read smartegg/+/actuadores/estado
+topic read smartegg/+/gateway/status
+topic write smartegg/+/comandos/actuador
+topic write smartegg/+/comandos/rotar
+topic write smartegg/+/comandos/config
+topic read smartegg/+/comandos/resultado
 
 # Grafana datasource. Read-only access to every SmartEgg measurement.
 user smartegg-grafana
