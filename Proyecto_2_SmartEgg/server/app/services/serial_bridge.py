@@ -158,12 +158,7 @@ class SerialBridge:
         ):
             return
         self._stop.clear()
-        self._payload_thread = threading.Thread(
-            target=self._process_payloads,
-            name="smartegg-telemetry",
-            daemon=True,
-        )
-        self._payload_thread.start()
+        self._start_payload_worker()
         self._thread = threading.Thread(
             target=self._run, name="smartegg-serial", daemon=True
         )
@@ -178,6 +173,14 @@ class SerialBridge:
         if self._payload_thread:
             self._payload_thread.join(timeout=2)
         self.connected = False
+
+    def _start_payload_worker(self) -> None:
+        self._payload_thread = threading.Thread(
+            target=self._process_payloads,
+            name="smartegg-telemetry",
+            daemon=True,
+        )
+        self._payload_thread.start()
 
     def _enqueue_payload(self, payload: TelemetryCreate) -> None:
         try:
@@ -232,47 +235,43 @@ class SerialBridge:
                     self.last_error = None
                     while not self._stop.is_set():
                         raw = connection.readline()
-                        if not raw:
-                            continue
-                        line = raw.decode("utf-8", errors="replace")
-                        try:
-                            stripped = line.strip()
-                            if stripped.startswith(("RFID:", "ACCESS:")):
-                                if self.on_access_event is not None:
-                                    self.on_access_event(
-                                        parse_serial_access_event(
-                                            stripped, self.default_incubator_code
-                                        )
-                                    )
-                                self.last_message_at = datetime.now(UTC)
-                                self.last_error = None
-                                continue
-                            if stripped.startswith("DIAG:") or (
-                                stripped.startswith("MSG:") and "TEMP:" not in stripped
-                            ):
-                                continue
-                            payload = parse_serial_line(
-                                line, self.default_incubator_code
-                            )
-                            # One receive timestamp for both the immediate MQTT
-                            # message and the eventually persisted reading.
-                            payload = payload.model_copy(
-                                update={"recorded_at": datetime.now(UTC)}
-                            )
-                            if self.on_live_payload is not None:
-                                try:
-                                    self.on_live_payload(payload)
-                                except Exception as exc:
-                                    self.last_error = f"Live telemetry callback: {exc}"
-                            self._enqueue_payload(payload)
-                            self.last_message_at = datetime.now(UTC)
-                            self.last_error = None
-                        except Exception as exc:
-                            self.last_error = f"Rejected message: {exc}"
+                        if raw:
+                            self._handle_line(raw.decode("utf-8", errors="replace"))
             except Exception as exc:
                 self.connected = False
                 self.last_error = str(exc)
                 self._stop.wait(self.reconnect_seconds)
+
+    def _handle_line(self, line: str) -> None:
+        """Dispatch one node line; shared by the USB port and the MQTT gateway."""
+        try:
+            stripped = line.strip()
+            if stripped.startswith(("RFID:", "ACCESS:")):
+                if self.on_access_event is not None:
+                    self.on_access_event(
+                        parse_serial_access_event(stripped, self.default_incubator_code)
+                    )
+                self.last_message_at = datetime.now(UTC)
+                self.last_error = None
+                return
+            if stripped.startswith("DIAG:") or (
+                stripped.startswith("MSG:") and "TEMP:" not in stripped
+            ):
+                return
+            payload = parse_serial_line(line, self.default_incubator_code)
+            # One receive timestamp for both the immediate MQTT message and the
+            # eventually persisted reading.
+            payload = payload.model_copy(update={"recorded_at": datetime.now(UTC)})
+            if self.on_live_payload is not None:
+                try:
+                    self.on_live_payload(payload)
+                except Exception as exc:
+                    self.last_error = f"Live telemetry callback: {exc}"
+            self._enqueue_payload(payload)
+            self.last_message_at = datetime.now(UTC)
+            self.last_error = None
+        except Exception as exc:
+            self.last_error = f"Rejected message: {exc}"
 
     def send_command(self, command: dict[str, object]) -> None:
         if not self.connected or self._serial is None:
