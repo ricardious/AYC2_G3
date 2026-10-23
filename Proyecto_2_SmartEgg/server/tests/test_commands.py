@@ -114,3 +114,25 @@ def test_command_is_recorded_when_gateway_is_offline(
 
     assert result["ok"] is True
     assert result["delivered"] is False
+
+
+def test_control_is_not_exposed_over_rest(
+    client: TestClient, auth_headers: dict[str, str], incubator: dict
+) -> None:
+    base = f"/api/v1/incubators/{incubator['id']}"
+
+    config = client.put(f"{base}/config", headers=auth_headers, json={})
+    actuator = client.post(
+        f"{base}/actuators/fan/commands",
+        headers=auth_headers,
+        json={"enabled": True, "mode": "manual"},
+    )
+    rotation = client.post(
+        f"/api/v1/incubators/{incubator['id']}/rotations",
+        headers=auth_headers,
+        json={"angle_degrees": 45, "direction": "left"},
+    )
+
+    assert config.status_code == 405
+    assert actuator.status_code == 404
+    assert rotation.status_code == 405

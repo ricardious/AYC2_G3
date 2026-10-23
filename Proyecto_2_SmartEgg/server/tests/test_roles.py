@@ -104,36 +104,6 @@ def test_roles_enforce_management_and_hardware_permissions(
     )
     assert create_user.status_code == 403
 
-    config = client.get(
-        f"/api/v1/incubators/{incubator['id']}/config", headers=operator_headers
-    ).json()
-    update_config = client.put(
-        f"/api/v1/incubators/{incubator['id']}/config",
-        headers=operator_headers,
-        json={
-            "temperature_min_c": config["temperature_min_c"],
-            "temperature_max_c": config["temperature_max_c"],
-            "humidity_min_pct": config["humidity_min_pct"],
-            "humidity_max_pct": config["humidity_max_pct"],
-            "critical_temperature_c": config["critical_temperature_c"],
-            "rotation_interval_seconds": config["rotation_interval_seconds"],
-            "rotation_angle_degrees": config["rotation_angle_degrees"],
-        },
-    )
-    assert update_config.status_code == 403
-    command = client.post(
-        f"/api/v1/incubators/{incubator['id']}/actuators/fan/commands",
-        headers=operator_headers,
-        json={"enabled": True, "mode": "manual"},
-    )
-    assert command.status_code == 403
-    manual_rotation = client.post(
-        f"/api/v1/incubators/{incubator['id']}/rotations",
-        headers=operator_headers,
-        json={"angle_degrees": 45, "direction": "left"},
-    )
-    assert manual_rotation.status_code == 403
-
     admin_door = client.post(
         f"/api/v1/incubators/{incubator['id']}/door-events",
         headers=auth_headers,
