@@ -1,6 +1,7 @@
 services:
   backend:
     environment:
+      SMARTEGG_NODE_TRANSPORT: serial
       SMARTEGG_SERIAL_ENABLED: "true"
       SMARTEGG_SERIAL_PORT: /dev/smartegg
       SMARTEGG_SERIAL_BAUDRATE: ${SERIAL_BAUDRATE:-115200}
