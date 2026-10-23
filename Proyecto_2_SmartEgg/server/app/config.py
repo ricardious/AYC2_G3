@@ -3,6 +3,7 @@ from __future__ import annotations
 import secrets
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -62,6 +63,9 @@ class Settings(BaseSettings):
     initial_technicians: list[InitialTechnician] = Field(default_factory=list)
     initial_incubators: list[InitialIncubator] = Field(default_factory=list)
 
+    # "serial": the backend owns the USB port. "gateway": the ESP32 is attached
+    # to another machine and its lines travel over MQTT (backend in the cloud).
+    node_transport: Literal["serial", "gateway"] = "serial"
     serial_enabled: bool = False
     serial_port: str | None = None
     serial_baudrate: int = 115200
