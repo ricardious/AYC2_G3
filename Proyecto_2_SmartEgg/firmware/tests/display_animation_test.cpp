@@ -51,7 +51,7 @@ void lcdPrint(char value) {
 int main() {
   const smartegg::SystemState state = {
       37.5F, 58.0F, true, true, true, false, 2, 0,
-      false, false, false, 45};
+      false, false, false, 45, false};
   smartegg::display::initialize();
 
   smartegg::display::showAccessFeedback(

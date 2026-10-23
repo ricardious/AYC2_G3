@@ -10,7 +10,7 @@ smartegg::RuntimeConfig validConfig() {
 
 smartegg::SystemState normalState() {
   return {37.5F, 58.0F, true, true, true, false, 3, 0,
-          false, false, false, 0};
+          false, false, false, 0, false};
 }
 
 }  // namespace
@@ -66,6 +66,21 @@ int main() {
   state.consecutiveDhtFailures = 3;
   decision = smartegg::evaluateActuators(state, config, automatic, allOff);
   assert(!decision.heaterOn && !decision.fanOn && decision.buzzerOn);
+
+  // Locked: the alarm sounds even in range, manual overrides are ignored and
+  // the automatic climate control keeps protecting the eggs.
+  state = normalState();
+  state.locked = true;
+  decision = smartegg::evaluateActuators(state, config, automatic, allOff);
+  assert(!decision.heaterOn && !decision.fanOn && decision.buzzerOn);
+  const ManualOverrides manualOff = {0, 0, 0};
+  state.temperatureC = 36.8F;
+  decision = smartegg::evaluateActuators(state, config, manualOff, allOff);
+  assert(decision.heaterOn);
+  assert(decision.buzzerOn);
+  state.systemEnabled = false;
+  decision = smartegg::evaluateActuators(state, config, automatic, allOff);
+  assert(!decision.buzzerOn);
 
   assert(smartegg::clampRotationAngle(80, config) == 45);
   assert(smartegg::clampRotationAngle(-80, config) == -45);

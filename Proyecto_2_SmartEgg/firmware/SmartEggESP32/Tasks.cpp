@@ -17,7 +17,7 @@ namespace smartegg {
 namespace {
 
 SystemState sharedState = {
-    0.0F, 0.0F, false, false, true, false, 0, 0, false, false, false, 0,
+    0.0F, 0.0F, false, false, true, false, 0, 0, false, false, false, 0, false,
 };
 
 RuntimeConfig sharedRuntimeConfig = {
