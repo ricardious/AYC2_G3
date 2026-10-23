@@ -45,6 +45,7 @@ Para realizar el cableado físico terminal por terminal, consulte la
 - DHT11, LCD 16×2 I²C, final de carrera para la puerta y cuatro microinterruptores de presión
   con palanca.
 - Dos canales de relé, buzzer activo y switch general.
+- LED rojo con resistencia de 220 Ω como señal de bloqueo.
 
 ## Pines
 
@@ -64,6 +65,7 @@ Para realizar el cableado físico terminal por terminal, consulte la
 | 16 | Final de carrera de puerta |
 | 17 | Switch general |
 | 32 / 34 / 35 / 36 | Microinterruptores de presión 1–4 |
+| 13 | LED de bloqueo (ánodo por la resistencia de 220 Ω, cátodo a GND) |
 
 GPIO 34, 35 y 36 no incluyen pull-up interno. Cada microinterruptor usa una resistencia
 externa de 10 kΩ a 3.3 V y su contacto normalmente abierto cierra contra GND al recibir
@@ -160,6 +162,33 @@ actuadores y nombre del operador. Solo muestra los estados implementados; no inc
 propuestas alternativas.
 Es una maqueta visual; para comprobar los caracteres reales del firmware sin grabar
 la placa, use [la simulación de Wokwi](wokwi/README.md).
+
+## Bloqueo del sistema
+
+Si la cámara detecta un objeto que no es un huevo, el backend envía por el gateway:
+
+```json
+{"type":"system","action":"lock"}
+```
+
+y para liberar el sistema, normalmente después de validar una tarjeta RFID:
+
+```json
+{"type":"system","action":"unlock"}
+```
+
+| Mientras está bloqueado | Comportamiento |
+|---|---|
+| Buzzer | Suena de forma continua |
+| LED GPIO 13 | Encendido |
+| LCD | `!! BLOQUEADO !!` / alterna `OBJETO DETECTADO` y `PASE SU TARJETA` |
+| Comandos manuales (actuador, rotación) | Se rechazan con `MSG:4,ERROR:7` |
+| Control automático de temperatura y rotación periódica | Siguen activos para no dañar los huevos |
+| Telemetría | Agrega `LOCK:1` (`LOCK:0` sin bloqueo) |
+
+El cambio de estado emite `MSG:3,EVENT:10` al bloquear y `MSG:3,EVENT:11` al
+desbloquear. El bloqueo también se acepta con el switch general apagado, para no
+perder el resultado de la cámara.
 
 ## Flujo RFID
 

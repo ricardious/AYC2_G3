@@ -38,7 +38,7 @@ ActuatorDecision evaluateActuators(const SystemState& state,
       !state.sensorOk && state.consecutiveDhtFailures >=
                              config::kMaxConsecutiveDhtFailures;
   if (!state.hasValidReading || !state.sensorOk) {
-    result.buzzerOn = sensorAlarm || overrides.buzzer > 0;
+    result.buzzerOn = sensorAlarm || overrides.buzzer > 0 || state.locked;
     return result;
   }
 
@@ -66,9 +66,13 @@ ActuatorDecision evaluateActuators(const SystemState& state,
       state.humidityPct < runtimeConfig.humidityMinPct ||
       state.humidityPct > runtimeConfig.humidityMaxPct;
 
-  result.heaterOn = resolveOverride(overrides.heater, heaterAutomatic);
-  result.fanOn = resolveOverride(overrides.fan, fanAutomatic);
-  result.buzzerOn = environmentAlarm || overrides.buzzer > 0;
+  // While locked the alarm sounds and manual overrides are ignored, but the
+  // automatic climate control keeps running so the eggs are not harmed.
+  const ManualOverrides effective =
+      state.locked ? ManualOverrides{-1, -1, -1} : overrides;
+  result.heaterOn = resolveOverride(effective.heater, heaterAutomatic);
+  result.fanOn = resolveOverride(effective.fan, fanAutomatic);
+  result.buzzerOn = environmentAlarm || effective.buzzer > 0 || state.locked;
 
   // Safety always wins over a manual command from the computer.
   if (state.temperatureC >= runtimeConfig.temperatureMaxC) {

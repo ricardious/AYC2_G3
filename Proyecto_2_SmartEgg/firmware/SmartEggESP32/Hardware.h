@@ -10,6 +10,7 @@ void setHeater(bool enabled);
 void setFan(bool enabled);
 void setBuzzer(bool enabled);
 void setStatusLed(bool enabled);
+void setLockLed(bool enabled);
 void setTrayAngle(int8_t signedAngleDegrees);
 void setAccessAngle(uint8_t absoluteAngleDegrees);
 

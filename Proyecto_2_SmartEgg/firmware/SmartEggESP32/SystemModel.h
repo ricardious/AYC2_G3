@@ -22,6 +22,8 @@ enum class EventCode : uint8_t {
   kConfigUpdated = 7,
   kActuatorCommand = 8,
   kDhtRecovered = 9,
+  kSystemLocked = 10,
+  kSystemUnlocked = 11,
 };
 
 enum class ErrorCode : uint8_t {
@@ -32,6 +34,7 @@ enum class ErrorCode : uint8_t {
   kSerialOverflow = 4,
   kSystemDisabled = 5,
   kTaskAllocationFailed = 6,
+  kSystemLocked = 7,
 };
 
 enum class CommandType : uint8_t {
@@ -40,6 +43,7 @@ enum class CommandType : uint8_t {
   kHeater = 2,
   kFan = 3,
   kBuzzer = 4,
+  kSystemLock = 5,
 };
 
 // -1 means automatic control, 0 manual OFF and 1 manual ON.
@@ -71,6 +75,8 @@ struct SystemState {
   bool fanOn;
   bool buzzerOn;
   int8_t servoAngleDegrees;  // Signed angle relative to the 90-degree center.
+  // Set by the backend when the camera sees something that is not an egg.
+  bool locked;
 };
 
 struct ActuatorDecision {

@@ -134,7 +134,7 @@
       "top": 36,
       "left": 298,
       "attrs": {
-        "text": "SmartEgg · Proyecto 1 · nodo ESP32",
+        "text": "SmartEgg · Proyecto 2 · nodo ESP32 + ESP32-CAM",
         "fontSize": "26",
         "color": "#0f172a",
         "bold": "1"
@@ -215,6 +215,42 @@
       "top": 855,
       "left": 890,
       "attrs": { "text": "LED de estado · 2", "fontSize": "13", "color": "#166534" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rLock",
+      "top": 1150,
+      "left": 400,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledLock",
+      "top": 1110,
+      "left": 500,
+      "attrs": { "color": "red", "label": "bloqueo" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t12",
+      "top": 1200,
+      "left": 298,
+      "attrs": {
+        "text": "LED de bloqueo · 13\nSe enciende junto con el buzzer cuando la visión detecta un objeto que no es huevo",
+        "fontSize": "13",
+        "color": "#b91c1c"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t13",
+      "top": 1260,
+      "left": 298,
+      "attrs": {
+        "text": "ESP32-CAM (AI-Thinker) · nodo aparte, no simulable en Wokwi\nSin cables de datos hacia esta placa: publica las fotos en smartegg/node-1/camera/frame por WiFi/MQTT\nAlimentación: 5 V ≥ 2 A al pin 5V · GND común con esta placa si comparten fuente · capacitor 470–1000 µF\nEsta placa se suscribe a smartegg/node-1/system/lock para activar buzzer (14) y LED de bloqueo (13)",
+        "fontSize": "13",
+        "color": "#0f172a"
+      }
     }
   ],
   "connections": [
@@ -268,7 +304,10 @@
     [ "swDoor:1", "rfid1:GND", "black", [ "h-21.5", "v-158.95" ] ],
     [ "esp:2", "rLed:1", "orange", [] ],
     [ "rLed:2", "ledStatus:A", "orange", [] ],
-    [ "ledStatus:C", "swDoor:1", "black", [ "h-67.4", "v-114" ] ]
+    [ "ledStatus:C", "swDoor:1", "black", [ "h-67.4", "v-114" ] ],
+    [ "esp:13", "rLock:2", "orange", [ "h-24", "*", "h20" ] ],
+    [ "rLock:1", "ledLock:A", "orange", [] ],
+    [ "ledLock:C", "esp:GND.1", "black", [ "v20", "*", "h-12" ] ]
   ],
   "dependencies": {}
 }

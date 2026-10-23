@@ -22,6 +22,8 @@ constexpr uint8_t kPowerSwitchPin = 17;
 constexpr uint8_t kSlotPins[] = {32, 34, 35, 36};
 constexpr uint8_t kSlotCount = sizeof(kSlotPins) / sizeof(kSlotPins[0]);
 constexpr uint8_t kStatusLedPin = 2;
+// Red LED (220 ohm to GND) that stays on while the system is locked.
+constexpr uint8_t kLockLedPin = 13;
 constexpr uint8_t kI2cSdaPin = 21;
 constexpr uint8_t kI2cSclPin = 22;
 constexpr uint8_t kSpiSckPin = 18;

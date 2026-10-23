@@ -218,6 +218,22 @@ void parseAccessCommand(const char* input) {
                             static_cast<uint8_t>(servoAngle), operatorName);
 }
 
+void parseSystemCommand(const char* input) {
+  char action[12];
+  if (!readStringField(input, "\"action\"", action, sizeof(action)) ||
+      (strcmp(action, "lock") != 0 && strcmp(action, "unlock") != 0)) {
+    postProtocolMessage(MessageType::kError,
+                        static_cast<uint8_t>(ErrorCode::kUnknownCommand));
+    return;
+  }
+  const ControlCommand command = {
+      CommandType::kSystemLock,
+      static_cast<int8_t>(strcmp(action, "lock") == 0 ? 1 : 0),
+      false,
+  };
+  submitControlCommand(command);
+}
+
 void parseCommand(const char* input) {
   char type[16];
   if (!readStringField(input, "\"type\"", type, sizeof(type))) {
@@ -233,6 +249,8 @@ void parseCommand(const char* input) {
     parseConfigCommand(input);
   } else if (strcmp(type, "access") == 0) {
     parseAccessCommand(input);
+  } else if (strcmp(type, "system") == 0) {
+    parseSystemCommand(input);
   } else {
     postProtocolMessage(MessageType::kError,
                         static_cast<uint8_t>(ErrorCode::kUnknownCommand));
@@ -319,13 +337,13 @@ void emitProtocolFrame(MessageType type, uint8_t code,
   length += snprintf(
       frame + length, sizeof(frame) - length,
       ",TEMP:%.2f,HUM:%.1f,DOOR:%u,SLOTS:%u,HEATER:%u,FAN:%u,SERVO:%d,"
-      "BUZZER:%u,POWER:%u,SENSOR:%u\n",
+      "BUZZER:%u,POWER:%u,SENSOR:%u,LOCK:%u\n",
       static_cast<double>(state.temperatureC),
       static_cast<double>(state.humidityPct), state.doorOpen ? 1U : 0U,
       state.occupiedSlots, state.heaterOn ? 1U : 0U,
       state.fanOn ? 1U : 0U, state.servoAngleDegrees,
       state.buzzerOn ? 1U : 0U, state.systemEnabled ? 1U : 0U,
-      state.sensorOk ? 1U : 0U);
+      state.sensorOk ? 1U : 0U, state.locked ? 1U : 0U);
   uart_write_bytes(UART_NUM_0, frame, length);
 }
 
