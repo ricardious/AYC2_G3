@@ -10,7 +10,6 @@ import type {
   EggCreate,
   Incubator,
   IncubatorConfig,
-  IncubatorConfigUpdate,
   Lot,
   LotCreate,
   ReportExport,
@@ -212,17 +211,6 @@ export const api = {
 
   config: (incubatorId: number, token: string) =>
     request<IncubatorConfig>(`/incubators/${incubatorId}/config`, {}, token),
-
-  updateConfig: (
-    incubatorId: number,
-    payload: IncubatorConfigUpdate,
-    token: string,
-  ) =>
-    request<IncubatorConfig>(
-      `/incubators/${incubatorId}/config`,
-      { method: "PUT", body: JSON.stringify(payload) },
-      token,
-    ),
 
   telemetry: (incubatorId: number, token: string, limit = 240) =>
     request<TelemetryReading[]>(
