@@ -675,7 +675,7 @@ permitido o denegado y los errores. Reunimos esas pantallas en
 El nodo físico no usa Wi-Fi ni HTTP. Pines, montaje, carga y pruebas están en
 [firmware/README.md](firmware/README.md).
 
-## Documentación y evaluación
+## Documentación y evaluación.
 
 - [Documento técnico](docs/DOCUMENTO_TECNICO.md) y [manual de usuario](docs/MANUAL_USUARIO.md).
 - [Enunciado del Proyecto 1](docs/enunciado/Proyecto_1_2S2026.pdf).
