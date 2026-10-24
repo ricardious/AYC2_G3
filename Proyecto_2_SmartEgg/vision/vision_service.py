@@ -2,9 +2,9 @@
 
 Recibe por MQTT las fotos que publica el gateway, las clasifica con el modelo
 ONNX entrenado en ml/vision (huevo / objeto / vacio) usando solo OpenCV y
-publica el resultado. Para no bloquear la incubadora por un error aislado, la
-detección se confirma cuando 3 de las últimas 5 fotos salen como "objeto"; el
-backend recibe esa señal y bloquea el nodo.
+publica el resultado. Para no bloquear la incubadora por fotos dudosas, el
+objeto se confirma cuando la probabilidad media de "objeto" en las últimas 5
+fotos llega al 65 %; el backend recibe esa señal y bloquea el nodo.
 
 Topics:
   smartegg/{nodo}/camara/foto       gateway → visión. JPEG de la bandeja.               QoS 0.
@@ -52,7 +52,7 @@ class VisionConfig:
     mqtt_password: str | None
     client_id: str
     window: int = 5
-    votes_to_alert: int = 3
+    min_probability: float = 0.65
     tls: bool = False
     ca_cert: str | None = None
 
@@ -76,20 +76,32 @@ class Classifier:
         return self.net.forward()[0]
 
 
-class ObjectVote:
-    """Ventana de las últimas fotos: confirma un objeto con `needed` de `window` votos."""
+class ObjectWindow:
+    """Últimas fotos de un nodo: confirma un objeto por la probabilidad media.
 
-    def __init__(self, window: int = 5, needed: int = 3) -> None:
-        self.needed = needed
-        self.recent: deque[bool] = deque(maxlen=window)
+    Contar votos fallaba con escenas en las que el modelo duda: una bandeja con
+    huevos que oscila entre 45 % y 55 % de "objeto" junta 3 votos de 5 tarde o
+    temprano. El promedio de esa escena se queda cerca del 50 %, mientras que
+    un objeto claro pasa del 90 %.
+    """
 
-    def add(self, is_object: bool) -> bool:
-        self.recent.append(is_object)
-        return self.votes >= self.needed
+    def __init__(self, window: int = 5, min_probability: float = 0.65) -> None:
+        self.min_probability = min_probability
+        self.recent: deque[tuple[float, bool]] = deque(maxlen=window)
+
+    def add(self, object_probability: float, is_object: bool) -> bool:
+        self.recent.append((object_probability, is_object))
+        return len(self.recent) == self.recent.maxlen and self.mean >= self.min_probability
+
+    @property
+    def mean(self) -> float:
+        if not self.recent:
+            return 0.0
+        return sum(probability for probability, _ in self.recent) / len(self.recent)
 
     @property
     def votes(self) -> int:
-        return sum(self.recent)
+        return sum(is_object for _, is_object in self.recent)
 
 
 class VisionService:
@@ -103,7 +115,7 @@ class VisionService:
         self.classifier = classifier
         self._client_factory = client_factory
         self._client: mqtt.Client | None = None
-        self._votes: dict[str, ObjectVote] = {}
+        self._windows: dict[str, ObjectWindow] = {}
         self._detected: dict[str, bool] = {}
 
     def start(self) -> None:
@@ -151,7 +163,8 @@ class VisionService:
             "status": "online",
             "modelo": self.config.model_path.name,
             "clases": self.classifier.classes,
-            "regla": f"{self.config.votes_to_alert} de {self.config.window} fotos",
+            "regla": (f"objeto medio >= {self.config.min_probability:.0%} "
+                      f"en {self.config.window} fotos"),
             "recorded_at": datetime.now(UTC).isoformat(),
         }), qos=1, retain=True)
         logger.info("Conectado al broker %s:%s", self.config.mqtt_host, self.config.mqtt_port)
@@ -171,28 +184,31 @@ class VisionService:
         probabilities = self.classifier.classify(jpeg)
         elapsed_ms = (time.perf_counter() - started) * 1000
         predicted = self.classifier.classes[int(probabilities.argmax())]
-        vote = self._votes.setdefault(node, ObjectVote(self.config.window,
-                                                       self.config.votes_to_alert))
-        detected = vote.add(predicted == OBJECT_CLASS)
+        window = self._windows.setdefault(node, ObjectWindow(self.config.window,
+                                                             self.config.min_probability))
+        object_probability = float(probabilities[self.classifier.classes.index(OBJECT_CLASS)])
+        detected = window.add(object_probability, predicted == OBJECT_CLASS)
         result: dict[str, object] = {
             "clase": predicted,
             "confianza": round(float(probabilities.max()), 4),
             "probabilidades": {name: round(float(value), 4)
                                for name, value in zip(self.classifier.classes, probabilities,
                                                       strict=True)},
-            "votos_objeto": vote.votes,
-            "ventana": len(vote.recent),
+            "votos_objeto": window.votes,
+            "prob_objeto_media": round(window.mean, 4),
+            "ventana": len(window.recent),
             "objeto_detectado": detected,
             "inferencia_ms": round(elapsed_ms, 1),
             "recorded_at": datetime.now(UTC).isoformat(),
         }
-        logger.debug("%s: %s %.0f%% (%d/%d votos de objeto, %.0f ms)", node, predicted,
-                     probabilities.max() * 100, vote.votes, len(vote.recent), elapsed_ms)
+        logger.debug("%s: %s %.0f%% (objeto medio %.0f%% en %d fotos, %.0f ms)", node,
+                     predicted, probabilities.max() * 100, window.mean * 100,
+                     len(window.recent), elapsed_ms)
         if detected != self._detected.get(node, False):
             self._detected[node] = detected
             if detected:
-                logger.warning("%s: objeto confirmado (%d de %d fotos)", node, vote.votes,
-                               len(vote.recent))
+                logger.warning("%s: objeto confirmado (objeto medio %.0f%%)", node,
+                               window.mean * 100)
             else:
                 logger.info("%s: la bandeja volvió a la normalidad", node)
         if self._client is not None:
@@ -215,16 +231,19 @@ def parse_args(argv: list[str] | None = None) -> tuple[VisionConfig, bool]:
     parser.add_argument("--usuario", default=env("MQTT_USERNAME", "smartegg-vision"))
     parser.add_argument("--clave", default=env("MQTT_PASSWORD"))
     parser.add_argument("--ventana", type=int, default=int(env("VISION_WINDOW", "5")))
-    parser.add_argument("--votos", type=int, default=int(env("VISION_VOTES", "3")),
-                        help="fotos de objeto dentro de la ventana para confirmar")
+    parser.add_argument("--umbral", type=float,
+                        default=float(env("VISION_MIN_PROBABILITY", "0.65")),
+                        help="probabilidad media de objeto en la ventana para confirmar")
     parser.add_argument("--tls", action="store_true",
                         default=env("MQTT_TLS", "false").lower() == "true")
     parser.add_argument("--ca", default=env("MQTT_CA_CERT"))
     parser.add_argument("-v", "--detalle", action="store_true",
                         help="mostrar el resultado de cada foto")
     args = parser.parse_args(argv)
-    if not 1 <= args.votos <= args.ventana:
-        parser.error("--votos debe estar entre 1 y --ventana")
+    if args.ventana < 1:
+        parser.error("--ventana debe ser al menos 1")
+    if not 0.5 <= args.umbral <= 1:
+        parser.error("--umbral debe estar entre 0.5 y 1")
     return VisionConfig(
         model_path=args.modelo,
         mqtt_host=args.broker,
@@ -233,7 +252,7 @@ def parse_args(argv: list[str] | None = None) -> tuple[VisionConfig, bool]:
         mqtt_password=args.clave,
         client_id=env("MQTT_CLIENT_ID", "smartegg-vision"),
         window=args.ventana,
-        votes_to_alert=args.votos,
+        min_probability=args.umbral,
         tls=args.tls,
         ca_cert=args.ca,
     ), args.detalle
