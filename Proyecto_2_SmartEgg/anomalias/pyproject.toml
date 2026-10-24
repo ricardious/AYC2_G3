@@ -1,0 +1,29 @@
+[project]
+name = "smartegg-anomalias"
+version = "0.1.0"
+description = "Servicio de anomalías de SmartEgg: califica la telemetría con un LOF"
+requires-python = ">=3.11"
+dependencies = [
+    "joblib>=1.4",
+    "numpy>=2.0",
+    "paho-mqtt>=2.1.0",
+    # La misma versión con la que se entrenó: joblib guarda el pipeline de
+    # scikit-learn tal cual y otra versión puede no cargarlo igual.
+    "scikit-learn==1.9.1",
+]
+
+[dependency-groups]
+dev = [
+    "pandas>=2.2",
+    "pytest>=9.1.1",
+    "ruff>=0.16.3",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "BLE", "DTZ"]
