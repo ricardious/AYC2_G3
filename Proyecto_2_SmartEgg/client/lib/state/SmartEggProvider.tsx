@@ -42,7 +42,10 @@ import type {
   WebSocketMessage,
 } from "@/lib/api/types";
 import {
+  cameraTopic,
+  isJpegPayload,
   parseMqttMessage,
+  type CameraFrame,
   type MqttActuatorState,
   type MqttCriticalAlarm,
   type MqttEnergy,
@@ -188,6 +191,8 @@ export interface SmartEggContextValue extends ConsoleState {
   /** Bloqueo por objeto extraño: la página queda inutilizable hasta la tarjeta RFID. */
   systemLock: MqttSystemState | null;
   vision: MqttVisionResult | null;
+  /** Última foto de la bandeja que publicó el gateway; null sin cámara. */
+  cameraFrame: CameraFrame | null;
   /** Consumo eléctrico estimado; null hasta la primera lectura guardada. */
   energy: MqttEnergy | null;
   alarmSoundEnabled: boolean;
@@ -290,6 +295,7 @@ export function SmartEggProvider({
     useState<MqttCriticalAlarm | null>(null);
   const [systemLock, setSystemLock] = useState<MqttSystemState | null>(null);
   const [vision, setVision] = useState<MqttVisionResult | null>(null);
+  const [cameraFrame, setCameraFrame] = useState<CameraFrame | null>(null);
   const [energy, setEnergy] = useState<MqttEnergy | null>(null);
   const [alarmSoundEnabled, setAlarmSoundEnabled] = useState(true);
   const [alarmSoundBlocked, setAlarmSoundBlocked] = useState(false);
@@ -727,15 +733,37 @@ export function SmartEggProvider({
           [`${prefix}/telemetria`]: { qos: 0 },
           [`${prefix}/sistema/estado`]: { qos: 1 },
           [`${prefix}/vision/resultado`]: { qos: 0 },
+          [cameraTopic(mqttNodeCode)]: { qos: 0 },
           [`${prefix}/energia`]: { qos: 0 },
           [commandResultTopic(mqttNodeCode)]: { qos: 1 },
         },
         (reason) => setMqttConnected(!reason),
       );
     });
+    // Las URL de blob ocupan memoria hasta revocarlas. La anterior se revoca un
+    // momento después para que el <img> no parpadee mientras carga la nueva.
+    let cameraUrl: string | null = null;
+    const revokeTimers = new Set<number>();
+
     mqttClient.on("message", (topic, payload) => {
       if (topic === commandResultTopic(mqttNodeCode)) {
         commands.resolve(payload);
+        return;
+      }
+      if (topic === cameraTopic(mqttNodeCode)) {
+        if (!isJpegPayload(payload)) return;
+        const previous = cameraUrl;
+        cameraUrl = URL.createObjectURL(
+          new Blob([new Uint8Array(payload)], { type: "image/jpeg" }),
+        );
+        setCameraFrame({ url: cameraUrl, receivedAt: Date.now() });
+        if (previous) {
+          const timer = window.setTimeout(() => {
+            URL.revokeObjectURL(previous);
+            revokeTimers.delete(timer);
+          }, 2_000);
+          revokeTimers.add(timer);
+        }
         return;
       }
       const message = parseMqttMessage(topic, payload, mqttNodeCode);
@@ -796,6 +824,9 @@ export function SmartEggProvider({
 
     return () => {
       setMqttConnected(false);
+      setCameraFrame(null);
+      revokeTimers.forEach((timer) => window.clearTimeout(timer));
+      if (cameraUrl) URL.revokeObjectURL(cameraUrl);
       commandsRef.current = null;
       void mqttClient.endAsync(true);
     };
@@ -1181,6 +1212,7 @@ export function SmartEggProvider({
       criticalAlarm,
       systemLock,
       vision,
+      cameraFrame,
       energy,
       alarmSoundEnabled,
       alarmSoundBlocked,
@@ -1213,6 +1245,7 @@ export function SmartEggProvider({
       criticalAlarm,
       systemLock,
       vision,
+      cameraFrame,
       energy,
       alarmSoundEnabled,
       alarmSoundBlocked,
