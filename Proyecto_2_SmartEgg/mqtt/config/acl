@@ -9,6 +9,14 @@ user smartegg-gateway
 topic write smartegg/+/gateway/rx
 topic readwrite smartegg/+/gateway/status
 topic read smartegg/+/gateway/tx
+topic write smartegg/+/camara/foto
+
+# Vision service. Classifies the gateway photos and publishes the verdict; the
+# backend decides the lock, so this account cannot reach the node.
+user smartegg-vision
+topic read smartegg/+/camara/foto
+topic write smartegg/+/vision/resultado
+topic readwrite smartegg/vision/estado
 
 # Browser client. Reads live state and publishes control commands, which the
 # backend validates before forwarding them to the node.
@@ -18,6 +26,9 @@ topic read smartegg/+/alarmas/critica
 topic read smartegg/+/status
 topic read smartegg/+/actuadores/estado
 topic read smartegg/+/gateway/status
+topic read smartegg/+/sistema/estado
+topic read smartegg/+/vision/resultado
+topic read smartegg/vision/estado
 topic write smartegg/+/comandos/actuador
 topic write smartegg/+/comandos/rotar
 topic write smartegg/+/comandos/config

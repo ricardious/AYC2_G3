@@ -24,6 +24,10 @@ Definimos los topics de la siguiente forma:
 | `smartegg/{id}/comandos/rotar` | Frontend | Backend | 1 | No |
 | `smartegg/{id}/comandos/config` | Frontend | Backend | 1 | No |
 | `smartegg/{id}/comandos/resultado` | Backend | Frontend | 1 | No |
+| `smartegg/{id}/camara/foto` | Gateway | Visión | 0 | No |
+| `smartegg/{id}/vision/resultado` | Visión | Backend, Frontend, Grafana | 0 | Sí |
+| `smartegg/vision/estado` | Visión/LWT | Frontend, Grafana | 1 | Sí |
+| `smartegg/{id}/sistema/estado` | Backend | Frontend, Grafana | 1 | Sí |
 
 El frontend recibe los eventos de acceso por el WebSocket de FastAPI, no por
 `acceso/eventos`; su cuenta MQTT puede leer `telemetria`, `alarmas/critica`,
@@ -66,13 +70,14 @@ También enviamos una lectura completa para tener todos los valores en un solo m
   "door_open": false,
   "system_enabled": true,
   "sensor_ok": true,
+  "system_locked": false,
   "occupied_slots": 3,
   "available_slots": 1,
   "recorded_at": "2026-09-04T18:30:00Z"
 }
 ```
 
-`door_open`, `system_enabled` y `sensor_ok` pueden ser `null` cuando la trama
+`door_open`, `system_enabled`, `sensor_ok` y `system_locked` pueden ser `null` cuando la trama
 de origen no informa ese estado. Para la ESP32 se publica primero una versión
 en vivo, no retenida, directamente al leer el serial y antes de escribir en la
 base de datos; esta versión omite `available_slots`. Después de persistirla se
@@ -248,3 +253,75 @@ Respuesta en `comandos/resultado`:
 `error` vale `invalid_payload` (no cumple el esquema), `rejected` (nodo o
 actuador desconocido, JSON inválido) o `backend_error`. `delivered: false`
 indica que el cambio quedó registrado pero el gateway estaba desconectado.
+
+`error` también vale `system_locked` cuando el nodo está bloqueado por la
+cámara: ningún comando se aplica hasta que una tarjeta RFID lo desbloquea.
+
+## Visión y bloqueo del sistema
+
+```mermaid
+sequenceDiagram
+    participant GW as Gateway
+    participant VIS as Visión
+    participant BE as Backend
+    participant ESP as ESP32
+    GW->>VIS: camara/foto (1 por segundo)
+    VIS->>BE: vision/resultado · objeto_detectado=true (3 de 5 fotos)
+    BE->>ESP: gateway/tx · {"type":"system","action":"lock"}
+    ESP->>BE: gateway/rx · MSG:1,...,LOCK:1
+    BE-->>BE: alarma crítica object_detected
+    Note over BE: sistema/estado = locked
+    ESP->>BE: gateway/rx · RFID:A1B2C3D4 (tarjeta autorizada)
+    BE->>ESP: {"type":"system","action":"unlock"} y luego el acceso
+    ESP->>BE: MSG:1,...,LOCK:0
+```
+
+### Foto de la bandeja (`camara/foto`)
+
+JPEG en bytes, tal como lo entrega IP Webcam. Sin retener y con QoS 0: si el
+broker va lento se pierde una foto en vez de acumular fotos viejas.
+
+### Resultado de visión (`vision/resultado`)
+
+```json
+{
+  "clase": "objeto",
+  "confianza": 0.9132,
+  "probabilidades": {"huevo": 0.0521, "objeto": 0.9132, "vacio": 0.0347},
+  "votos_objeto": 3,
+  "ventana": 5,
+  "objeto_detectado": true,
+  "inferencia_ms": 18.4,
+  "recorded_at": "2026-10-23T22:15:03.512+00:00"
+}
+```
+
+`objeto_detectado` aplica la regla de 3 de las últimas 5 fotos. El backend solo
+reacciona a resultados en vivo: ignora el retenido que el broker reenvía al
+reconectar, que puede tener minutos.
+
+### Estado del servicio de visión (`vision/estado`)
+
+```json
+{"status":"online","modelo":"smartegg_vision.onnx","clases":["huevo","objeto","vacio"],"regla":"3 de 5 fotos","recorded_at":"2026-10-23T22:14:00Z"}
+```
+
+El Last Will retenido es `{"status":"offline"}`.
+
+### Estado del sistema (`sistema/estado`)
+
+Lo publica el backend con el `LOCK` que confirma la ESP32 en su telemetría:
+
+```json
+{"state":"locked","locked":true,"reason":"object_detected","recorded_at":"2026-10-23T22:15:04Z"}
+```
+
+```json
+{"state":"normal","locked":false,"reason":null,"recorded_at":"2026-10-23T22:16:30Z"}
+```
+
+Mientras dura el bloqueo hay además una alarma crítica `object_detected` en
+`alarmas/critica`. Al desbloquear con la tarjeta, `acceso/eventos` recibe un
+evento `system_unlocked` con el `operator_id` y el `session_id` de la tarjeta.
+Durante los 30 s siguientes (`VISION_UNLOCK_GRACE_SECONDS`) visión no vuelve a
+bloquear, para que el operador saque el objeto.
