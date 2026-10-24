@@ -27,8 +27,14 @@ uint32_t milliseconds() {
 }
 
 void pollRfid(uint32_t now) {
-  if (activeSessionId != 0 || authorizationPending ||
-      now - lastRfidAtMs < config::kRfidCooldownMs) {
+  if (authorizationPending || now - lastRfidAtMs < config::kRfidCooldownMs) {
+    return;
+  }
+  // An open session normally ignores cards until the door closes. A lock that
+  // arrives with the door still open (object inside, operator at the tray)
+  // must still accept a card: it is the only way to release the system. The
+  // backend closes the old session as "replaced" when it authorizes the new one.
+  if (activeSessionId != 0 && !getSystemStateSnapshot().locked) {
     return;
   }
   char uid[21];
