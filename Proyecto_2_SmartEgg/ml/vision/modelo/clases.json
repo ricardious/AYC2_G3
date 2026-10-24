@@ -1,0 +1,25 @@
+{
+  "clases": [
+    "huevo",
+    "objeto",
+    "vacio"
+  ],
+  "entrada": {
+    "nombre": "imagen",
+    "forma": [
+      1,
+      3,
+      224,
+      224
+    ],
+    "formato": "RGB, float32, valores 0-255, imagen completa estirada a 224x224",
+    "opencv": "cv2.dnn.blobFromImage(bgr, 1.0, (224, 224), swapRB=True, crop=False)"
+  },
+  "salida": {
+    "nombre": "probabilidades",
+    "forma": [
+      1,
+      3
+    ]
+  }
+}
