@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import api_router
 from .config import Settings, get_settings
 from .database import Base, build_session_factory, create_engine
+from .services.anomalies import AnomalyListener
 from .services.bootstrap import ensure_initial_incubators, ensure_initial_technicians
 from .services.broadcast import AccessConnectionManager, ConnectionManager
 from .services.commands import CommandListener
@@ -157,6 +158,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         unlock_grace_seconds=configured.vision_unlock_grace_seconds,
     )
     vision_listener = VisionListener(configured, system_lock)
+    anomaly_listener = AnomalyListener(configured, session_factory)
     command_listener = CommandListener(
         configured,
         session_factory,
@@ -176,7 +178,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         serial_bridge.start()
         command_listener.start()
         vision_listener.start()
+        anomaly_listener.start()
         yield
+        anomaly_listener.stop()
         vision_listener.stop()
         command_listener.stop()
         serial_bridge.stop()
@@ -201,6 +205,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.commands = command_listener
     app.state.system_lock = system_lock
     app.state.vision = vision_listener
+    app.state.anomalies = anomaly_listener
     app.add_middleware(
         CORSMiddleware,
         allow_origins=configured.cors_origins,

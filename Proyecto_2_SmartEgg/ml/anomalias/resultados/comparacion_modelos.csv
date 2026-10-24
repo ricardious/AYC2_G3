@@ -1,0 +1,4 @@
+modelo,precision,recall,f1,roc_auc,falsos_positivos_pct,alertas_falsas_por_hora,eventos_pico,eventos_sobrecalentamiento,eventos_foco_sin_calentar,eventos_humedad,eventos_sensor
+Local Outlier Factor,0.8429,0.2833,0.4241,0.7724,1.2783,6.6187,45/47,16/47,3/18,7/7,4/4
+Isolation Forest,0.9231,0.0720,0.1336,0.8076,0.1453,0.0000,8/47,1/47,0/18,6/7,4/4
+One-Class SVM,0.7671,0.5534,0.6430,0.8215,4.0674,28.9212,47/47,46/47,9/18,7/7,4/4
