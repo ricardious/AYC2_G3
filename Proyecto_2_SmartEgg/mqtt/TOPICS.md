@@ -12,7 +12,7 @@ Definimos los topics de la siguiente forma:
 |---|---|---|---:|:---:|
 | `smartegg/{id}/sensores/temperatura` | Backend | Grafana | 0 | Sí |
 | `smartegg/{id}/sensores/humedad` | Backend | Grafana | 0 | Sí |
-| `smartegg/{id}/telemetria` | Backend | Frontend, Grafana | 0 | Sí para la última lectura persistida; no para el adelanto en vivo |
+| `smartegg/{id}/telemetria` | Backend | Frontend, Grafana, Anomalías | 0 | Sí para la última lectura persistida; no para el adelanto en vivo |
 | `smartegg/{id}/actuadores/estado` | Backend | Frontend, Grafana | 1 | Sí |
 | `smartegg/{id}/alarmas/critica` | Backend | Frontend, Grafana | 1 | Sí; se borra con payload vacío |
 | `smartegg/{id}/acceso/eventos` | Backend | Grafana | 1 | No |
@@ -27,6 +27,8 @@ Definimos los topics de la siguiente forma:
 | `smartegg/{id}/camara/foto` | Gateway | Visión | 0 | No |
 | `smartegg/{id}/vision/resultado` | Visión | Backend, Frontend, Grafana | 0 | Sí |
 | `smartegg/vision/estado` | Visión/LWT | Frontend, Grafana | 1 | Sí |
+| `smartegg/{id}/ml/anomalia` | Anomalías | Backend, Frontend, Grafana | 0 | Sí |
+| `smartegg/ml/estado` | Anomalías/LWT | Frontend, Grafana | 1 | Sí |
 | `smartegg/{id}/sistema/estado` | Backend | Frontend, Grafana | 1 | Sí |
 
 El frontend recibe los eventos de acceso por el WebSocket de FastAPI, no por
@@ -327,3 +329,51 @@ Mientras dura el bloqueo hay además una alarma crítica `object_detected` en
 evento `system_unlocked` con el `operator_id` y el `session_id` de la tarjeta.
 Durante los 30 s siguientes (`VISION_UNLOCK_GRACE_SECONDS`) visión no vuelve a
 bloquear, para que el operador saque el objeto.
+
+## Detección de anomalías
+
+El servicio [`anomalias/`](../anomalias/) recibe cada lectura en vivo de
+`telemetria`, calcula sus características con el último minuto del nodo y la
+califica con el Local Outlier Factor entrenado en
+[`ml/anomalias`](../ml/anomalias/). Ignora la lectura retenida y no califica
+mientras el sistema está apagado.
+
+```mermaid
+sequenceDiagram
+    participant BE as Backend
+    participant ML as Anomalías
+    BE->>ML: telemetria (una lectura cada ~2.6 s)
+    ML->>BE: ml/anomalia · puntaje, anomalia, alerta
+    Note over ML: alerta = 3 lecturas anómalas seguidas
+    BE-->>BE: guarda anomaly_scores y abre la alarma ml_anomaly
+```
+
+### Resultado (`ml/anomalia`)
+
+```json
+{
+  "puntaje": 8.4127,
+  "umbral": 1.1672,
+  "anomalia": true,
+  "alerta": true,
+  "causa": "temperatura fuera de lo normal",
+  "caracteristicas": {"temperatura": 44.0, "vel_temp": 6.52, "vel_hum": 0.0, "ruido_temp": 0.21},
+  "lectura_at": "2026-10-23T22:15:03.512+00:00",
+  "recorded_at": "2026-10-23T22:15:03.530+00:00"
+}
+```
+
+`anomalia` dice si esa lectura pasó el umbral; `alerta`, si se cumple la regla
+de 3 seguidas (`ML_ALERT_NEEDED` de `ML_ALERT_WINDOW`). `causa` es la
+característica más alejada de lo normal y solo viene con `anomalia: true`.
+El backend guarda cada resultado en `anomaly_scores` con la hora de la lectura
+(`lectura_at`) y mantiene abierta la alarma `ml_anomaly` (severidad `warning`)
+mientras `alerta` sea `true`.
+
+### Estado del servicio (`ml/estado`)
+
+```json
+{"status":"online","modelo":"Local Outlier Factor","caracteristicas":["temperatura","vel_temp","vel_hum","ruido_temp"],"umbral":1.1672,"regla":"3 de 3 lecturas anómalas","recorded_at":"2026-10-23T22:14:00Z"}
+```
+
+El Last Will retenido es `{"status":"offline"}`.
