@@ -27,8 +27,29 @@ de consumo anómalo.
 Enunciado: [`docs/enunciado/Proyecto_2_2S2026.pdf`](docs/enunciado/Proyecto_2_2S2026.pdf) ·
 Hoja de calificación: [`docs/Hoja_Calificacion_Proyecto2_Fase2_SmartEgg.pdf`](docs/Hoja_Calificacion_Proyecto2_Fase2_SmartEgg.pdf).
 
+## Entregables para la calificación
+
+Acceso directo a lo que el enunciado exige para optar a la calificación y a cada
+sección obligatoria de la documentación:
+
+| Entregable | Dónde está |
+|---|---|
+| **Bitácora de desarrollo** | [Bitácora](#bitácora-de-desarrollo) |
+| **Notebooks de ML** | Anomalías: [`ml/anomalias/entrenar_anomalias.ipynb`](ml/anomalias/entrenar_anomalias.ipynb) · Visión: [`ml/vision/entrenar_vision.ipynb`](ml/vision/entrenar_vision.ipynb) |
+| **Manual técnico** | [Manual técnico](#manual-técnico) |
+| **Manual de usuario** | [Manual de usuario](#manual-de-usuario) |
+| **Modelo entidad-relación** | [§10 Base de datos](#modelo-entidad-relación) |
+| **Scripts de consultas a la base de datos** | [`db/consultas_calificacion.sql`](db/consultas_calificacion.sql) · [§10](#scripts-de-consulta-para-la-calificación) |
+| **Documentación de la API (Swagger/OpenAPI)** | [§11](#11-documentación-de-la-api) · [captura de Swagger](docs/evidencias/api/api-swagger.png) · `http://100.63.122.66:8000/docs` |
+| **Valor disruptivo** | [§8 Bloqueo inteligente por visión](#8-valor-disruptivo-bloqueo-inteligente-por-visión) |
+| **Infraestructura en la nube (AWS)** | [§4](#4-infraestructura-en-la-nube) · [capturas de AWS](#despliegue-en-aws) · Grafana: <http://100.63.122.66:3001> |
+| **Evidencias de funcionamiento** | [Evidencias](#evidencias-de-funcionamiento) · [`docs/evidencias/`](docs/evidencias/) · [Capturas de Grafana](docs/evidencias/grafana/) |
+| **Dashboards de Grafana exportados (JSON)** | [`grafana/dashboards/`](grafana/dashboards/) |
+| **Video de presentación** | _Enlace pendiente: agregar aquí el enlace al video_ |
+
 ## Contenido
 
+- [Entregables para la calificación](#entregables-para-la-calificación)
 - [Objetivos de la Fase 3](#objetivos-de-la-fase-3)
 - [Cumplimiento del enunciado](#cumplimiento-del-enunciado)
 - [Estructura del repositorio](#estructura-del-repositorio)
@@ -73,7 +94,7 @@ Hoja de calificación: [`docs/Hoja_Calificacion_Proyecto2_Fase2_SmartEgg.pdf`](d
 |---|---|---|
 | Modelo de ML funcional e integrado | LOF entrenado y evaluado; el servicio `anomalias` califica cada lectura de `telemetria` y publica `ml/anomalia`; el backend abre la alarma `ml_anomaly` | [§6](#6-pipeline-de-ml-detección-de-anomalías), [`anomalias/`](anomalias/), [`ml/anomalias/`](ml/anomalias/) |
 | Módulo de visión computacional operativo | El gateway publica una foto por segundo; el servicio `vision` la clasifica con OpenCV + ONNX y publica `vision/resultado` | [§7](#7-módulo-de-visión-por-computadora), [`vision/`](vision/), [`ml/vision/`](ml/vision/) |
-| Stack desplegado en la nube | `docker-compose.yml` levanta broker, base de datos, backend, visión, anomalías y Grafana en la VM | [§4](#4-infraestructura-en-la-nube), [§13](#13-orquestación-con-docker) |
+| Stack desplegado en la nube | EC2 `smartegg-fase3` en AWS con los 7 servicios de `docker-compose.yml`; IP elástica `100.63.122.66` | [§4](#4-infraestructura-en-la-nube), [capturas de AWS](#despliegue-en-aws) |
 | Dashboard de Grafana con alertas | Cuatro dashboards provisionados (tiempo real, histórico, centro de control y consumo) y la regla *Consumo eléctrico anómalo o límite superado* | [§12](#12-dashboards-de-monitoreo), [`grafana/`](grafana/) |
 | Evidencias del desarrollo | Capturas, fotografías, métricas y video | [Evidencias](#evidencias-de-funcionamiento) |
 | Repositorio del proyecto | Código por módulo y trabajo progresivo por commits | [Estructura](#estructura-del-repositorio), [Bitácora](#bitácora-de-desarrollo) |
@@ -93,8 +114,6 @@ Hoja de calificación: [`docs/Hoja_Calificacion_Proyecto2_Fase2_SmartEgg.pdf`](d
 | Interfaz visual interactiva | Consola web con Observatorio interactivo e Historial ([§12.2](#122-consola-web-interactiva)) |
 | Buzzer y señal luminosa para el bloqueo | Buzzer + LED rojo en GPIO 13 + pantalla de bloqueo en la LCD ([§15](#15-hardware-y-firmware)) |
 | Actuadores de al menos 3 categorías | Calefacción (foco), ventilación, volteo de huevos (servo), señalización (buzzer, LED, LCD) y cerradura (servo) |
-| Pitch y presentación final | Guion con problema, arquitectura, modelos, nube, dashboards, valor disruptivo y demo de alarma y bloqueo: [`docs/guion.pdf`](docs/guion.pdf) |
-
 ### Hoja de calificación
 
 Mantenemos los puntos evaluados en la hoja de la Fase 2, ahora sobre el stack de la Fase 3:
@@ -102,7 +121,7 @@ Mantenemos los puntos evaluados en la hoja de la Fase 2, ahora sobre el stack de
 | Sección de la hoja | Dónde está documentado |
 |---|---|
 | 1. Continuidad y capa física | [§15](#15-hardware-y-firmware), [`firmware/README.md`](firmware/README.md) |
-| 2. Backend y cliente MQTT | [§3](#3-arquitectura-del-sistema-extendido), [§11](#11-documentación-de-la-api), [`server/README.md`](server/README.md) |
+| 2. Backend y cliente MQTT | [§3](#3-arquitectura-del-sistema-extendido), [manejo de fallas](#manejo-de-fallas-de-conexión), [logs](#registro-de-eventos-logs), [§11](#11-documentación-de-la-api), [`server/README.md`](server/README.md) |
 | 3. Broker MQTT: topics, JSON, QoS, retained, LWT y demo pub/sub | [§5](#5-broker-mqtt), [`mqtt/TOPICS.md`](mqtt/TOPICS.md) |
 | 4. Base de datos: modelo E-R, localización y registros | [§10](#10-base-de-datos), [`db/consultas_calificacion.sql`](db/consultas_calificacion.sql) |
 | 5. Frontend, roles y alarmas en tiempo real | [Manual de usuario](#manual-de-usuario), [`client/README.md`](client/README.md) |
@@ -259,6 +278,41 @@ flowchart LR
    de seguridad.
 4. El backend responde en `comandos/resultado` con `ok` y `delivered`.
 
+### Manejo de fallas de conexión
+
+| Falla | Qué hace el sistema | Dónde |
+|---|---|---|
+| El backend pierde el broker | paho-mqtt reconecta solo (`connect_async` + `loop_start`); Mosquitto publica el LWT `{"status":"offline","reason":"unexpected_disconnect"}` en `status`; cada publicación fallida queda en el log | `server/app/services/mqtt.py` |
+| El gateway pierde el broker | Reintenta cada 1 a 10 s y encola hasta 200 tramas, que salen al reconectar; el límite evita acumular telemetría vieja | `gateway/gateway.py` |
+| Se desconecta el USB de la ESP32 | `gateway/status` pasa a `serial: "disconnected"`; el gateway reintenta abrir el puerto y descarta los comandos que lleguen mientras tanto, para no ejecutar órdenes viejas al reconectar | `gateway/gateway.py` |
+| USB directo (modo `serial`) | El puente reintenta abrir el puerto cada 3 s (`serial_reconnect_seconds`); `GET /api/v1/serial/status` informa el estado | `server/app/services/serial_bridge.py` |
+| Llega una trama inválida | Se descarta y se registra en el log sin cortar la lectura | `server/app/main.py` |
+| El gateway está caído | Su LWT marca `gateway/status` como `offline`; los comandos responden `delivered: false` | `server/app/services/commands.py` |
+| Cae el servicio de visión o de anomalías | Su LWT publica `{"status":"offline"}` en `vision/estado` o `ml/estado` y Grafana lo muestra en la portada | `vision/`, `anomalias/` |
+| Se cae un contenedor | Compose lo reinicia (`restart: unless-stopped`); el backend y Grafana arrancan solo cuando la base y el broker pasan su healthcheck | `docker-compose.yml` |
+
+Mientras tanto, el firmware sigue controlando la temperatura por umbrales:
+ninguna falla de red deja al nodo sin control local.
+
+### Registro de eventos (logs)
+
+El backend registra con `logging` de Python y los mensajes se consultan con
+`docker compose logs -f backend` en la EC2. Entre otros, registra:
+
+| Nivel | Evento |
+|---|---|
+| INFO | Conexión al broker (`Connected to MQTT broker at …`) y suscripción al gateway (`Listening to the SmartEgg gateway on …`) |
+| INFO | Cada evento de acceso RFID procesado, con su resultado y su duración en ms |
+| INFO | Desbloqueo con tarjeta (`Authorized card unlocked …`) y cada regla de consumo aplicada |
+| INFO | Cuentas e incubadoras iniciales creadas al arrancar |
+| WARNING | Objeto confirmado por visión y orden de bloqueo enviada (`Foreign object confirmed on …; lock sent`) |
+| WARNING | Desconexión inesperada del broker, publicación fallida y regla de consumo no entregada |
+| ERROR | El broker rechaza la conexión del backend o de alguno de sus oyentes (comandos, visión, anomalías) |
+| ERROR / traza | Trama serial o evento de acceso rechazado, comando MQTT que no se pudo aplicar, resultado de anomalías inválido |
+
+Los servicios `gateway`, `vision` y `anomalias` registran igual su conexión,
+sus reintentos y cada resultado con la opción `-v`.
+
 ## 4. Infraestructura en la nube
 
 ```mermaid
@@ -280,6 +334,24 @@ flowchart TB
     NAV -->|"HTTP 3001"| GF
     NAV -->|"HTTP 8000 · consultas"| BE
 ```
+
+### Instancia desplegada
+
+| Dato | Valor |
+|---|---|
+| Proveedor y región | AWS, `us-east-1c` (Norte de Virginia) |
+| Instancia | `smartegg-fase3` · `i-048526fe56ba8e80b` · `t3.medium` · Linux (Ubuntu) |
+| IP elástica pública | `100.63.122.66` |
+| Grupo de seguridad | `smartegg-sg` (`sg-0ddba2d63823bee39`) |
+| Carpeta del stack | `/opt/smartegg` |
+| Grafana | <http://100.63.122.66:3001> |
+| Swagger | <http://100.63.122.66:8000/docs> |
+
+| `docker compose ps` en la EC2 | Instancia en la consola de AWS |
+|---|---|
+| ![docker compose ps en la EC2 con los siete servicios del stack](docs/evidencias/nube/01-docker-compose-ps.png) | ![Instancia smartegg-fase3 en ejecución con su IP elástica](docs/evidencias/nube/04-consola-instancias.jpg) |
+
+Las capturas completas están en [Evidencias](#despliegue-en-aws).
 
 ### Servicios en la VM
 
@@ -315,17 +387,19 @@ con el que entrenamos el modelo se exportó desde Neon con
 
 ### Puertos del grupo de seguridad
 
-Estos son los únicos puertos que el stack necesita abrir:
+Reglas de entrada de `smartegg-sg` (7 reglas; ver
+[captura](docs/evidencias/nube/06-consola-grupo-seguridad.jpg)):
 
 | Puerto | Protocolo | Origen | Para qué |
 |---:|---|---|---|
-| 22 | TCP | IP del equipo | SSH de administración |
-| 1883 | TCP | Laptop del gateway | MQTT del gateway (con usuario y contraseña) |
+| 22 | TCP | 3 orígenes de administración (dos /32 y un /16 del proveedor) | SSH |
+| 1883 | TCP | 0.0.0.0/0 | MQTT del gateway (con usuario y contraseña) |
 | 9001 | TCP | 0.0.0.0/0 | MQTT sobre WebSocket para la consola web |
-| 3001 | TCP | 0.0.0.0/0 | Grafana (inicio de sesión obligatorio) |
+| 3001 | TCP | 0.0.0.0/0 | Grafana (lectura anónima; editar requiere inicio de sesión) |
 | 8000 | TCP | 0.0.0.0/0 | API de consulta y Swagger |
 
-PostgreSQL (5432) **no** se abre: se administra por SSH con
+PostgreSQL (5432) **no** se abre: Compose lo publica solo en `127.0.0.1:5432`
+dentro de la VM y se administra por SSH con
 `docker compose exec database psql`. Mosquitto exige usuario y contraseña en
 todas las conexiones y cada cuenta tiene una ACL mínima. Para TLS dejamos
 [`mqtt/config/mosquitto-tls.conf.example`](mqtt/config/mosquitto-tls.conf.example).
@@ -354,13 +428,14 @@ En la laptop de la incubadora:
 ```bash
 adb forward tcp:8080 tcp:8080             # cámara del celular por USB
 cd Proyecto_2_SmartEgg/gateway
-cp .env.example .env                       # MQTT_HOST=<IP-pública-de-la-VM>
+cp .env.example .env                       # MQTT_HOST=100.63.122.66
 uv run gateway.py
 ```
 
 La consola web se configura con la IP pública de la VM en `client/.env.local`
-(`NEXT_PUBLIC_MQTT_URL=ws://<IP-pública>:9001`, `NEXT_PUBLIC_API_URL=http://<IP-pública>:8000`).
-Grafana queda en `http://<IP-pública>:3001`.
+(`NEXT_PUBLIC_MQTT_URL=ws://100.63.122.66:9001`, `NEXT_PUBLIC_API_URL=http://100.63.122.66:8000`).
+Grafana queda en `http://100.63.122.66:3001`. En nuestra instancia el stack vive en
+`/opt/smartegg`.
 
 ## 5. Broker MQTT
 
@@ -454,10 +529,10 @@ en los servicios de ML) y Grafana y la consola muestran la caída sin polling.
 
 ```bash
 # Escuchar todo el árbol de SmartEgg en la nube
-mosquitto_sub -h <IP-pública> -p 1883 -u smartegg-grafana -P '<clave>' -t 'smartegg/#' -v
+mosquitto_sub -h 100.63.122.66 -p 1883 -u smartegg-grafana -P '<clave>' -t 'smartegg/#' -v
 
 # Comprobar retained: un suscriptor nuevo recibe el último estado al instante
-mosquitto_sub -h <IP-pública> -p 1883 -u smartegg-grafana -P '<clave>' -t 'smartegg/NODE-01/sistema/estado' -C 1
+mosquitto_sub -h 100.63.122.66 -p 1883 -u smartegg-grafana -P '<clave>' -t 'smartegg/NODE-01/sistema/estado' -C 1
 
 # Comprobar LWT: matar el gateway (kill -9) y observar gateway/status → offline
 ```
@@ -567,6 +642,12 @@ gateway descarga `shot.jpg` una vez por segundo a 640×480 (~50 KB), descarta
 respuestas que no son JPEG o pesan más de 1 MB, y la publica en `camara/foto`
 con QoS 0 para no acumular fotos viejas.
 
+Secuencia real de 6 fotos que el gateway tomó y publicó, una por segundo
+(24-10-2026, 15:06:55 a 15:07:01), con cuatro huevos en la bandeja; en la última
+el foco está apagado:
+
+![Seis fotos consecutivas de la cámara sobre la bandeja con cuatro huevos](docs/evidencias/camara/camara-secuencia.png)
+
 ### Dataset propio
 
 | Clase | Fotos | Contenido |
@@ -600,6 +681,15 @@ tandas, 5 particiones, 800 fotos:
 | Matriz de confusión | Errores de la validación |
 |---|---|
 | ![Matriz de confusión del clasificador de visión](ml/vision/resultados/matriz_confusion.png) | ![Ejemplos de fotos mal clasificadas](ml/vision/resultados/errores.png) |
+
+Ejemplos de fotos reales de la bandeja clasificadas con el mismo código OpenCV
+del servicio (`cv2.imdecode` → `blobFromImage` → `cv2.dnn`):
+
+![Ejemplos del clasificador: cuatro fotos por clase con la predicción y las tres probabilidades](docs/evidencias/vision/vision-ejemplos.png)
+
+Las fotos de la lámina forman parte del dataset con el que se entrenó el modelo
+final, así que su desempeño honesto es el de la validación cruzada. La última
+foto de objeto (38 %) es un caso dudoso: por eso el bloqueo usa la media de 5 fotos.
 
 La precisión de `objeto` (0.95) es la métrica que protege contra bloqueos
 falsos; el recall de `objeto` (0.74 por foto) se compensa con la ventana de 5
@@ -674,6 +764,16 @@ sequenceDiagram
   y haya una sesión en curso: es el caso normal, porque el objeto se detecta con el
   operador frente a la bandeja. El backend cierra la sesión anterior como
   `replaced` y conserva su apertura en `door_events`.
+
+| Pantalla de bloqueo de la página | Alerta en el Centro de control |
+|---|---|
+| ![Pantalla SISTEMA BLOQUEADO con la foto de la bandeja y la instrucción de pasar una tarjeta RFID](docs/evidencias/consola/ui_bloqueo_seguridad.png) | ![Centro de control con la alerta crítica Objeto extraño detectado: sistema bloqueado](docs/evidencias/consola/ui_centro_de_control.png) |
+
+En la primera captura la página quedó bloqueada desde las 15:20:54 y ya no
+acepta controles. La última foto ya es *huevo* porque se retiró el objeto: el
+sistema sigue bloqueado hasta que pase una tarjeta autorizada. En la segunda,
+el Centro de control muestra la alerta crítica `object_detected` y el evento
+en *Eventos · en vivo*.
 
 ### Por qué es disruptivo
 
@@ -866,9 +966,14 @@ FastAPI genera la documentación **OpenAPI/Swagger** automáticamente:
 
 | Recurso | URL |
 |---|---|
-| Swagger UI | `http://<IP-pública>:8000/docs` |
-| ReDoc | `http://<IP-pública>:8000/redoc` |
-| Esquema OpenAPI | `http://<IP-pública>:8000/openapi.json` |
+| Swagger UI | `http://100.63.122.66:8000/docs` |
+| ReDoc | `http://100.63.122.66:8000/redoc` |
+| Esquema OpenAPI | `http://100.63.122.66:8000/openapi.json` |
+
+![Swagger UI de SmartEgg API con los 39 endpoints agrupados por área](docs/evidencias/api/api-swagger.png)
+
+Captura del Swagger UI del backend desplegado (24-10-2026). Ningún endpoint
+acciona actuadores.
 
 Por la restricción del enunciado, **la API no controla sensores ni actuadores**:
 solo consulta y administra. Los endpoints que antes cambiaban actuadores,
@@ -912,6 +1017,14 @@ dashboards están versionados como JSON en [`grafana/dashboards/`](grafana/dashb
 se evalúa cada minuto y pasa a *firing* cuando lleva 1 minuto abierta una alarma
 `energy_anomaly` o `energy_limit`. Se ve en *Alerting → Alert rules*, carpeta SmartEgg.
 
+![Grafana · Centro de control con el nodo en línea, la visión clasificando la bandeja y el sistema en estado normal](docs/evidencias/grafana/grafana-centro-control.png)
+
+Capturas de los cuatro tableros y de la regla de alerta:
+[Centro de control](docs/evidencias/grafana/grafana-centro-control.png) ·
+[Tiempo real](docs/evidencias/grafana/grafana-tiempo-real.png) ·
+[Histórico](docs/evidencias/grafana/grafana-historico.png) ·
+[Consumo eléctrico](docs/evidencias/grafana/grafana-consumo.png) ·
+[Regla de alerta](docs/evidencias/grafana/grafana-regla-alerta.png).
 El detalle de cada panel está en [`grafana/README.md`](grafana/README.md).
 
 ### 12.2 Consola web interactiva
@@ -926,6 +1039,14 @@ consultas, cuentas y reportes.
 | Observatorio | [Three.js](https://threejs.org/docs/) | Modelo 3D interactivo de la incubadora: capas de temperatura/humedad, ventilador, ángulo de la bandeja y posiciones |
 | Historial | [Apache ECharts](https://echarts.apache.org/) | Pulso del microclima, espacio de fase, cronología de alarmas, bandeja y tiempo en rango |
 | Pantalla de bloqueo | React | Superposición con la foto que provocó el bloqueo |
+
+| Centro de control | Observatorio (Three.js) |
+|---|---|
+| ![Centro de control con medidores, urna, actuadores, sensores y panel de cámara](docs/evidencias/consola/ui_centro_de_control.png) | ![Observatorio con el modelo 3D de la incubadora y la lectura del entorno](docs/evidencias/consola/ui_observatorio.png) |
+
+| Historial (ECharts) | Panel Cámara · Visión |
+|---|---|
+| ![Historial con 240 lecturas reales, cronología de alarmas, bandeja y tiempo en rango](docs/evidencias/consola/ui_historial.png) | ![Panel de cámara con la última foto, la probabilidad media de objeto y la decisión](docs/evidencias/consola/ui_panel_camara.png) |
 
 **Justificación del framework.** Elegimos Three.js para el Observatorio por su
 cámara, materiales y controles de órbita, que permiten inspeccionar la
@@ -1040,8 +1161,8 @@ Pines, montaje, carga del firmware y pruebas: [`firmware/README.md`](firmware/RE
 | Superficie | Dirección | Credenciales |
 |---|---|---|
 | Consola web | La dirección donde se sirve el cliente | Usuario y contraseña, o tarjeta RFID para operadores |
-| Grafana | `http://<IP-pública>:3001` | `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` de `.env` |
-| Swagger | `http://<IP-pública>:8000/docs` | Token obtenido en `POST /auth/login` |
+| Grafana | `http://100.63.122.66:3001` | Los tableros se ven sin iniciar sesión; para editar, `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` de `.env` |
+| Swagger | `http://100.63.122.66:8000/docs` | Token obtenido en `POST /auth/login` |
 
 Hay dos roles. **Operador** (Operador 1 y Operador 2 son cuentas separadas): abre
 la puerta con su tarjeta, registra lotes y huevos y ve solo sus incubadoras,
@@ -1082,6 +1203,13 @@ cambia la configuración y ve la vista general; no abre la puerta con RFID.
 | **Perfiles** | (Administrador) crear operadores, registrar su UID RFID y asignar incubadoras |
 | **Configuración** | (Administrador) umbrales de temperatura, humedad, temperatura crítica y rotación; se envían por MQTT |
 
+| Incubación | Reportes | Perfiles |
+|---|---|---|
+| ![Incubación con dos huevos detectados sin ficha y dos posiciones disponibles](docs/evidencias/consola/ui_incubacion.png) | ![Reportes con la vista previa del informe y el botón GENERAR PDF](docs/evidencias/consola/ui_reportes.png) | ![Perfil del operador con muestras, promedios, aperturas e informes](docs/evidencias/consola/ui_perfiles.png) |
+
+En **Reportes**, la lámina es una vista previa; el informe real es el PDF que
+descarga **GENERAR PDF**.
+
 ## Uso de los botones y paneles para accionar los actuadores
 
 Todos los controles publican un comando MQTT; la respuesta del backend llega por
@@ -1099,9 +1227,9 @@ El encendido manual directo y la rotación manual también se pueden enviar desd
 cualquier cliente MQTT con la cuenta del frontend, por ejemplo:
 
 ```bash
-mosquitto_pub -h <IP-pública> -u smartegg-frontend -P '<clave>' -q 1 \
+mosquitto_pub -h 100.63.122.66 -u smartegg-frontend -P '<clave>' -q 1 \
   -t smartegg/NODE-01/comandos/actuador -m '{"kind":"fan","enabled":true,"mode":"manual"}'
-mosquitto_pub -h <IP-pública> -u smartegg-frontend -P '<clave>' -q 1 \
+mosquitto_pub -h 100.63.122.66 -u smartegg-frontend -P '<clave>' -q 1 \
   -t smartegg/NODE-01/comandos/rotar -m '{"angle_degrees":30,"direction":"left"}'
 ```
 
@@ -1125,11 +1253,19 @@ fijas por umbral siguen activas en paralelo.
 ## Funcionamiento del módulo de visión y del bloqueo (valor disruptivo)
 
 1. El panel **CÁMARA · VISIÓN** del Centro de control muestra la **ÚLTIMA FOTO**,
-   la clase detectada y **FOTOS CON OBJETO** en la ventana de 5.
+   su clase, la probabilidad media de objeto en las últimas 5 fotos y la
+   **DECISIÓN**. En el ejemplo, una foto salió como *objeto extraño* pero la media
+   es 22 %, así que la decisión sigue en *VIGILANDO* y no bloquea:
+
+   ![Panel Cámara · Visión: última foto objeto extraño, media 22 %, decisión vigilando](docs/evidencias/consola/ui_panel_camara.png)
+
 2. Si se coloca un objeto que no es huevo, en unos 4 s suena el buzzer, se
    enciende el LED rojo, la LCD muestra `!! BLOQUEADO !!` y la página entera se cubre con
-   la pantalla **BLOQUEADO DESDE** y la foto que lo provocó. Los botones dejan de
-   responder.
+   la pantalla **SISTEMA BLOQUEADO**, que indica **BLOQUEADO DESDE**, la última foto y
+   cuántas de las 5 fotos fueron objeto. Los botones dejan de responder:
+
+   ![Pantalla de bloqueo de la página](docs/evidencias/consola/ui_bloqueo_seguridad.png)
+
 3. Para desbloquear: pasar una **tarjeta RFID autorizada** de operador por el
    lector, incluso con la puerta todavía abierta, y retirar el objeto. El sistema
    vuelve a normal y durante 30 s la visión no vuelve a bloquear, para dar tiempo
@@ -1165,39 +1301,89 @@ El manual de la Fase 2, con el detalle de RFID, puerta y reportes, está en
 | Distribución de sensores y sesión de ejemplo con fallas | [`distribucion_sensores.png`](ml/anomalias/resultados/distribucion_sensores.png), [`sesion_ejemplo.png`](ml/anomalias/resultados/sesion_ejemplo.png) |
 | Métricas, matriz de confusión, curvas y errores del clasificador | [`ml/vision/resultados/`](ml/vision/resultados/) |
 | Dataset real de 800 fotos | [`dataset/`](dataset/) |
+| Ejemplos de fotos procesadas con OpenCV y clasificadas | [`docs/evidencias/vision/vision-ejemplos.png`](docs/evidencias/vision/vision-ejemplos.png) |
+| Documentación de la API en Swagger | [`docs/evidencias/api/api-swagger.png`](docs/evidencias/api/api-swagger.png) |
 
 | Distribución de sensores (Fase 2) | Curvas de entrenamiento de visión |
 |---|---|
 | ![Distribución de temperatura y humedad del histórico](ml/anomalias/resultados/distribucion_sensores.png) | ![Curvas de pérdida y exactitud del clasificador](ml/vision/resultados/curvas_entrenamiento.png) |
 
-### Plataforma, base de datos y montaje
+### Grafana de la Fase 3
+
+Capturas tomadas el 24-10-2026 del Grafana desplegado en la EC2
+(<http://100.63.122.66:3001>), con el nodo `NODE-01` enviando datos. Están en [`docs/evidencias/grafana/`](docs/evidencias/grafana/).
+
+| Captura | Qué muestra |
+|---|---|
+| [Centro de control](docs/evidencias/grafana/grafana-centro-control.png) | Nodo, visión y detector ML **en línea**; sistema **Normal**; la visión clasifica la última foto como *Huevo* con sus tres probabilidades y la ventana de 5 fotos; temperatura y humedad en vivo |
+| [Tiempo real](docs/evidencias/grafana/grafana-tiempo-real.png) | Datos por MQTT: 36.1 °C, 23 % de humedad, puerta abierta, ocupación 2/4, calefactor encendido, buzzer sonando y bandeja a −45° |
+| [Histórico](docs/evidencias/grafana/grafana-historico.png) | Últimas 24 h desde PostgreSQL: 6 611 lecturas, aperturas con tarjeta RFID por operador, resumen por lote y 509 alarmas, entre ellas 2 `object_detected` (bloqueo por visión) y 2 `ml_anomaly` (modelo de anomalías) |
+| [Consumo eléctrico](docs/evidencias/grafana/grafana-consumo.png) | Potencia actual (41.56 W), energía y costo del día, uso del límite diario, promedio de la última hora y potencia por componente |
+| [Regla de alerta](docs/evidencias/grafana/grafana-regla-alerta.png) | *Consumo eléctrico anómalo o límite superado*: regla provisionada, evaluada cada minuto, estado *Normal* al momento de la captura |
+
+| Tiempo real | Consumo eléctrico |
+|---|---|
+| ![Grafana en tiempo real con temperatura, humedad, puerta, actuadores y bandeja](docs/evidencias/grafana/grafana-tiempo-real.png) | ![Grafana de consumo eléctrico con potencia, energía, costo y potencia por componente](docs/evidencias/grafana/grafana-consumo.png) |
+
+| Histórico (24 h) | Regla de alerta |
+|---|---|
+| ![Grafana histórico con lecturas, accesos, lotes y alarmas](docs/evidencias/grafana/grafana-historico.png) | ![Regla de alerta de consumo eléctrico en Grafana](docs/evidencias/grafana/grafana-regla-alerta.png) |
+
+### Plataforma, base de datos y montaje (Fase 2)
 
 | Evidencia | Archivo |
 |---|---|
 | Índice completo de capturas | [`docs/evidencias/README.md`](docs/evidencias/README.md) |
-| Grafana en tiempo real e histórico | [`plataforma/grafana-tiempo-real-con-datos.png`](docs/evidencias/plataforma/grafana-tiempo-real-con-datos.png), [`plataforma/grafana-historico-con-datos.png`](docs/evidencias/plataforma/grafana-historico-con-datos.png) |
+| Grafana en tiempo real e histórico (Fase 2) | [`plataforma/grafana-tiempo-real-con-datos.png`](docs/evidencias/plataforma/grafana-tiempo-real-con-datos.png), [`plataforma/grafana-historico-con-datos.png`](docs/evidencias/plataforma/grafana-historico-con-datos.png) |
 | MQTT Explorer publish/subscribe | [`mqtt-explorer-prueba-manual-sin-esp32.png`](docs/evidencias/mqtt-explorer-prueba-manual-sin-esp32.png) |
 | Base de datos | [`docs/evidencias/base-datos/`](docs/evidencias/base-datos/) |
 | Montaje físico | [`docs/evidencias/fisico/`](docs/evidencias/fisico/) |
 | Commits por integrante | [`docs/evidencias/commits/`](docs/evidencias/commits/) |
 | Video demostrativo | [`smartegg-observatorio-3d.mp4`](docs/evidencias/smartegg-observatorio-3d.mp4) |
 
-| Grafana en tiempo real | Montaje de la incubadora |
+| Montaje de la incubadora | Lector RFID |
 |---|---|
-| ![Panel de Grafana con temperatura, humedad, puerta y actuadores](docs/evidencias/plataforma/grafana-tiempo-real-con-datos.png) | ![Cableado de relés y protoboard](docs/evidencias/fisico/cableado-reles-protoboard.jpeg) |
+| ![Cableado de relés y protoboard](docs/evidencias/fisico/cableado-reles-protoboard.jpeg) | ![Módulo RC522 y sus conexiones](docs/evidencias/fisico/lector-rfid-cableado.jpeg) |
 
-### Evidencia de la Fase 3 en la nube
+### Consola web y cámara
 
-Las capturas de la Fase 3 se guardan en `docs/evidencias/nube/` con estos nombres:
+Capturas del 24-10-2026 de la consola conectada al stack de la nube, en
+[`docs/evidencias/consola/`](docs/evidencias/consola/) y
+[`docs/evidencias/camara/`](docs/evidencias/camara/).
+
+| Captura | Qué muestra |
+|---|---|
+| [Pantalla de bloqueo](docs/evidencias/consola/ui_bloqueo_seguridad.png) | **SISTEMA BLOQUEADO** por la cámara desde las 15:20:54, con la foto de la bandeja y la instrucción de pasar una tarjeta RFID autorizada |
+| [Centro de control](docs/evidencias/consola/ui_centro_de_control.png) | Alerta crítica *Objeto extraño detectado: sistema bloqueado*, estado CRÍTICO, actuadores, sensores, panel de cámara y eventos en vivo |
+| [Panel Cámara · Visión](docs/evidencias/consola/ui_panel_camara.png) | Una foto clasificada como *objeto extraño* con media de 22 % en 5 fotos: la decisión sigue en *VIGILANDO* (la regla de la ventana evita el bloqueo por una foto suelta) |
+| [Observatorio](docs/evidencias/consola/ui_observatorio.png) | Modelo 3D con telemetría activa: 37.5 °C, foco encendido, bandeja a 45°, 2 de 4 posiciones ocupadas |
+| [Incubación](docs/evidencias/consola/ui_incubacion.png) | 2 de 4 posiciones con huevo detectado por los microinterruptores, aún sin ficha registrada |
+| [Historial](docs/evidencias/consola/ui_historial.png) | 240 lecturas reales en las cinco gráficas de ECharts |
+| [Reportes](docs/evidencias/consola/ui_reportes.png) | Vista previa del informe y botón **GENERAR PDF** (la lámina no es el PDF descargado) |
+| [Perfiles](docs/evidencias/consola/ui_perfiles.png) | Perfil del operador con 7 414 muestras y 4 aperturas |
+| [Fotos de la cámara](docs/evidencias/camara/) | 6 fotos JPEG de 640×480 tomadas una por segundo por el gateway |
+
+### Despliegue en AWS
+
+Capturas del 24-10-2026 en [`docs/evidencias/nube/`](docs/evidencias/nube/).
+
+| Captura | Qué muestra |
+|---|---|
+| [`docker compose ps`](docs/evidencias/nube/01-docker-compose-ps.png) | Dentro de la EC2 (`/opt/smartegg`): el ID de la instancia leído del servicio de metadatos y los 7 servicios. `backend`, `broker` y `database` *healthy*; `vision`, `anomalias` y `grafana` arriba; `mqtt-password-init` terminó con código 0. La base solo escucha en `127.0.0.1:5432` |
+| [Instancia por CLI](docs/evidencias/nube/02-instancia-ec2.png) | `aws ec2 describe-instances`: `smartegg-fase3`, *running*, `t3.medium`, `us-east-1c`, Linux; y `describe-addresses`: IP elástica `100.63.122.66` asociada a la instancia |
+| [Grupo de seguridad por CLI](docs/evidencias/nube/03-grupo-seguridad.png) | `smartegg-sg`: puertos 8000, 22, 3001, 9001 y 1883 con su origen y uso; 5432 no aparece |
+| [Consola de instancias](docs/evidencias/nube/04-consola-instancias.jpg) | Instancia *En ejecución*, 3/3 comprobaciones de estado, DNS público e IP elástica |
+| [Detalle de la instancia](docs/evidencias/nube/05-consola-detalle-instancia.jpg) | IPv4 pública y privada, VPC, subred, IP elástica e IMDSv2 requerido |
+| [Grupo de seguridad en la consola](docs/evidencias/nube/06-consola-grupo-seguridad.jpg) | Las 7 reglas de entrada de `smartegg-sg` |
+
+| Grupo de seguridad | Detalle de la instancia |
+|---|---|
+| ![Reglas de entrada del grupo de seguridad smartegg-sg](docs/evidencias/nube/06-consola-grupo-seguridad.jpg) | ![Detalle de la instancia smartegg-fase3 en la consola de AWS](docs/evidencias/nube/05-consola-detalle-instancia.jpg) |
+
+### Evidencia de la Fase 3 pendiente
 
 | Captura | Qué debe mostrar |
 |---|---|
-| `ec2-instancia.png` | Instancia Ubuntu en ejecución con su IP pública |
-| `security-group.png` | Reglas de entrada del grupo de seguridad |
-| `docker-compose-ps-nube.png` | `docker compose ps` en la VM con los siete servicios |
-| `grafana-centro-control-nube.png` | Centro de control con datos en vivo desde la nube |
-| `grafana-alerta.png` | Regla de alerta en *Alerting → Alert rules* |
-| `vision-bloqueo.png` | Pantalla de bloqueo con la foto del objeto |
 | `ml-anomalia-alerta.png` | Puntaje sobre el umbral y alarma `ml_anomaly` |
 
 ---
@@ -1218,7 +1404,7 @@ Las capturas de la Fase 3 se guardan en `docs/evidencias/nube/` con estos nombre
 | 24-10-2026 | **Grafana:** imagen propia con identidad SmartEgg, portada Centro de control con visión, anomalías y bloqueo |
 | 24-10-2026 | **Consola:** panel Cámara · Visión y foto de la bandeja en la pantalla de bloqueo |
 | 24-10-2026 | **Firmware:** el lector acepta la tarjeta durante un bloqueo aunque la puerta siga abierta, para poder liberar el sistema con el operador frente a la bandeja |
-| 24-10-2026 | Guion del pitch con 2 minutos por integrante, documentación final, evidencias y calificación |
+| 24-10-2026 | Documentación final, evidencias y calificación |
 
 El historial completo está en los commits de la rama `develop`
 (`git log -- Proyecto_2_SmartEgg`).
@@ -1231,12 +1417,12 @@ El historial completo está en los commits de la rama `develop`
 | Manual de usuario | [Manual de usuario](#manual-de-usuario) · [`docs/MANUAL_USUARIO.md`](docs/MANUAL_USUARIO.md) (Fase 2) |
 | Notebook de ML | [`ml/anomalias/entrenar_anomalias.ipynb`](ml/anomalias/entrenar_anomalias.ipynb) · [`ml/vision/entrenar_vision.ipynb`](ml/vision/entrenar_vision.ipynb) |
 | Módulo de visión computacional | [`vision/`](vision/) · [`ml/vision/`](ml/vision/) |
-| Infraestructura en la nube | [`docker-compose.yml`](docker-compose.yml) · [§4](#4-infraestructura-en-la-nube) · capturas en `docs/evidencias/nube/` |
+| Infraestructura en la nube | [`docker-compose.yml`](docker-compose.yml) · [§4](#4-infraestructura-en-la-nube) · [capturas de AWS](docs/evidencias/nube/) |
 | Dashboards exportados de Grafana | [`grafana/dashboards/`](grafana/dashboards/) |
 | Repositorio Git | Este repositorio, carpeta `Proyecto_2_SmartEgg` |
 | Evidencias de funcionamiento | [Evidencias](#evidencias-de-funcionamiento) |
 | Bitácora de desarrollo | [Bitácora](#bitácora-de-desarrollo) |
-| Pitch y demo en vivo | [`docs/guion.pdf`](docs/guion.pdf): 2 minutos por integrante, demo con bloqueo y preguntas técnicas probables |
+| Video de presentación | _Enlace pendiente: agregar aquí el enlace al video_ |
 | Justificación del consumo eléctrico | [`docs/CONSUMO_ELECTRICO.md`](docs/CONSUMO_ELECTRICO.md) |
 | Contrato MQTT | [`mqtt/TOPICS.md`](mqtt/TOPICS.md) |
 | Consultas SQL de calificación | [`db/consultas_calificacion.sql`](db/consultas_calificacion.sql) |

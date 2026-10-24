@@ -76,7 +76,7 @@ El contrato de aplicación, los niveles de QoS y los payloads están en
 En la Fase 3 el broker corre en la VM de AWS con el mismo `docker-compose.yml`, junto al
 backend, la base de datos, los servicios de ML y Grafana. Dentro de la red Docker los
 servicios lo encuentran como `broker:1883`; desde fuera, el gateway usa
-`<IP-pública>:1883` y la consola `ws://<IP-pública>:9001`. El grupo de seguridad solo
+`100.63.122.66:1883` y la consola `ws://100.63.122.66:9001`. El grupo de seguridad solo
 abre esos puertos y todas las conexiones exigen usuario y contraseña. Los pasos completos
 están en el [README principal](../README.md#4-infraestructura-en-la-nube).
 

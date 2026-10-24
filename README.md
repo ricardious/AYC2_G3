@@ -12,6 +12,23 @@ Repositorio del Grupo 3 para el curso **Arquitectura de Computadoras y Ensamblad
 
 Cada entrega tiene sus propias instrucciones de instalación, ejecución y pruebas. Para trabajar con el Proyecto 2, comience por su [guía principal](Proyecto_2_SmartEgg/README.md); para el Proyecto 1 y la Práctica 1, consulte sus respectivos README: [Proyecto 1](Proyecto_1_SmartEgg/README.md) y [Práctica 1](Practica_1_SmartEgg/README.md).
 
+## Entregables del Proyecto 2
+
+| Entregable | Enlace |
+| --- | --- |
+| Bitácora de desarrollo | [Bitácora](Proyecto_2_SmartEgg/README.md#bitácora-de-desarrollo) |
+| Notebooks de ML | [Anomalías](Proyecto_2_SmartEgg/ml/anomalias/entrenar_anomalias.ipynb) · [Visión](Proyecto_2_SmartEgg/ml/vision/entrenar_vision.ipynb) |
+| Manual técnico | [Manual técnico](Proyecto_2_SmartEgg/README.md#manual-técnico) |
+| Manual de usuario | [Manual de usuario](Proyecto_2_SmartEgg/README.md#manual-de-usuario) |
+| Modelo entidad-relación | [Base de datos](Proyecto_2_SmartEgg/README.md#modelo-entidad-relación) |
+| Scripts de consultas a la base de datos | [consultas_calificacion.sql](Proyecto_2_SmartEgg/db/consultas_calificacion.sql) |
+| Documentación de la API (Swagger/OpenAPI) | [Documentación de la API](Proyecto_2_SmartEgg/README.md#11-documentación-de-la-api) |
+| Valor disruptivo | [Bloqueo inteligente por visión](Proyecto_2_SmartEgg/README.md#8-valor-disruptivo-bloqueo-inteligente-por-visión) |
+| Infraestructura en la nube (AWS) | [Capturas de AWS](Proyecto_2_SmartEgg/README.md#despliegue-en-aws) · [Grafana](http://100.63.122.66:3001) |
+| Evidencias de funcionamiento | [Evidencias](Proyecto_2_SmartEgg/README.md#evidencias-de-funcionamiento) |
+| Dashboards de Grafana (JSON) | [grafana/dashboards](Proyecto_2_SmartEgg/grafana/dashboards/) |
+| Video de presentación | _Enlace pendiente_ |
+
 ## Integrantes
 
 | Nombre | Carné |
