@@ -57,7 +57,7 @@ def serial_status(request: Request) -> SerialStatus:
 async def create_reading(
     payload: TelemetryCreate, request: Request, db: Session = Depends(get_db)
 ) -> TelemetryReading:
-    reading = ingest_telemetry(db, payload)
+    reading = ingest_telemetry(db, payload, request.app.state.settings.timezone)
     request.app.state.mqtt.publish_snapshot(
         build_mqtt_snapshot(db, reading, payload.incubator_code)
     )

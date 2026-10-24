@@ -15,6 +15,7 @@ from .services.anomalies import AnomalyListener
 from .services.bootstrap import ensure_initial_incubators, ensure_initial_technicians
 from .services.broadcast import AccessConnectionManager, ConnectionManager
 from .services.commands import CommandListener
+from .services.energy import EnergyManager, energy_status
 from .services.gateway_link import GatewayLink
 from .services.mqtt import MqttPublisher, build_mqtt_snapshot
 from .services.serial_access import (
@@ -43,10 +44,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def serial_payload_handler(payload) -> None:  # type: ignore[no-untyped-def]
         with session_factory() as db:
             try:
-                reading = ingest_telemetry(db, payload)
+                reading = ingest_telemetry(db, payload, configured.timezone)
                 mqtt_publisher.publish_snapshot(
                     build_mqtt_snapshot(db, reading, payload.incubator_code)
                 )
+                status = energy_status(
+                    db,
+                    reading.incubator_id,
+                    configured.timezone,
+                    energy_manager.rules(payload.incubator_code),
+                )
+                if status is not None:
+                    mqtt_publisher.publish_energy(payload.incubator_code, status)
             except Exception:
                 logger.exception("Rejected serial telemetry")
                 return
@@ -159,11 +168,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     vision_listener = VisionListener(configured, system_lock)
     anomaly_listener = AnomalyListener(configured, session_factory)
+    energy_manager = EnergyManager(
+        session_factory,
+        lambda command: serial_bridge.send_command(command),
+        timezone=configured.timezone,
+        is_locked=system_lock.is_locked,
+    )
     command_listener = CommandListener(
         configured,
         session_factory,
         send_to_node=serial_bridge.send_command,
         is_locked=system_lock.is_locked,
+        on_energy_change=energy_manager.wake,
     )
 
     @asynccontextmanager
@@ -179,7 +195,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         command_listener.start()
         vision_listener.start()
         anomaly_listener.start()
+        energy_manager.start()
         yield
+        energy_manager.stop()
         anomaly_listener.stop()
         vision_listener.stop()
         command_listener.stop()
@@ -206,6 +224,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.system_lock = system_lock
     app.state.vision = vision_listener
     app.state.anomalies = anomaly_listener
+    app.state.energy = energy_manager
     app.add_middleware(
         CORSMiddleware,
         allow_origins=configured.cors_origins,

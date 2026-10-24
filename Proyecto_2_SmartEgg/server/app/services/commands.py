@@ -21,11 +21,16 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from ..config import Settings
 from ..models import ActuatorState, Incubator, RotationEvent
-from ..schemas import ActuatorCommand, IncubatorConfigUpdate, RotationCommand
+from ..schemas import (
+    ActuatorCommand,
+    EnergyConfigUpdate,
+    IncubatorConfigUpdate,
+    RotationCommand,
+)
 
 logger = logging.getLogger(__name__)
 
-COMMAND_KINDS = ("actuador", "rotar", "config")
+COMMAND_KINDS = ("actuador", "rotar", "config", "energia")
 ACTUATOR_KINDS = {"heater", "fan", "servo", "buzzer"}
 
 
@@ -97,8 +102,11 @@ def apply_config_command(
 
 def execute_command(
     db: Session, node_code: str, kind: str, data: dict[str, Any]
-) -> dict[str, object]:
-    """Validate and record one command; return the frame for the node."""
+) -> dict[str, object] | None:
+    """Validate and record one command; return the frame for the node.
+
+    Energy settings stay in the backend, so they return no frame.
+    """
     incubator = db.scalar(select(Incubator).where(Incubator.code == node_code))
     if incubator is None:
         raise CommandError("Unknown incubator")
@@ -115,6 +123,13 @@ def execute_command(
         return apply_config_command(
             db, incubator, IncubatorConfigUpdate.model_validate(data)
         )
+    if kind == "energia":
+        from .energy import apply_energy_update
+
+        apply_energy_update(
+            db, incubator, EnergyConfigUpdate.model_validate(data), datetime.now(UTC)
+        )
+        return None
     raise CommandError("Unknown command")
 
 
@@ -126,8 +141,10 @@ class CommandListener:
         send_to_node: Callable[[dict[str, object]], None],
         client_factory: Callable[..., mqtt.Client] = mqtt.Client,
         is_locked: Callable[[str], bool] = lambda _node_code: False,
+        on_energy_change: Callable[[], None] | None = None,
     ) -> None:
         self.settings = settings
+        self.on_energy_change = on_energy_change
         self.enabled = settings.mqtt_enabled
         self.session_factory = session_factory
         self.send_to_node = send_to_node
@@ -197,19 +214,23 @@ class CommandListener:
             request_id = data.pop("request_id", None)
             if request_id is not None:
                 result["request_id"] = request_id
-            if self.is_locked(node_code):
+            if kind != "energia" and self.is_locked(node_code):
                 # The node rejects them too; answering here keeps the page honest.
                 raise SystemLockedError("System locked: present an authorized card")
             with self.session_factory() as db:
                 frame = execute_command(db, node_code, kind, data)
-            try:
-                self.send_to_node(frame)
-                result["delivered"] = True
-            except RuntimeError as exc:
-                # The command stays recorded; the client learns that it did
-                # not reach the node because the gateway is offline.
-                result["delivered"] = False
-                result["detail"] = str(exc)
+            if frame is None:
+                if self.on_energy_change is not None:
+                    self.on_energy_change()
+            else:
+                try:
+                    self.send_to_node(frame)
+                    result["delivered"] = True
+                except RuntimeError as exc:
+                    # The command stays recorded; the client learns that it did
+                    # not reach the node because the gateway is offline.
+                    result["delivered"] = False
+                    result["detail"] = str(exc)
             result["ok"] = True
         except SystemLockedError as exc:
             result.update(ok=False, error="system_locked", detail=str(exc))
