@@ -38,8 +38,33 @@ export interface MqttVisionResult {
   confianza: number;
   votos_objeto: number;
   ventana: number;
+  /** Probabilidad media de `objeto` en la ventana: lo que decide el bloqueo. */
+  prob_objeto_media: number | null;
   objeto_detectado: boolean;
   recorded_at: string;
+}
+
+/** Última foto de la bandeja (`camara/foto`), lista para un `<img>`. */
+export interface CameraFrame {
+  url: string;
+  receivedAt: number;
+}
+
+/** Una foto más grande no es de IP Webcam a 640 × 480; el gateway corta en 1 MB. */
+const MAX_CAMERA_BYTES = 1_000_000;
+
+export function cameraTopic(nodeCode: string): string {
+  return `smartegg/${nodeCode}/camara/foto`;
+}
+
+/** El topic trae el JPEG en bytes, sin JSON; se descarta lo que no empiece como JPEG. */
+export function isJpegPayload(payload: Uint8Array): boolean {
+  return (
+    payload.byteLength > 2 &&
+    payload.byteLength <= MAX_CAMERA_BYTES &&
+    payload[0] === 0xff &&
+    payload[1] === 0xd8
+  );
 }
 
 export type EnergyDevice = "heater" | "fan";
@@ -189,6 +214,8 @@ export function parseMqttMessage(
         confianza: data.confianza,
         votos_objeto: data.votos_objeto as number,
         ventana: data.ventana as number,
+        prob_objeto_media:
+          typeof data.prob_objeto_media === "number" ? data.prob_objeto_media : null,
         objeto_detectado: data.objeto_detectado,
         recorded_at: data.recorded_at,
       },
