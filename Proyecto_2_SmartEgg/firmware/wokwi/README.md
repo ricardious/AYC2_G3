@@ -1,6 +1,6 @@
 # Simulación en Wokwi
 
-`diagram.json` reproduce el nodo del Proyecto 1 con el mismo mapa de pines que
+`diagram.json` reproduce el nodo del Proyecto 2 con el mismo mapa de pines que
 [`Config.h`](../SmartEggESP32/Config.h). Sirve para probar el firmware y para
 grabar el video sin depender del hardware.
 
@@ -13,7 +13,7 @@ grabar el video sin depender del hardware.
 Requiere la extensión **Wokwi for VS Code** y una licencia gratuita.
 
 ```bash
-cd Proyecto_1_SmartEgg/firmware
+cd Proyecto_2_SmartEgg/firmware
 uvx platformio run          # deja firmware.bin y firmware.elf en .pio/build/esp32dev/
 ```
 

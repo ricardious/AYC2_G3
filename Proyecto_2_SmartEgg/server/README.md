@@ -1,8 +1,10 @@
 # SmartEgg API
 
-Backend FastAPI para el Proyecto 1 **SmartEgg: Plataforma IoT Distribuida**. Recibe la
-telemetría ambiental de la ESP32 por UART/USB, conserva el ciclo de incubación en PostgreSQL,
-expone la información al frontend por REST y publica el estado del nodo mediante MQTT.
+Backend FastAPI para el Proyecto 2 **SmartEgg: Incubadora Inteligente IoT (Fase 3)**. Recibe
+la telemetría de la ESP32 a través del gateway MQTT (o por UART/USB en modo `serial`),
+conserva el ciclo de incubación en PostgreSQL, publica el estado del nodo mediante MQTT y
+recibe por MQTT todos los comandos de control. La API REST queda solo para consultas,
+cuentas, lotes, huevos y reportes.
 
 ## Cobertura del enunciado
 
@@ -143,7 +145,7 @@ pierde la conexión inesperadamente. La lista completa está en `../mqtt/TOPICS.
 
 ## Ejecución
 
-Con Docker, desde la raíz de `Proyecto_1_SmartEgg`:
+Con Docker, desde la raíz de `Proyecto_2_SmartEgg`:
 
 ```bash
 docker compose up -d --build backend

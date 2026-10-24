@@ -1,8 +1,11 @@
 # Montaje físico paso a paso
 
-Esta guía describe el cableado del nodo físico del Proyecto 1 con una ESP32
+Esta guía describe el cableado del nodo físico del Proyecto 2 (el mismo de la Fase 2) con una ESP32
 DevKit V1. Haga todo el montaje con la ESP32, la fuente de 5 V y las cargas
 desconectadas. Revise cada etapa antes de energizar la siguiente.
+
+Para la Fase 3 se agrega el LED rojo de bloqueo en GPIO 13: ánodo por una
+resistencia de 220 Ω y cátodo a GND (ver [`README.md`](README.md)).
 
 ## 1. Reglas de alimentación
 
@@ -275,7 +278,7 @@ GND    ─────────────────────── cá
 Para abrir el monitor serial desde la raíz del repositorio:
 
 ```bash
-uvx platformio run -d Proyecto_1_SmartEgg/firmware -t monitor
+uvx platformio run -d Proyecto_2_SmartEgg/firmware -t monitor
 ```
 
 ## 13. Correspondencia con el montaje fotografiado

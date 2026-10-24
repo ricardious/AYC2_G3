@@ -1,6 +1,6 @@
 # Grafana
 
-Usamos Grafana local para visualizar los datos de SmartEgg. Dejamos dos datasources
+Usamos Grafana para visualizar los datos de SmartEgg; en la Fase 3 corre en la VM de la nube con el resto del stack (`http://<IP-pública>:3001`). Dejamos dos datasources
 configurados automáticamente:
 
 - PostgreSQL para consultar el historial guardado.
@@ -8,7 +8,7 @@ configurados automáticamente:
 
 ## Iniciar
 
-Desde la carpeta `Proyecto_1_SmartEgg` ejecutamos:
+Desde la carpeta `Proyecto_2_SmartEgg` ejecutamos:
 
 ```bash
 cp .env.example .env
@@ -142,7 +142,7 @@ En local dejamos esta dirección:
 GRAFANA_MQTT_URI=tcp://broker:1883
 ```
 
-Cuando el broker esté en AWS cambiamos `GRAFANA_MQTT_URI` por su dirección externa. Si
+En la nube el broker corre en el mismo Compose que Grafana, así que el valor no cambia. Solo si el broker estuviera en otra máquina cambiaríamos `GRAFANA_MQTT_URI` por su dirección externa. Si
 activamos TLS también actualizamos la configuración del datasource en
 `provisioning/datasources/smartegg.yml`.
 
