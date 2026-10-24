@@ -1,16 +1,17 @@
 """Entrenamiento del clasificador de visión de SmartEgg (huevo / objeto / vacio).
 
-Transfer learning con MobileNetV2 preentrenada en ImageNet. El notebook
-`entrenar_vision.ipynb` usa estas funciones paso a paso; también se puede
-correr todo de una vez desde la terminal:
+Transfer learning con MobileNetV2 preentrenada en ImageNet. El modelo se
+evalúa con validación cruzada por tandas y después se entrena el modelo final
+con todas las fotos. El notebook `entrenar_vision.ipynb` usa estas funciones
+paso a paso; también se puede correr todo de una vez desde la terminal:
 
   python ml/vision/smartegg_vision.py
-  python ml/vision/smartegg_vision.py --dataset otra/carpeta --epocas-cabeza 5 --epocas-ajuste 5
+  python ml/vision/smartegg_vision.py --particiones 3 --epocas-cabeza 5 --epocas-ajuste 5
 
 Salidas:
-  modelo/smartegg_vision.onnx   modelo para el servicio de visión (cv2.dnn u onnxruntime)
+  modelo/smartegg_vision.onnx   modelo final para el servicio de visión (cv2.dnn u onnxruntime)
   modelo/clases.json            clases y formato de entrada del modelo
-  resultados/                   matriz de confusión, curvas, errores y reporte con F1
+  resultados/                   validación cruzada, matriz de confusión, curvas, errores y reporte con F1
 """
 
 import argparse
@@ -126,6 +127,45 @@ def split_by_group(samples: list[Sample], val_ratio: float = 0.15, test_ratio: f
         for name in remaining:
             split.train.extend(groups[name])
     return split
+
+
+def kfold_splits(samples: list[Sample], folds: int = 5, val_ratio: float = 0.15,
+                 seed: int = SEED) -> list[Split]:
+    """Validación cruzada por tandas: cada tanda queda en prueba en una sola partición.
+
+    Con pocas tandas por clase, un único conjunto de prueba depende mucho de
+    qué tandas caen en él; promediar varias particiones da una medida estable.
+    """
+    rng = random.Random(seed)
+    splits = [Split() for _ in range(folds)]
+    for label in range(len(CLASSES)):
+        groups: dict[str, list[Sample]] = {}
+        for sample in samples:
+            if sample.label == label:
+                groups.setdefault(sample.group, []).append(sample)
+        names = sorted(groups)
+        if len(names) < folds:
+            raise SystemExit(f"La clase {CLASSES[label]} tiene menos de {folds} tandas.")
+        rng.shuffle(names)
+        # Reparte las tandas en partes con un número parecido de fotos.
+        parts: list[list[str]] = [[] for _ in range(folds)]
+        sizes = [0] * folds
+        for name in names:
+            smallest = sizes.index(min(sizes))
+            parts[smallest].append(name)
+            sizes[smallest] += len(groups[name])
+        total = sum(sizes)
+        for index, split in enumerate(splits):
+            split.test.extend(s for name in parts[index] for s in groups[name])
+            remaining = [name for other, part in enumerate(parts) if other != index for name in part]
+            rng.shuffle(remaining)
+            taken = 0
+            while remaining[1:] and taken < total * val_ratio:
+                name = remaining.pop(0)
+                split.val.extend(groups[name])
+                taken += len(groups[name])
+            split.train.extend(s for name in remaining for s in groups[name])
+    return splits
 
 
 def describe_split(split: Split) -> str:
@@ -335,14 +375,98 @@ def evaluate(labels: np.ndarray, probabilities: np.ndarray) -> dict:
     }
 
 
-def plot_confusion(metrics: dict, path: pathlib.Path | None = None):
+def cross_validate(samples: list[Sample], folds: int = 5, *, head_epochs: int = 8,
+                   finetune_epochs: int = 12, pretrained: bool = True,
+                   device: str = "cpu") -> dict:
+    """Entrena un modelo por partición y junta sus predicciones de prueba.
+
+    Cada foto se predice una sola vez, con el modelo que no la vio, así que la
+    matriz de confusión global cubre todo el dataset.
+    """
+    folds_results, tested, all_labels, all_probabilities = [], [], [], []
+    for index, split in enumerate(kfold_splits(samples, folds), start=1):
+        print(f"\n=== Partición {index}/{folds} ===\n{describe_split(split)}", flush=True)
+        set_seed(SEED + index)
+        train_loader, val_loader, test_loader = make_loaders(split)
+        model = build_model(pretrained=pretrained)
+        history = train(model, train_loader, val_loader, class_weights(split.train),
+                        head_epochs=head_epochs, finetune_epochs=finetune_epochs, device=device)
+        labels, probabilities = predict(model, test_loader, device)
+        metrics = evaluate(labels, probabilities)
+        print(f"Partición {index}: exactitud {metrics['exactitud']:.3f}  "
+              f"F1 macro {metrics['f1_macro']:.3f}  "
+              f"recall objeto {metrics['por_clase']['objeto']['recall']:.3f}", flush=True)
+        folds_results.append({
+            "particion": index,
+            "fotos_prueba": len(split.test),
+            "epocas": len(history),
+            **{key: metrics[key] for key in ("exactitud", "f1_macro", "por_clase",
+                                             "matriz_confusion")},
+        })
+        tested.extend(split.test)
+        all_labels.append(labels)
+        all_probabilities.append(probabilities)
+    labels = np.concatenate(all_labels)
+    probabilities = np.concatenate(all_probabilities)
+    return {"particiones": folds_results, "global": evaluate(labels, probabilities),
+            "samples": tested, "labels": labels, "probabilidades": probabilities}
+
+
+def summarize_cv(cv: dict) -> str:
+    """Promedio ± desviación estándar de las particiones."""
+    rows = [("exactitud", lambda f: f["exactitud"]), ("F1 macro", lambda f: f["f1_macro"])]
+    for name in CLASSES:
+        rows.append((f"recall {name}", lambda f, n=name: f["por_clase"][n]["recall"]))
+    rows.append(("precisión objeto", lambda f: f["por_clase"]["objeto"]["precision"]))
+    folds = cv["particiones"]
+    lines = [f"{'métrica':<18}" + "".join(f"{'P' + str(f['particion']):>7}" for f in folds)
+             + f"{'media ± desv.':>16}"]
+    for title, value in rows:
+        values = np.array([value(f) for f in folds])
+        lines.append(f"{title:<18}" + "".join(f"{v:>7.3f}" for v in values)
+                     + f"{values.mean():>9.3f} ± {values.std():.3f}")
+    return "\n".join(lines)
+
+
+def plot_cross_validation(cv: dict, path: pathlib.Path | None = None):
+    import matplotlib.pyplot as plt
+
+    folds = cv["particiones"]
+    names = [f"P{f['particion']}" for f in folds]
+    series = {
+        "F1 macro": [f["f1_macro"] for f in folds],
+        "recall objeto": [f["por_clase"]["objeto"]["recall"] for f in folds],
+        "precisión objeto": [f["por_clase"]["objeto"]["precision"] for f in folds],
+    }
+    positions = np.arange(len(folds))
+    width = 0.8 / len(series)
+    figure, axis = plt.subplots(figsize=(8, 4))
+    for offset, (title, values) in enumerate(series.items()):
+        bars = axis.bar(positions + (offset - 1) * width, values, width,
+                        label=f"{title} (media {np.mean(values):.2f})")
+        axis.axhline(np.mean(values), color=bars.patches[0].get_facecolor(),
+                     linestyle="--", linewidth=1)
+    axis.set_xticks(positions, names)
+    axis.set_ylim(0, 1.05)
+    axis.set_xlabel("Partición (conjunto de prueba distinto en cada una)")
+    axis.set_title("Validación cruzada por tandas")
+    axis.legend(loc="lower right")
+    axis.grid(axis="y", alpha=0.3)
+    figure.tight_layout()
+    if path:
+        figure.savefig(path, dpi=150)
+    return figure
+
+
+def plot_confusion(metrics: dict, path: pathlib.Path | None = None,
+                   title: str = "Matriz de confusión (prueba)"):
     import matplotlib.pyplot as plt
     from sklearn.metrics import ConfusionMatrixDisplay
 
     figure, axis = plt.subplots(figsize=(5, 4.5))
     ConfusionMatrixDisplay(np.array(metrics["matriz_confusion"]), display_labels=CLASSES).plot(
         ax=axis, cmap="Blues", colorbar=False, values_format="d")
-    axis.set_title(f"Matriz de confusión (prueba)\nF1 macro = {metrics['f1_macro']:.3f}")
+    axis.set_title(f"{title}\nF1 macro = {metrics['f1_macro']:.3f}")
     axis.set_xlabel("Predicción")
     axis.set_ylabel("Real")
     figure.tight_layout()
@@ -381,7 +505,7 @@ def plot_history(history: list[dict], path: pathlib.Path | None = None):
 
 def plot_errors(samples: list[Sample], labels: np.ndarray, probabilities: np.ndarray,
                 path: pathlib.Path | None = None, limit: int = 12):
-    """Fotos de prueba mal clasificadas; devuelve None si no hay errores."""
+    """Fotos mal clasificadas; devuelve None si no hay errores."""
     import matplotlib.pyplot as plt
 
     predictions = probabilities.argmax(1)
@@ -457,23 +581,31 @@ def verify_onnx(model: nn.Module, onnx_path: pathlib.Path, samples: list[Sample]
     return worst
 
 
-def save_results(metrics: dict, history: list[dict], split: Split,
+def save_results(cv: dict, history: list[dict], final_split: Split,
                  results_dir: pathlib.Path = RESULTS_DIR) -> None:
     results_dir.mkdir(parents=True, exist_ok=True)
+    folds = len(cv["particiones"])
     (results_dir / "reporte.txt").write_text(
         "SmartEgg - clasificador de visión (MobileNetV2, transfer learning)\n\n"
-        f"Fotos por conjunto (separadas por tanda):\n{describe_split(split)}\n\n"
-        f"Exactitud en prueba: {metrics['exactitud']:.3f}\n"
-        f"F1 macro en prueba:  {metrics['f1_macro']:.3f}\n\n"
-        f"{metrics['reporte']}\n")
-    summary = {key: value for key, value in metrics.items() if key != "reporte"}
-    (results_dir / "metricas.json").write_text(
-        json.dumps({**summary, "historial": history}, indent=2, ensure_ascii=False) + "\n")
+        f"Validación cruzada por tandas ({folds} particiones, {len(cv['samples'])} fotos):\n"
+        f"{summarize_cv(cv)}\n\n"
+        f"Predicciones de las {folds} particiones juntas (cada foto la predice el modelo que no la vio):\n"
+        f"Exactitud: {cv['global']['exactitud']:.3f}\n"
+        f"F1 macro:  {cv['global']['f1_macro']:.3f}\n\n"
+        f"{cv['global']['reporte']}\n"
+        "Modelo final exportado (todas las fotos; la validación solo elige la mejor época):\n"
+        f"{describe_split(final_split)}\n")
+    summary = {key: value for key, value in cv["global"].items() if key != "reporte"}
+    (results_dir / "metricas.json").write_text(json.dumps({
+        "validacion_cruzada": {"particiones": cv["particiones"], "global": summary},
+        "modelo_final": {"historial": history},
+    }, indent=2, ensure_ascii=False) + "\n")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dataset", type=pathlib.Path, default=DEFAULT_DATASET)
+    parser.add_argument("--particiones", type=int, default=5)
     parser.add_argument("--epocas-cabeza", type=int, default=8)
     parser.add_argument("--epocas-ajuste", type=int, default=12)
     parser.add_argument("--modelo", type=pathlib.Path, default=MODEL_DIR)
@@ -485,30 +617,31 @@ def main() -> None:
     import matplotlib
 
     matplotlib.use("Agg")
-    set_seed()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     samples = list_samples(args.dataset)
-    split = split_by_group(samples)
-    print(describe_split(split), flush=True)
+    epochs = {"head_epochs": args.epocas_cabeza, "finetune_epochs": args.epocas_ajuste}
 
-    train_loader, val_loader, test_loader = make_loaders(split)
-    model = build_model(pretrained=not args.sin_preentrenar)
-    history = train(model, train_loader, val_loader, class_weights(split.train),
-                    head_epochs=args.epocas_cabeza, finetune_epochs=args.epocas_ajuste,
-                    device=device)
-
-    labels, probabilities = predict(model, test_loader, device)
-    metrics = evaluate(labels, probabilities)
-    print(metrics["reporte"], flush=True)
-
+    cv = cross_validate(samples, args.particiones, pretrained=not args.sin_preentrenar,
+                        device=device, **epochs)
+    print(f"\n{summarize_cv(cv)}\n\n{cv['global']['reporte']}", flush=True)
     args.resultados.mkdir(parents=True, exist_ok=True)
-    save_results(metrics, history, split, args.resultados)
-    plot_confusion(metrics, args.resultados / "matriz_confusion.png")
+    plot_cross_validation(cv, args.resultados / "validacion_cruzada.png")
+    plot_confusion(cv["global"], args.resultados / "matriz_confusion.png",
+                   title="Matriz de confusión (validación cruzada)")
+    plot_errors(cv["samples"], cv["labels"], cv["probabilidades"], args.resultados / "errores.png")
+
+    print("\n=== Modelo final ===", flush=True)
+    set_seed()
+    final_split = split_by_group(samples, test_ratio=0)
+    train_loader, val_loader, _ = make_loaders(final_split)
+    model = build_model(pretrained=not args.sin_preentrenar)
+    history = train(model, train_loader, val_loader, class_weights(final_split.train),
+                    device=device, **epochs)
     plot_history(history, args.resultados / "curvas_entrenamiento.png")
-    plot_errors(split.test, labels, probabilities, args.resultados / "errores.png")
+    save_results(cv, history, final_split, args.resultados)
 
     onnx_path = export_onnx(model, args.modelo)
-    difference = verify_onnx(model, onnx_path, split.test[:10])
+    difference = verify_onnx(model, onnx_path, final_split.val[:10])
     print(f"Modelo exportado en {onnx_path} (diferencia PyTorch vs OpenCV: {difference:.2e})")
 
 
