@@ -21,6 +21,7 @@ from .services.serial_access import (
     process_serial_access_event,
 )
 from .services.serial_bridge import SerialBridge
+from .services.system_lock import SystemLock, VisionListener
 from .services.telemetry import ingest_telemetry
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     broadcast = ConnectionManager()
     access_broadcast = AccessConnectionManager()
     main_loop: asyncio.AbstractEventLoop | None = None
+
+    def live_payload_handler(payload) -> None:  # type: ignore[no-untyped-def]
+        system_lock.observe(payload.incubator_code, payload.system_locked)
+        mqtt_publisher.publish_live_telemetry(payload)
 
     def serial_payload_handler(payload) -> None:  # type: ignore[no-untyped-def]
         with session_factory() as db:
@@ -88,6 +93,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             outcome.mqtt_payload.get("event", "unknown"),
             (perf_counter() - started_at) * 1000,
         )
+        if outcome.mqtt_payload.get("event") == "authorized":
+            # Unlock first: the node rejects every command while locked.
+            try:
+                unlocked = system_lock.unlock(outcome.incubator_code)
+            except RuntimeError:
+                logger.exception("Could not unlock %s", outcome.incubator_code)
+                unlocked = False
+            if unlocked:
+                mqtt_publisher.publish_access_event(
+                    outcome.incubator_code,
+                    {**outcome.mqtt_payload, "event": "system_unlocked"},
+                )
         if outcome.command is not None:
             try:
                 serial_bridge.send_command(outcome.command)
@@ -118,7 +135,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         serial_bridge = GatewayLink(
             configured,
             on_payload=serial_payload_handler,
-            on_live_payload=mqtt_publisher.publish_live_telemetry,
+            on_live_payload=live_payload_handler,
             on_access_event=serial_access_handler,
         )
     else:
@@ -130,12 +147,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             reconnect_seconds=configured.serial_reconnect_seconds,
             default_incubator_code=configured.default_incubator_code,
             on_payload=serial_payload_handler,
-            on_live_payload=mqtt_publisher.publish_live_telemetry,
+            on_live_payload=live_payload_handler,
             on_access_event=serial_access_handler,
         )
 
+    system_lock = SystemLock(
+        lambda command: serial_bridge.send_command(command),
+        resend_seconds=configured.vision_lock_resend_seconds,
+        unlock_grace_seconds=configured.vision_unlock_grace_seconds,
+    )
+    vision_listener = VisionListener(configured, system_lock)
     command_listener = CommandListener(
-        configured, session_factory, send_to_node=serial_bridge.send_command
+        configured,
+        session_factory,
+        send_to_node=serial_bridge.send_command,
+        is_locked=system_lock.is_locked,
     )
 
     @asynccontextmanager
@@ -149,7 +175,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         mqtt_publisher.start()
         serial_bridge.start()
         command_listener.start()
+        vision_listener.start()
         yield
+        vision_listener.stop()
         command_listener.stop()
         serial_bridge.stop()
         mqtt_publisher.stop()
@@ -171,6 +199,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.mqtt = mqtt_publisher
     app.state.serial_bridge = serial_bridge
     app.state.commands = command_listener
+    app.state.system_lock = system_lock
+    app.state.vision = vision_listener
     app.add_middleware(
         CORSMiddleware,
         allow_origins=configured.cors_origins,
