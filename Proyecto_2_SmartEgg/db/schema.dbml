@@ -76,6 +76,9 @@ Table telemetry_readings {
   temperature_c float [not null]
   humidity_pct float [not null]
   door_open boolean
+  system_enabled boolean [note: 'POWER de la trama']
+  sensor_ok boolean [note: 'SENSOR de la trama (DHT22)']
+  system_locked boolean [note: 'LOCK de la trama: bloqueo por objeto extraño']
   occupied_slots integer [not null]
   available_slots integer [not null]
   source varchar(20) [not null]

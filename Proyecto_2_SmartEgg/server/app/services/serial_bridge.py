@@ -90,6 +90,7 @@ def parse_serial_line(line: str, default_incubator_code: str) -> TelemetryCreate
             "BUZZER": "buzzer",
             "POWER": "system_enabled",
             "SENSOR": "sensor_ok",
+            "LOCK": "system_locked",
             "NODE": "incubator_code",
         }
         for fragment in raw.split(","):
@@ -105,6 +106,7 @@ def parse_serial_line(line: str, default_incubator_code: str) -> TelemetryCreate
                 "buzzer",
                 "system_enabled",
                 "sensor_ok",
+                "system_locked",
             }:
                 data[normalized] = value.lower() in {"1", "true", "on", "open"}
             elif normalized == "incubator_code":
