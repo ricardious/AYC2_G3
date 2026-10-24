@@ -144,7 +144,9 @@ bool communicate(const uint8_t* transmit, size_t transmitSize,
 }
 
 bool requestCard() {
-  const uint8_t request = 0x26;
+  // WUPA (0x52) instead of REQA (0x26): it also wakes cards left in HALT by
+  // the previous read, so a card that never left the field is read again.
+  const uint8_t request = 0x52;
   uint8_t response[2] = {};
   size_t responseSize = sizeof(response);
   return communicate(&request, 1, 7, response, responseSize) &&

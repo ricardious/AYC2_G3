@@ -275,6 +275,22 @@ def _cancel_access(
         if session.ended_at is None:
             session.ended_at = now
             session.ended_reason = "unlock_timeout"
+            # El nodo también cancela si la puerta se abrió y el cierre nunca
+            # llegó (switch flojo); la apertura queda registrada sin cierre.
+            if session.door_opened_at is not None:
+                db.add(
+                    DoorEvent(
+                        incubator_id=session.incubator_id,
+                        operator_id=session.technician_id,
+                        access_session_id=session.id,
+                        access_method="rfid",
+                        event_type="inspection",
+                        opened_at=session.door_opened_at,
+                        closed_at=None,
+                        eggs_added=0,
+                        eggs_removed=0,
+                    )
+                )
             db.commit()
     return SerialAccessOutcome(
         command=None,
