@@ -24,7 +24,7 @@ Definimos los topics de la siguiente forma:
 | `smartegg/{id}/comandos/rotar` | Frontend | Backend | 1 | No |
 | `smartegg/{id}/comandos/config` | Frontend | Backend | 1 | No |
 | `smartegg/{id}/comandos/resultado` | Backend | Frontend | 1 | No |
-| `smartegg/{id}/camara/foto` | Gateway | Visión | 0 | No |
+| `smartegg/{id}/camara/foto` | Gateway | Visión, Frontend | 0 | No |
 | `smartegg/{id}/vision/resultado` | Visión | Backend, Frontend, Grafana | 0 | Sí |
 | `smartegg/vision/estado` | Visión/LWT | Frontend, Grafana | 1 | Sí |
 | `smartegg/{id}/ml/anomalia` | Anomalías | Backend, Frontend, Grafana | 0 | Sí |
@@ -283,7 +283,8 @@ sequenceDiagram
 ### Foto de la bandeja (`camara/foto`)
 
 JPEG en bytes, tal como lo entrega IP Webcam. Sin retener y con QoS 0: si el
-broker va lento se pierde una foto en vez de acumular fotos viejas.
+broker va lento se pierde una foto en vez de acumular fotos viejas. El frontend
+también la lee para mostrar la bandeja en vivo junto al veredicto del modelo.
 
 ### Resultado de visión (`vision/resultado`)
 

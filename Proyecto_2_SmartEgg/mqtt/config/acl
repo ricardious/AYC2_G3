@@ -35,6 +35,7 @@ topic read smartegg/+/actuadores/estado
 topic read smartegg/+/gateway/status
 topic read smartegg/+/sistema/estado
 topic read smartegg/+/vision/resultado
+topic read smartegg/+/camara/foto
 topic read smartegg/vision/estado
 topic read smartegg/+/ml/anomalia
 topic read smartegg/ml/estado
