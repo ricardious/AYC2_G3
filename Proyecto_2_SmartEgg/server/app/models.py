@@ -441,6 +441,30 @@ class Alarm(Base):
     )
 
 
+class AnomalyScore(Base):
+    """Puntaje del servicio de anomalías (anomalias/) para cada lectura calificada."""
+
+    __tablename__ = "anomaly_scores"
+    __table_args__ = (
+        Index("ix_anomaly_incubator_recorded", "incubator_id", "recorded_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    incubator_id: Mapped[int] = mapped_column(
+        ForeignKey("incubators.id", ondelete="CASCADE"), index=True
+    )
+    score: Mapped[float] = mapped_column(Float)
+    threshold: Mapped[float] = mapped_column(Float)
+    anomalous: Mapped[bool] = mapped_column(Boolean)
+    # Regla de persistencia del servicio: varias lecturas anómalas seguidas.
+    alert: Mapped[bool] = mapped_column(Boolean)
+    cause: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    # Hora de la lectura calificada, para alinearla con telemetry_readings.
+    recorded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+
 class RotationEvent(Base):
     __tablename__ = "rotation_events"
     __table_args__ = (
