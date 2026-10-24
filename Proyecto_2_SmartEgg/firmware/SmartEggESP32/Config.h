@@ -65,6 +65,10 @@ constexpr uint32_t kRfidCooldownMs = 2000UL;
 // alive long enough for a cold database response without blocking other tasks.
 constexpr uint32_t kAccessAuthorizationTimeoutMs = 15000UL;
 constexpr uint32_t kUnlockTimeoutMs = 15000UL;
+// If the door switch never reports CLOSED (loose lever, bad wiring), the
+// session ends anyway so the RFID reader does not stay ignored until reboot.
+constexpr uint32_t kDoorOpenTimeoutMs = 120000UL;
+constexpr uint16_t kDoorDebounceMs = 100;
 
 constexpr uint8_t kSplashLetterMs = 40;
 constexpr uint8_t kSplashEggMs = 25;
