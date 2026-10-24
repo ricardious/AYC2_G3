@@ -7,28 +7,45 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [
-    {
-      "asDropdown": false,
-      "icon": "external link",
-      "includeVars": false,
-      "keepTime": false,
-      "tags": [],
-      "targetBlank": false,
-      "title": "SmartEgg · Histórico",
-      "tooltip": "Dashboard alimentado por PostgreSQL",
-      "type": "link",
-      "url": "/d/smartegg-historical"
-    }
-  ],
+  "links": [],
   "panels": [
+    {
+      "id": 900,
+      "type": "marcusolsson-dynamictext-panel",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "renderMode": "allRows",
+        "content": "<div class=\"se-header\" data-se-frameless><svg viewBox=\"0 0 64 72\" fill=\"none\" aria-hidden=\"true\"><path d=\"M32 6C43.5 6 53 26.4 53 44C53 56.6 43.5 66 32 66C20.5 66 11 56.6 11 44C11 26.4 20.5 6 32 6Z\" stroke=\"#d7eef0\" stroke-width=\"4\"/><g stroke=\"#5fe3e8\" stroke-width=\"4.4\" stroke-linecap=\"round\"><path d=\"M24.5 30h15\" stroke-opacity=\".34\"/><path d=\"M20 38.5h24\" stroke-opacity=\".56\"/><path d=\"M17 47h30\" stroke-opacity=\".82\"/><path d=\"M19.5 55h25\"/></g></svg><div class=\"se-brand\"><h1>Smart<b>Egg</b> · Observatorio</h1><p>Tiempo real por MQTT · Nodo NODE-01</p></div><nav class=\"se-nav\" aria-label=\"Dashboards SmartEgg\"><a href=\"/d/smartegg-centro\">Centro de control</a><a href=\"/d/smartegg-realtime\" aria-current=\"page\">Tiempo real</a><a href=\"/d/smartegg-historical\">Histórico</a><a href=\"/d/smartegg-energia\">Consumo</a></nav></div>",
+        "defaultContent": "<div class=\"se-header\" data-se-frameless><svg viewBox=\"0 0 64 72\" fill=\"none\" aria-hidden=\"true\"><path d=\"M32 6C43.5 6 53 26.4 53 44C53 56.6 43.5 66 32 66C20.5 66 11 56.6 11 44C11 26.4 20.5 6 32 6Z\" stroke=\"#d7eef0\" stroke-width=\"4\"/><g stroke=\"#5fe3e8\" stroke-width=\"4.4\" stroke-linecap=\"round\"><path d=\"M24.5 30h15\" stroke-opacity=\".34\"/><path d=\"M20 38.5h24\" stroke-opacity=\".56\"/><path d=\"M17 47h30\" stroke-opacity=\".82\"/><path d=\"M19.5 55h25\"/></g></svg><div class=\"se-brand\"><h1>Smart<b>Egg</b> · Observatorio</h1><p>Tiempo real por MQTT · Nodo NODE-01</p></div><nav class=\"se-nav\" aria-label=\"Dashboards SmartEgg\"><a href=\"/d/smartegg-centro\">Centro de control</a><a href=\"/d/smartegg-realtime\" aria-current=\"page\">Tiempo real</a><a href=\"/d/smartegg-historical\">Histórico</a><a href=\"/d/smartegg-energia\">Consumo</a></nav></div>",
+        "editor": {
+          "format": "auto",
+          "language": "html"
+        },
+        "styles": "\nfont-family: 'Space Grotesk', Inter, sans-serif;\ncolor: #d1e1e5;\nheight: 100%;\n.se-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }\n.se-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #8fa3ad; }\n.se-ok { --tone: #6fe2a0; }\n.se-heat { --tone: #f0a44a; }\n.se-alarm { --tone: #ff5a4d; }\n.se-cyan { --tone: #5fe3e8; }\n.se-idle { --tone: #5d6b73; }\n@keyframes se-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }\n@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }\n\n.se-header { display: flex; align-items: center; gap: 18px; height: 100%; padding: 4px 6px; }\n.se-header svg { width: 40px; height: 46px; flex: none; filter: drop-shadow(0 0 14px rgba(95,227,232,.25)); }\n.se-brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }\n.se-brand h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: .01em; color: #e8f6f7; line-height: 1.1; }\n.se-brand h1 b { color: #5fe3e8; font-weight: 600; }\n.se-brand p { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8fa3ad; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n.se-nav { margin-left: auto; display: flex; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; }\n.se-nav a { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #9db2b8; text-decoration: none; padding: 6px 10px; white-space: nowrap; border: 1px solid rgba(160,190,205,.18); border-radius: 999px; background: rgba(12,16,21,.6); transition: border-color .15s, color .15s; }\n.se-nav a:hover { color: #e8f6f7; border-color: rgba(95,227,232,.5); }\n.se-nav a[aria-current=\"page\"] { color: #05070a; background: #5fe3e8; border-color: #5fe3e8; font-weight: 500; }\n@media (max-width: 900px) { .se-nav { display: none; } }\n",
+        "helpers": "",
+        "afterRender": "",
+        "wrap": false,
+        "contentPartials": [],
+        "editors": [],
+        "externalStyles": [],
+        "status": ""
+      },
+      "targets": []
+    },
     {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 3
       },
       "id": 100,
       "panels": [],
@@ -53,12 +70,12 @@
                 "online": {
                   "index": 0,
                   "text": "EN LÍNEA",
-                  "color": "green"
+                  "color": "#6fe2a0"
                 },
                 "offline": {
                   "index": 1,
                   "text": "DESCONECTADO",
-                  "color": "red"
+                  "color": "#ff5a4d"
                 }
               }
             }
@@ -80,11 +97,11 @@
         "h": 5,
         "w": 4,
         "x": 0,
-        "y": 1
+        "y": 4
       },
       "id": 1,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
@@ -129,25 +146,26 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "#5fe3e8",
                 "value": null
               },
               {
-                "color": "#73BF69",
+                "color": "#6fe2a0",
                 "value": 37
               },
               {
-                "color": "#FADE2A",
+                "color": "#f0c75e",
                 "value": 38
               },
               {
-                "color": "#F2495C",
+                "color": "#ff5a4d",
                 "value": 39
               }
             ]
           },
           "unit": "celsius",
-          "decimals": 2
+          "decimals": 2,
+          "noValue": "—"
         },
         "overrides": []
       },
@@ -155,7 +173,7 @@
         "h": 5,
         "w": 5,
         "x": 4,
-        "y": 1
+        "y": 4
       },
       "id": 2,
       "options": {
@@ -204,25 +222,26 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "#5fe3e8",
                 "value": null
               },
               {
-                "color": "#73BF69",
+                "color": "#6fe2a0",
                 "value": 50
               },
               {
-                "color": "#FADE2A",
+                "color": "#f0c75e",
                 "value": 65
               },
               {
-                "color": "#F2495C",
+                "color": "#ff5a4d",
                 "value": 75
               }
             ]
           },
           "unit": "percent",
-          "decimals": 1
+          "decimals": 1,
+          "noValue": "—"
         },
         "overrides": []
       },
@@ -230,7 +249,7 @@
         "h": 5,
         "w": 5,
         "x": 9,
-        "y": 1
+        "y": 4
       },
       "id": 3,
       "options": {
@@ -281,12 +300,12 @@
                 "false": {
                   "index": 0,
                   "text": "CERRADA",
-                  "color": "green"
+                  "color": "#6fe2a0"
                 },
                 "true": {
                   "index": 1,
                   "text": "ABIERTA",
-                  "color": "orange"
+                  "color": "#f0a44a"
                 }
               }
             }
@@ -299,7 +318,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "—"
         },
         "overrides": []
       },
@@ -307,11 +327,11 @@
         "h": 5,
         "w": 4,
         "x": 14,
-        "y": 1
+        "y": 4
       },
       "id": 4,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
@@ -380,7 +400,7 @@
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "#73BF69",
+                  "fixedColor": "#6fe2a0",
                   "mode": "fixed"
                 }
               }
@@ -399,7 +419,7 @@
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "#6E7079",
+                  "fixedColor": "#5d6b73",
                   "mode": "fixed"
                 }
               }
@@ -411,7 +431,7 @@
         "h": 5,
         "w": 6,
         "x": 18,
-        "y": 1
+        "y": 4
       },
       "id": 5,
       "options": {
@@ -467,7 +487,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 9
       },
       "id": 106,
       "panels": [],
@@ -493,19 +513,19 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "#5fe3e8",
                 "value": null
               },
               {
-                "color": "#73BF69",
+                "color": "#6fe2a0",
                 "value": 37
               },
               {
-                "color": "#FADE2A",
+                "color": "#f0c75e",
                 "value": 38
               },
               {
-                "color": "#F2495C",
+                "color": "#ff5a4d",
                 "value": 39
               }
             ]
@@ -518,7 +538,7 @@
         "h": 9,
         "w": 4,
         "x": 0,
-        "y": 7
+        "y": 10
       },
       "id": 6,
       "options": {
@@ -558,7 +578,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "#FF9830",
+            "fixedColor": "#f0a44a",
             "mode": "fixed"
           },
           "custom": {
@@ -606,7 +626,7 @@
                 "value": null
               },
               {
-                "color": "green",
+                "color": "#6fe2a0",
                 "value": 37
               },
               {
@@ -614,7 +634,7 @@
                 "value": 38
               },
               {
-                "color": "red",
+                "color": "#ff5a4d",
                 "value": 39
               }
             ]
@@ -640,7 +660,7 @@
         "h": 9,
         "w": 8,
         "x": 4,
-        "y": 7
+        "y": 10
       },
       "id": 7,
       "options": {
@@ -703,19 +723,19 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "#5fe3e8",
                 "value": null
               },
               {
-                "color": "#73BF69",
+                "color": "#6fe2a0",
                 "value": 50
               },
               {
-                "color": "#FADE2A",
+                "color": "#f0c75e",
                 "value": 65
               },
               {
-                "color": "#F2495C",
+                "color": "#ff5a4d",
                 "value": 75
               }
             ]
@@ -728,7 +748,7 @@
         "h": 9,
         "w": 4,
         "x": 12,
-        "y": 7
+        "y": 10
       },
       "id": 8,
       "options": {
@@ -768,7 +788,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "#5794F2",
+            "fixedColor": "#5fe3e8",
             "mode": "fixed"
           },
           "custom": {
@@ -816,7 +836,7 @@
                 "value": null
               },
               {
-                "color": "green",
+                "color": "#6fe2a0",
                 "value": 50
               },
               {
@@ -824,7 +844,7 @@
                 "value": 65
               },
               {
-                "color": "red",
+                "color": "#ff5a4d",
                 "value": 75
               }
             ]
@@ -850,7 +870,7 @@
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 7
+        "y": 10
       },
       "id": 9,
       "options": {
@@ -900,7 +920,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 19
       },
       "id": 116,
       "panels": [],
@@ -925,12 +945,12 @@
                 "true": {
                   "index": 0,
                   "text": "ENCENDIDO",
-                  "color": "red"
+                  "color": "#f0a44a"
                 },
                 "false": {
                   "index": 1,
                   "text": "APAGADO",
-                  "color": "#2C3235"
+                  "color": "#5d6b73"
                 }
               }
             }
@@ -943,7 +963,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "—"
         },
         "overrides": []
       },
@@ -951,11 +972,11 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 17
+        "y": 20
       },
       "id": 10,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
@@ -1002,12 +1023,12 @@
                 "true": {
                   "index": 0,
                   "text": "ENCENDIDO",
-                  "color": "blue"
+                  "color": "#5fe3e8"
                 },
                 "false": {
                   "index": 1,
                   "text": "APAGADO",
-                  "color": "#2C3235"
+                  "color": "#5d6b73"
                 }
               }
             }
@@ -1020,7 +1041,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "—"
         },
         "overrides": []
       },
@@ -1028,11 +1050,11 @@
         "h": 4,
         "w": 6,
         "x": 6,
-        "y": 17
+        "y": 20
       },
       "id": 11,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
@@ -1079,12 +1101,12 @@
                 "true": {
                   "index": 0,
                   "text": "SONANDO",
-                  "color": "orange"
+                  "color": "#f0a44a"
                 },
                 "false": {
                   "index": 1,
                   "text": "SILENCIO",
-                  "color": "#2C3235"
+                  "color": "#5d6b73"
                 }
               }
             }
@@ -1097,7 +1119,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "—"
         },
         "overrides": []
       },
@@ -1105,11 +1128,11 @@
         "h": 4,
         "w": 6,
         "x": 12,
-        "y": 17
+        "y": 20
       },
       "id": 12,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
@@ -1147,7 +1170,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "purple",
+            "fixedColor": "#8968d4",
             "mode": "fixed"
           },
           "mappings": [],
@@ -1161,7 +1184,8 @@
             ]
           },
           "unit": "degree",
-          "decimals": 0
+          "decimals": 0,
+          "noValue": "—"
         },
         "overrides": []
       },
@@ -1169,11 +1193,11 @@
         "h": 4,
         "w": 6,
         "x": 18,
-        "y": 17
+        "y": 20
       },
       "id": 13,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
@@ -1255,12 +1279,12 @@
                       "true": {
                         "index": 0,
                         "text": "Encendido",
-                        "color": "red"
+                        "color": "#f0a44a"
                       },
                       "false": {
                         "index": 1,
                         "text": "Apagado",
-                        "color": "#2C3235"
+                        "color": "#1b242c"
                       }
                     }
                   }
@@ -1287,12 +1311,12 @@
                       "true": {
                         "index": 0,
                         "text": "Encendido",
-                        "color": "blue"
+                        "color": "#5fe3e8"
                       },
                       "false": {
                         "index": 1,
                         "text": "Apagado",
-                        "color": "#2C3235"
+                        "color": "#1b242c"
                       }
                     }
                   }
@@ -1319,12 +1343,12 @@
                       "true": {
                         "index": 0,
                         "text": "Sonando",
-                        "color": "orange"
+                        "color": "#f0a44a"
                       },
                       "false": {
                         "index": 1,
                         "text": "Silencio",
-                        "color": "#2C3235"
+                        "color": "#1b242c"
                       }
                     }
                   }
@@ -1351,12 +1375,12 @@
                       "true": {
                         "index": 0,
                         "text": "Abierta",
-                        "color": "orange"
+                        "color": "#f0a44a"
                       },
                       "false": {
                         "index": 1,
                         "text": "Cerrada",
-                        "color": "#2C3235"
+                        "color": "#1b242c"
                       }
                     }
                   }
@@ -1383,12 +1407,12 @@
                       "true": {
                         "index": 0,
                         "text": "OK",
-                        "color": "#2C3235"
+                        "color": "#1b242c"
                       },
                       "false": {
                         "index": 1,
                         "text": "Falla",
-                        "color": "red"
+                        "color": "#ff5a4d"
                       }
                     }
                   }
@@ -1415,12 +1439,12 @@
                       "true": {
                         "index": 0,
                         "text": "Activo",
-                        "color": "#2C3235"
+                        "color": "#1b242c"
                       },
                       "false": {
                         "index": 1,
                         "text": "Pausado",
-                        "color": "yellow"
+                        "color": "#f0c75e"
                       }
                     }
                   }
@@ -1434,7 +1458,7 @@
         "h": 8,
         "w": 16,
         "x": 0,
-        "y": 21
+        "y": 24
       },
       "id": 14,
       "options": {
@@ -1493,7 +1517,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "#B877D9",
+            "fixedColor": "#8968d4",
             "mode": "fixed"
           },
           "custom": {
@@ -1561,7 +1585,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 21
+        "y": 24
       },
       "id": 15,
       "options": {
@@ -1608,7 +1632,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 29
+        "y": 32
       },
       "id": 129,
       "panels": [],
@@ -1742,17 +1766,17 @@
                       "info": {
                         "index": 0,
                         "text": "Informativa",
-                        "color": "blue"
+                        "color": "#5fe3e8"
                       },
                       "warning": {
                         "index": 1,
                         "text": "Advertencia",
-                        "color": "#E0B400"
+                        "color": "#f0c75e"
                       },
                       "critical": {
                         "index": 2,
                         "text": "Crítica",
-                        "color": "red"
+                        "color": "#ff5a4d"
                       }
                     }
                   }
@@ -1785,7 +1809,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 30
+        "y": 33
       },
       "id": 16,
       "options": {
@@ -1906,22 +1930,22 @@
                       "authorized": {
                         "index": 0,
                         "text": "Acceso autorizado",
-                        "color": "green"
+                        "color": "#6fe2a0"
                       },
                       "door_opened": {
                         "index": 1,
                         "text": "Puerta abierta",
-                        "color": "orange"
+                        "color": "#f0a44a"
                       },
                       "door_closed": {
                         "index": 2,
                         "text": "Puerta cerrada",
-                        "color": "blue"
+                        "color": "#5fe3e8"
                       },
                       "access_cancelled": {
                         "index": 3,
                         "text": "Sesión cancelada",
-                        "color": "red"
+                        "color": "#ff5a4d"
                       }
                     }
                   }
@@ -1955,17 +1979,17 @@
                       "rfid": {
                         "index": 0,
                         "text": "Tarjeta RFID",
-                        "color": "#5794F2"
+                        "color": "#5fe3e8"
                       },
                       "fingerprint": {
                         "index": 1,
                         "text": "Huella",
-                        "color": "#B877D9"
+                        "color": "#8968d4"
                       },
                       "key": {
                         "index": 2,
                         "text": "Llave",
-                        "color": "#FF9830"
+                        "color": "#f0a44a"
                       },
                       "password": {
                         "index": 3,
@@ -2001,7 +2025,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 30
+        "y": 33
       },
       "id": 17,
       "options": {
@@ -2075,7 +2099,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "SmartEgg - Tiempo real",
+  "title": "SmartEgg · Tiempo real",
   "uid": "smartegg-realtime",
   "version": 3,
   "weekStart": ""
