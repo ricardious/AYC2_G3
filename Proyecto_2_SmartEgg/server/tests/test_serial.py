@@ -218,6 +218,42 @@ def test_rfid_serial_access_lifecycle(client, operator_headers, incubator) -> No
         )
 
 
+def test_cancel_after_door_opened_keeps_the_inspection(
+    client, operator_headers, incubator
+) -> None:
+    del operator_headers, incubator
+    settings = client.app.state.settings
+
+    with client.app.state.session_factory() as db:
+        authorization = process_serial_access_event(
+            db, parse_serial_access_event("RFID:A1B2C3D4", "NODE-01"), settings
+        )
+        assert authorization.command is not None
+        session_id = int(authorization.command["session_id"])
+        process_serial_access_event(
+            db,
+            parse_serial_access_event(
+                f"ACCESS:DOOR,SESSION:{session_id},STATE:OPEN", "NODE-01"
+            ),
+            settings,
+        )
+
+        cancelled = process_serial_access_event(
+            db,
+            parse_serial_access_event(f"ACCESS:CANCEL,SESSION:{session_id}", "NODE-01"),
+            settings,
+        )
+        assert cancelled.mqtt_payload["event"] == "access_cancelled"
+        access_session = db.get(AccessSession, session_id)
+        assert access_session is not None
+        assert access_session.ended_reason == "unlock_timeout"
+        inspection = db.scalar(
+            select(DoorEvent).where(DoorEvent.access_session_id == session_id)
+        )
+        assert inspection is not None
+        assert inspection.closed_at is None
+
+
 def test_unknown_rfid_is_denied_over_serial(client, incubator) -> None:
     del incubator
     with client.app.state.session_factory() as db:
