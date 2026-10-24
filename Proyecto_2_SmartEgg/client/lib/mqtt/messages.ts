@@ -42,7 +42,36 @@ export interface MqttVisionResult {
   recorded_at: string;
 }
 
+export type EnergyDevice = "heater" | "fan";
+
+export interface EnergySchedule {
+  device: EnergyDevice;
+  start: string;
+  end: string;
+  state: "on" | "off";
+}
+
+/** Consumo estimado que publica el backend con cada lectura (`energia`). */
+export interface MqttEnergy {
+  potencia_w: number;
+  desglose_w: { foco: number; ventilador: number; otros: number };
+  energia_hoy_wh: number;
+  costo_hoy_q: number;
+  promedio_1h_w: number | null;
+  limite_wh: number;
+  uso_limite_pct: number;
+  accion_limite: "alert" | "heater_off";
+  tarifa_q_kwh: number;
+  tarifa: string;
+  anomalia: string | null;
+  horarios: EnergySchedule[];
+  temporizador: { device: EnergyDevice; state: "on" | "off"; until: string } | null;
+  reglas_activas: Partial<Record<EnergyDevice, { enabled: boolean; reason: string }>>;
+  recorded_at: string;
+}
+
 export type SmartEggMqttMessage =
+  | { type: "energy"; energy: MqttEnergy }
   | { type: "alarm"; alarm: MqttCriticalAlarm | null }
   | { type: "system"; system: MqttSystemState }
   | { type: "vision"; vision: MqttVisionResult }
@@ -164,6 +193,22 @@ export function parseMqttMessage(
         recorded_at: data.recorded_at,
       },
     };
+  }
+
+  if (suffix === "energia") {
+    if (
+      typeof data.potencia_w !== "number" ||
+      typeof data.energia_hoy_wh !== "number" ||
+      typeof data.costo_hoy_q !== "number" ||
+      typeof data.limite_wh !== "number" ||
+      !isRecord(data.desglose_w) ||
+      !Array.isArray(data.horarios) ||
+      !isRecord(data.reglas_activas) ||
+      typeof data.recorded_at !== "string"
+    ) {
+      return null;
+    }
+    return { type: "energy", energy: data as unknown as MqttEnergy };
   }
 
   if (suffix === "actuadores/estado") {

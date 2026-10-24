@@ -261,6 +261,14 @@ class MqttPublisher:
             retain=True,
         )
 
+    def publish_energy(
+        self, node_code: str, payload: dict[str, object]
+    ) -> mqtt.MQTTMessageInfo | None:
+        """Estimated power, today's energy and the active consumption rules."""
+        return self._publish(
+            self._topic(node_code, "energia"), payload, qos=0, retain=True
+        )
+
     def publish_access_event(
         self, node_code: str, payload: dict[str, object]
     ) -> mqtt.MQTTMessageInfo | None:

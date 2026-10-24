@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     CheckConstraint,
     Date,
@@ -460,6 +461,79 @@ class AnomalyScore(Base):
     alert: Mapped[bool] = mapped_column(Boolean)
     cause: Mapped[str | None] = mapped_column(String(80), nullable=True)
     # Hora de la lectura calificada, para alinearla con telemetry_readings.
+    recorded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+
+class EnergyConfig(Base):
+    """Consumo eléctrico de una incubadora: potencias, tarifa, límite y reglas.
+
+    Las potencias por defecto salen de las etiquetas y hojas de datos del
+    hardware (ver docs/CONSUMO_ELECTRICO.md).
+    """
+
+    __tablename__ = "energy_configs"
+    __table_args__ = (
+        CheckConstraint(
+            "limit_action IN ('alert', 'heater_off')", name="ck_energy_limit_action"
+        ),
+        CheckConstraint("daily_limit_wh > 0", name="ck_energy_daily_limit"),
+        CheckConstraint("tariff_q_per_kwh >= 0", name="ck_energy_tariff"),
+    )
+
+    incubator_id: Mapped[int] = mapped_column(
+        ForeignKey("incubators.id", ondelete="CASCADE"), primary_key=True
+    )
+    heater_w: Mapped[float] = mapped_column(Float, default=40.0)
+    fan_w: Mapped[float] = mapped_column(Float, default=0.31)
+    relay_w: Mapped[float] = mapped_column(Float, default=0.35)
+    buzzer_w: Mapped[float] = mapped_column(Float, default=0.15)
+    # ESP32, LCD, RC522 y los dos servos en reposo: siempre conectados.
+    base_w: Mapped[float] = mapped_column(Float, default=1.06)
+    tariff_q_per_kwh: Mapped[float] = mapped_column(Float, default=1.51)
+    tariff_label: Mapped[str] = mapped_column(
+        String(80), default="EEGSA tarifa no social, ago-oct 2026"
+    )
+    daily_limit_wh: Mapped[float] = mapped_column(Float, default=800.0)
+    limit_action: Mapped[str] = mapped_column(String(20), default="alert")
+    # Promedio de la última hora que se considera consumo anómalo.
+    anomaly_avg_w: Mapped[float] = mapped_column(Float, default=37.0)
+    # [{"device": "fan", "start": "22:00", "end": "06:00", "state": "off"}]
+    schedules: Mapped[list[dict[str, str]]] = mapped_column(JSON, default=list)
+    timer_device: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    timer_state: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    timer_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class EnergySample(Base):
+    """Potencia estimada en cada lectura y energía acumulada del día."""
+
+    __tablename__ = "energy_samples"
+    __table_args__ = (
+        Index("ix_energy_incubator_recorded", "incubator_id", "recorded_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    incubator_id: Mapped[int] = mapped_column(
+        ForeignKey("incubators.id", ondelete="CASCADE"), index=True
+    )
+    power_w: Mapped[float] = mapped_column(Float)
+    heater_w: Mapped[float] = mapped_column(Float)
+    fan_w: Mapped[float] = mapped_column(Float)
+    # Electrónica, relés y buzzer.
+    other_w: Mapped[float] = mapped_column(Float)
+    # Energía del intervalo desde la lectura anterior (Wh).
+    energy_wh: Mapped[float] = mapped_column(Float)
+    energy_today_wh: Mapped[float] = mapped_column(Float)
+    cost_today_q: Mapped[float] = mapped_column(Float)
+    # Regla de consumo anómalo que se cumplió en esta lectura, si alguna.
+    anomaly_rule: Mapped[str | None] = mapped_column(String(40), nullable=True)
     recorded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )

@@ -473,3 +473,49 @@ class DiagnosticSummary(BaseModel):
     registered_eggs: int
     acknowledged_alarms: int
     generated_reports: int
+
+
+ENERGY_DEVICES = ("heater", "fan")
+
+
+class EnergySchedule(BaseModel):
+    """Franja diaria en la que un dispositivo queda forzado (hora local)."""
+
+    device: Literal["heater", "fan"]
+    start: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    end: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    state: Literal["on", "off"]
+
+    @model_validator(mode="after")
+    def validate_window(self) -> EnergySchedule:
+        if self.start == self.end:
+            raise ValueError("start and end must differ")
+        return self
+
+
+class EnergyTimer(BaseModel):
+    """Temporizador: un dispositivo encendido o apagado por N minutos."""
+
+    device: Literal["heater", "fan"]
+    state: Literal["on", "off"]
+    minutes: int = Field(ge=1, le=1440)
+
+
+class EnergyConfigUpdate(BaseModel):
+    """Cambio parcial de la configuración de consumo (comandos/energia)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    heater_w: float | None = Field(default=None, ge=0, le=2000)
+    fan_w: float | None = Field(default=None, ge=0, le=500)
+    relay_w: float | None = Field(default=None, ge=0, le=10)
+    buzzer_w: float | None = Field(default=None, ge=0, le=10)
+    base_w: float | None = Field(default=None, ge=0, le=50)
+    tariff_q_per_kwh: float | None = Field(default=None, ge=0, le=20)
+    tariff_label: str | None = Field(default=None, max_length=80)
+    daily_limit_wh: float | None = Field(default=None, gt=0, le=100000)
+    limit_action: Literal["alert", "heater_off"] | None = None
+    anomaly_avg_w: float | None = Field(default=None, gt=0, le=5000)
+    schedules: list[EnergySchedule] | None = Field(default=None, max_length=20)
+    # Un objeto arranca el temporizador; null lo cancela; ausente no lo toca.
+    timer: EnergyTimer | None = None

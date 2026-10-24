@@ -2,7 +2,7 @@ import type { MqttClient } from "mqtt";
 
 // Control commands travel only over MQTT: the backend validates them, records
 // them and forwards them to the node, then answers on comandos/resultado.
-export type CommandKind = "actuador" | "rotar" | "config";
+export type CommandKind = "actuador" | "rotar" | "config" | "energia";
 
 export interface CommandResult {
   command: CommandKind;

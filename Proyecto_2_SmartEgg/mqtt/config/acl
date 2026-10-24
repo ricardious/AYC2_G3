@@ -38,9 +38,11 @@ topic read smartegg/+/vision/resultado
 topic read smartegg/vision/estado
 topic read smartegg/+/ml/anomalia
 topic read smartegg/ml/estado
+topic read smartegg/+/energia
 topic write smartegg/+/comandos/actuador
 topic write smartegg/+/comandos/rotar
 topic write smartegg/+/comandos/config
+topic write smartegg/+/comandos/energia
 topic read smartegg/+/comandos/resultado
 
 # Grafana datasource. Read-only access to every SmartEgg measurement.

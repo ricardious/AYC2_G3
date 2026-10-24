@@ -101,7 +101,9 @@ def _sync_alarm(
         alarm.resolved_at = recorded_at
 
 
-def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
+def ingest_telemetry(
+    db: Session, payload: TelemetryCreate, timezone: str = "America/Guatemala"
+) -> TelemetryReading:
     incubator = db.scalar(
         select(Incubator).where(Incubator.code == payload.incubator_code)
     )
@@ -259,6 +261,21 @@ def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
     _upsert_actuator(db, incubator.id, "heater", heater)
     _upsert_actuator(db, incubator.id, "fan", fan)
     _upsert_actuator(db, incubator.id, "buzzer", buzzer)
+    # Imported here: energy applies its rules through the command service,
+    # which depends on this module.
+    from .energy import record_energy
+
+    record_energy(
+        db,
+        incubator,
+        heater=heater,
+        fan=fan,
+        buzzer=buzzer,
+        temperature_c=payload.temperature_c,
+        system_enabled=payload.system_enabled,
+        recorded_at=recorded_at,
+        timezone=timezone,
+    )
     if payload.servo_angle is not None:
         rotation_angle = round(abs(payload.servo_angle))
         previous_servo = db.scalar(

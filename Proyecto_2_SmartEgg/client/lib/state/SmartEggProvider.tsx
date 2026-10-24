@@ -45,6 +45,7 @@ import {
   parseMqttMessage,
   type MqttActuatorState,
   type MqttCriticalAlarm,
+  type MqttEnergy,
   type MqttSystemState,
   type MqttVisionResult,
 } from "@/lib/mqtt/messages";
@@ -156,6 +157,8 @@ export interface SmartEggActions {
   updateIncubatorConfig: (
     payload: IncubatorConfigUpdate,
   ) => Promise<IncubatorConfig>;
+  /** Cambio parcial de límite, horarios o temporizador (`comandos/energia`). */
+  updateEnergy: (payload: Record<string, unknown>) => Promise<void>;
   createLot: (payload: LotCreate) => Promise<Lot>;
   registerEgg: (payload: EggCreate) => Promise<Egg>;
   createDoorEvent: (payload: DoorEventCreate) => Promise<DoorEvent>;
@@ -185,6 +188,8 @@ export interface SmartEggContextValue extends ConsoleState {
   /** Bloqueo por objeto extraño: la página queda inutilizable hasta la tarjeta RFID. */
   systemLock: MqttSystemState | null;
   vision: MqttVisionResult | null;
+  /** Consumo eléctrico estimado; null hasta la primera lectura guardada. */
+  energy: MqttEnergy | null;
   alarmSoundEnabled: boolean;
   alarmSoundBlocked: boolean;
   error: string | null;
@@ -285,6 +290,7 @@ export function SmartEggProvider({
     useState<MqttCriticalAlarm | null>(null);
   const [systemLock, setSystemLock] = useState<MqttSystemState | null>(null);
   const [vision, setVision] = useState<MqttVisionResult | null>(null);
+  const [energy, setEnergy] = useState<MqttEnergy | null>(null);
   const [alarmSoundEnabled, setAlarmSoundEnabled] = useState(true);
   const [alarmSoundBlocked, setAlarmSoundBlocked] = useState(false);
   const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -721,6 +727,7 @@ export function SmartEggProvider({
           [`${prefix}/telemetria`]: { qos: 0 },
           [`${prefix}/sistema/estado`]: { qos: 1 },
           [`${prefix}/vision/resultado`]: { qos: 0 },
+          [`${prefix}/energia`]: { qos: 0 },
           [commandResultTopic(mqttNodeCode)]: { qos: 1 },
         },
         (reason) => setMqttConnected(!reason),
@@ -760,6 +767,8 @@ export function SmartEggProvider({
         setSystemLock(message.system);
       } else if (message.type === "vision") {
         setVision(message.vision);
+      } else if (message.type === "energy") {
+        setEnergy(message.energy);
       } else if (message.type === "alarm") {
         setCriticalAlarm(message.alarm);
         if (message.alarm === null) {
@@ -969,6 +978,21 @@ export function SmartEggProvider({
     [dashboard, demoActive, incubator, token],
   );
 
+  const updateEnergy = useCallback(
+    async (payload: Record<string, unknown>) => {
+      if (demoActive) {
+        throw new Error("El consumo eléctrico necesita el backend en vivo");
+      }
+      const channel = commandsRef.current;
+      if (!channel) throw new Error("Sin conexión con el broker MQTT");
+      const result = await channel.send("energia", payload);
+      if (!result.ok) {
+        throw new Error(`Cambio rechazado: ${result.detail ?? result.error}`);
+      }
+    },
+    [demoActive],
+  );
+
   const createLot = useCallback(
     async (payload: LotCreate) => {
       if (demoActive) {
@@ -1093,6 +1117,7 @@ export function SmartEggProvider({
       setTechnicianActive,
       assignTechnician,
       updateIncubatorConfig,
+      updateEnergy,
       createLot,
       registerEgg,
       createDoorEvent,
@@ -1109,6 +1134,7 @@ export function SmartEggProvider({
       refreshRoleData,
       registerEgg,
       updateIncubatorConfig,
+      updateEnergy,
       assignTechnician,
       setTechnicianActive,
       technician,
@@ -1155,6 +1181,7 @@ export function SmartEggProvider({
       criticalAlarm,
       systemLock,
       vision,
+      energy,
       alarmSoundEnabled,
       alarmSoundBlocked,
       error,
@@ -1186,6 +1213,7 @@ export function SmartEggProvider({
       criticalAlarm,
       systemLock,
       vision,
+      energy,
       alarmSoundEnabled,
       alarmSoundBlocked,
       error,

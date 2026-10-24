@@ -1,0 +1,56 @@
+apiVersion: 1
+
+# Alerta de consumo eléctrico: se dispara mientras el backend tenga abierta una
+# alarma energy_anomaly o energy_limit (ver docs/CONSUMO_ELECTRICO.md).
+groups:
+  - orgId: 1
+    name: Consumo eléctrico
+    folder: SmartEgg
+    interval: 1m
+    rules:
+      - uid: smartegg-consumo-anomalo
+        title: Consumo eléctrico anómalo o límite superado
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: smartegg-postgres
+            model:
+              refId: A
+              editorMode: code
+              format: table
+              rawQuery: true
+              rawSql: >-
+                SELECT count(*)::float AS activas FROM alarms
+                WHERE kind IN ('energy_anomaly', 'energy_limit') AND resolved_at IS NULL
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: warning
+          area: consumo
+        annotations:
+          summary: La incubadora tiene una alarma de consumo eléctrico abierta
+          description: >-
+            Promedio de la última hora sobre el umbral, foco encendido con la
+            temperatura en el máximo, consumo con el sistema apagado o límite
+            diario superado. Revisar el panel "SmartEgg - Consumo eléctrico".
