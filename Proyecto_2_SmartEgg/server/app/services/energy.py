@@ -137,7 +137,10 @@ def record_energy(
         elapsed = (recorded_at - _aware(previous.recorded_at)).total_seconds()
         if 0 < elapsed <= MAX_GAP_SECONDS:
             interval_wh = previous.power_w * elapsed / 3600
-        if local_day(previous.recorded_at, timezone) == local_day(recorded_at, timezone):
+        same_day = local_day(previous.recorded_at, timezone) == local_day(
+            recorded_at, timezone
+        )
+        if same_day:
             today_wh = previous.energy_today_wh
     today_wh += interval_wh
 
@@ -147,7 +150,9 @@ def record_energy(
         rule = "foco_con_temperatura_alta"
     elif (heater or fan) and system_enabled is False:
         rule = "consumo_sistema_apagado"
-    sustained = rule is not None and previous is not None and previous.anomaly_rule == rule
+    sustained = (
+        rule is not None and previous is not None and previous.anomaly_rule == rule
+    )
     average = hourly_average_w(db, incubator.id, recorded_at, interval_wh)
     high_average = average is not None and average > config.anomaly_avg_w
     if rule is None and high_average:
@@ -277,7 +282,9 @@ def energy_status(
         "costo_hoy_q": round(sample.cost_today_q, 4),
         "promedio_1h_w": round(average, 2) if average is not None else None,
         "limite_wh": config.daily_limit_wh,
-        "uso_limite_pct": round(sample.energy_today_wh / config.daily_limit_wh * 100, 1),
+        "uso_limite_pct": round(
+            sample.energy_today_wh / config.daily_limit_wh * 100, 1
+        ),
         "accion_limite": config.limit_action,
         "tarifa_q_kwh": config.tariff_q_per_kwh,
         "tarifa": config.tariff_label,

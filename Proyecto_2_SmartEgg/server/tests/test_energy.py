@@ -54,11 +54,12 @@ def test_rules_priority_timer_limit_schedule(client: TestClient, incubator) -> N
         config.daily_limit_wh = 1
         rules = desired_overrides(config, 5, START, "America/Guatemala")
         assert rules["fan"].enabled is True
-        assert (rules["heater"].enabled, rules["heater"].reason) == (False, "limite_diario")
+        heater = rules["heater"]
+        assert (heater.enabled, heater.reason) == (False, "limite_diario")
         config.timer_device, config.timer_state = "heater", True
         config.timer_until = START + timedelta(minutes=5)
-        assert desired_overrides(config, 5, START, "America/Guatemala")["heater"].reason == (
-            "temporizador")
+        rules = desired_overrides(config, 5, START, "America/Guatemala")
+        assert rules["heater"].reason == "temporizador"
         db.commit()
 
 

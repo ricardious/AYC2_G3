@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     CheckConstraint,
     Date,
@@ -10,7 +11,6 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Index,
-    JSON,
     Integer,
     String,
     Text,
