@@ -83,6 +83,11 @@ class Settings(BaseSettings):
     mqtt_tls_enabled: bool = False
     mqtt_ca_cert: Path | None = None
 
+    # Vision lock: minimum gap between repeated lock commands while the node
+    # has not confirmed it, and time after an RFID unlock to remove the object.
+    vision_lock_resend_seconds: float = Field(default=5.0, ge=0)
+    vision_unlock_grace_seconds: float = Field(default=30.0, ge=0)
+
     report_logo_path: Path | None = None
 
     @field_validator("database_url")

@@ -3,12 +3,14 @@
 Corre en la laptop conectada por USB a la ESP32. No interpreta las tramas:
 reenvía cada línea del puerto serial al broker y escribe en el serial cada
 comando que el backend publica. Así la ESP32 no necesita Wi-Fi y el backend
-puede correr en la nube.
+puede correr en la nube. Si se configura una cámara (IP Webcam en el celular),
+también envía una foto de la bandeja cada segundo al servicio de visión.
 
 Topics (prefijo smartegg/{nodo}/gateway):
   rx      ESP32 → backend. Una línea serial por mensaje, texto plano. QoS 1.
   tx      backend → ESP32. Un comando JSON por mensaje.                QoS 1.
-  status  online/offline del gateway y del puerto serial. Retenido, con LWT.
+  status  online/offline del gateway, del serial y de la cámara. Retenido, con LWT.
+Y smartegg/{nodo}/camara/foto: JPEG de la bandeja para el servicio de visión. QoS 0.
 
 Uso:
   python gateway/gateway.py --puerto /dev/ttyUSB0 --broker 3.85.10.20
@@ -23,6 +25,7 @@ import logging
 import os
 import pathlib
 import threading
+import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -34,6 +37,13 @@ import serial
 logger = logging.getLogger("smartegg.gateway")
 
 ENV_FILE = pathlib.Path(__file__).resolve().parent / ".env"
+JPEG_MAGIC = b"\xff\xd8"
+MAX_PHOTO_BYTES = 1_000_000
+
+
+def fetch_photo(url: str, timeout: float = 3.0) -> bytes:
+    with urllib.request.urlopen(url, timeout=timeout) as response:
+        return response.read(MAX_PHOTO_BYTES + 1)
 
 
 @dataclass(frozen=True)
@@ -49,6 +59,8 @@ class GatewayConfig:
     tls: bool = False
     ca_cert: str | None = None
     reconnect_seconds: float = 3.0
+    camera_url: str | None = None
+    camera_interval_seconds: float = 1.0
 
     @property
     def topic_prefix(self) -> str:
@@ -61,12 +73,16 @@ class Gateway:
         config: GatewayConfig,
         serial_factory: Callable[..., serial.Serial] = serial.serial_for_url,
         client_factory: Callable[..., mqtt.Client] = mqtt.Client,
+        photo_fetcher: Callable[[str], bytes] = fetch_photo,
     ) -> None:
         self.config = config
         self.rx_topic = f"{config.topic_prefix}/rx"
         self.tx_topic = f"{config.topic_prefix}/tx"
         self.status_topic = f"{config.topic_prefix}/status"
+        self.photo_topic = f"smartegg/{config.node_code}/camara/foto"
         self.serial_connected = False
+        self.camera_ok: bool | None = None
+        self._photo_fetcher = photo_fetcher
         self._serial: serial.Serial | None = None
         self._serial_factory = serial_factory
         self._client_factory = client_factory
@@ -151,6 +167,8 @@ class Gateway:
             "status": status,
             "serial": "connected" if self.serial_connected else "disconnected",
             "port": self.config.serial_port,
+            "camera": ("disabled" if not self.config.camera_url
+                       else "ok" if self.camera_ok else "error"),
             "recorded_at": datetime.now(UTC).isoformat(),
         }
         if reason:
@@ -217,6 +235,40 @@ class Gateway:
                 self._set_serial_connected(False)
             self._stop.wait(self.config.reconnect_seconds)
 
+    # Cámara -------------------------------------------------------------
+
+    def capture_photo(self) -> bool:
+        """Toma una foto y la publica; devuelve si la cámara respondió."""
+        try:
+            photo = self._photo_fetcher(self.config.camera_url or "")
+            if not photo.startswith(JPEG_MAGIC) or len(photo) > MAX_PHOTO_BYTES:
+                raise ValueError(f"respuesta inválida ({len(photo)} bytes)")
+        except Exception as exc:
+            if self.camera_ok is not False:
+                logger.warning("Cámara no disponible: %s", exc)
+            self._set_camera_ok(False)
+            return False
+        if self.camera_ok is not True:
+            logger.info("Cámara conectada: %s", self.config.camera_url)
+        self._set_camera_ok(True)
+        if self._client is not None:
+            # QoS 0 y sin retener: si el broker va lento, mejor perder una
+            # foto que procesar fotos viejas.
+            self._client.publish(self.photo_topic, photo, qos=0, retain=False)
+        return True
+
+    def _set_camera_ok(self, ok: bool) -> None:
+        if ok == self.camera_ok:
+            return
+        self.camera_ok = ok
+        if not self._stop.is_set():
+            self._publish_status("online")
+
+    def run_camera(self) -> None:
+        while not self._stop.is_set():
+            self.capture_photo()
+            self._stop.wait(self.config.camera_interval_seconds)
+
     @staticmethod
     def _encode(payload: dict[str, object]) -> str:
         return json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
@@ -247,6 +299,11 @@ def parse_args(argv: list[str] | None = None) -> tuple[GatewayConfig, bool]:
     parser.add_argument("--tls", action="store_true",
                         default=env("MQTT_TLS", "false").lower() == "true")
     parser.add_argument("--ca", default=env("MQTT_CA_CERT"))
+    parser.add_argument("--camara-url", default=env("CAMERA_URL"),
+                        help="foto de la cámara, p. ej. IP Webcam: http://127.0.0.1:8080/shot.jpg")
+    parser.add_argument("--camara-intervalo", type=float,
+                        default=float(env("CAMERA_INTERVAL_SECONDS", "1.0")),
+                        help="segundos entre fotos (por defecto 1)")
     parser.add_argument("-v", "--detalle", action="store_true",
                         help="mostrar cada trama y comando")
     args = parser.parse_args(argv)
@@ -261,6 +318,8 @@ def parse_args(argv: list[str] | None = None) -> tuple[GatewayConfig, bool]:
         client_id=f"smartegg-gateway-{args.nodo}",
         tls=args.tls,
         ca_cert=args.ca,
+        camera_url=args.camara_url or None,
+        camera_interval_seconds=args.camara_intervalo,
     )
     return config, args.detalle
 
@@ -273,6 +332,8 @@ def main() -> None:
     )
     gateway = Gateway(config)
     gateway.start_mqtt()
+    if config.camera_url:
+        threading.Thread(target=gateway.run_camera, name="camara", daemon=True).start()
     try:
         gateway.run_serial()
     except KeyboardInterrupt:

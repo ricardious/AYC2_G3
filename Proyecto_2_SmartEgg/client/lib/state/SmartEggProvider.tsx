@@ -45,6 +45,8 @@ import {
   parseMqttMessage,
   type MqttActuatorState,
   type MqttCriticalAlarm,
+  type MqttSystemState,
+  type MqttVisionResult,
 } from "@/lib/mqtt/messages";
 import { CommandChannel, commandResultTopic } from "@/lib/mqtt/commands";
 import { mqttWebSocketUrl } from "@/lib/mqtt/url";
@@ -180,6 +182,9 @@ export interface SmartEggContextValue extends ConsoleState {
   mqttConnected: boolean;
   nodeOnline: boolean | null;
   criticalAlarm: MqttCriticalAlarm | null;
+  /** Bloqueo por objeto extraño: la página queda inutilizable hasta la tarjeta RFID. */
+  systemLock: MqttSystemState | null;
+  vision: MqttVisionResult | null;
   alarmSoundEnabled: boolean;
   alarmSoundBlocked: boolean;
   error: string | null;
@@ -278,6 +283,8 @@ export function SmartEggProvider({
   const [nodeOnline, setNodeOnline] = useState<boolean | null>(null);
   const [criticalAlarm, setCriticalAlarm] =
     useState<MqttCriticalAlarm | null>(null);
+  const [systemLock, setSystemLock] = useState<MqttSystemState | null>(null);
+  const [vision, setVision] = useState<MqttVisionResult | null>(null);
   const [alarmSoundEnabled, setAlarmSoundEnabled] = useState(true);
   const [alarmSoundBlocked, setAlarmSoundBlocked] = useState(false);
   const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -712,6 +719,8 @@ export function SmartEggProvider({
           [`${prefix}/status`]: { qos: 1 },
           [`${prefix}/actuadores/estado`]: { qos: 1 },
           [`${prefix}/telemetria`]: { qos: 0 },
+          [`${prefix}/sistema/estado`]: { qos: 1 },
+          [`${prefix}/vision/resultado`]: { qos: 0 },
           [commandResultTopic(mqttNodeCode)]: { qos: 1 },
         },
         (reason) => setMqttConnected(!reason),
@@ -747,6 +756,10 @@ export function SmartEggProvider({
           source: "serial",
           recorded_at: reading.recorded_at,
         });
+      } else if (message.type === "system") {
+        setSystemLock(message.system);
+      } else if (message.type === "vision") {
+        setVision(message.vision);
       } else if (message.type === "alarm") {
         setCriticalAlarm(message.alarm);
         if (message.alarm === null) {
@@ -1140,6 +1153,8 @@ export function SmartEggProvider({
       mqttConnected,
       nodeOnline,
       criticalAlarm,
+      systemLock,
+      vision,
       alarmSoundEnabled,
       alarmSoundBlocked,
       error,
@@ -1169,6 +1184,8 @@ export function SmartEggProvider({
       mqttConnected,
       nodeOnline,
       criticalAlarm,
+      systemLock,
+      vision,
       alarmSoundEnabled,
       alarmSoundBlocked,
       error,

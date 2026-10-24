@@ -33,6 +33,10 @@ class CommandError(ValueError):
     """A command that was understood but cannot be applied."""
 
 
+class SystemLockedError(RuntimeError):
+    """The node is locked by the vision service until an RFID unlock."""
+
+
 class ActuatorMqttCommand(ActuatorCommand):
     kind: str
 
@@ -121,11 +125,13 @@ class CommandListener:
         session_factory: sessionmaker[Session],
         send_to_node: Callable[[dict[str, object]], None],
         client_factory: Callable[..., mqtt.Client] = mqtt.Client,
+        is_locked: Callable[[str], bool] = lambda _node_code: False,
     ) -> None:
         self.settings = settings
         self.enabled = settings.mqtt_enabled
         self.session_factory = session_factory
         self.send_to_node = send_to_node
+        self.is_locked = is_locked
         self._client_factory = client_factory
         self._client: mqtt.Client | None = None
 
@@ -191,6 +197,9 @@ class CommandListener:
             request_id = data.pop("request_id", None)
             if request_id is not None:
                 result["request_id"] = request_id
+            if self.is_locked(node_code):
+                # The node rejects them too; answering here keeps the page honest.
+                raise SystemLockedError("System locked: present an authorized card")
             with self.session_factory() as db:
                 frame = execute_command(db, node_code, kind, data)
             try:
@@ -202,6 +211,8 @@ class CommandListener:
                 result["delivered"] = False
                 result["detail"] = str(exc)
             result["ok"] = True
+        except SystemLockedError as exc:
+            result.update(ok=False, error="system_locked", detail=str(exc))
         except ValidationError as exc:
             result.update(
                 ok=False, error="invalid_payload", detail=exc.errors()[0]["msg"]

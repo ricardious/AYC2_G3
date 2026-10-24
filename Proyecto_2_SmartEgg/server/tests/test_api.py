@@ -360,3 +360,30 @@ def test_websocket_receives_live_telemetry(
     assert len(rotations) == 1
     assert rotations[0]["angle_degrees"] == 45
     assert rotations[0]["direction"] == "left"
+
+
+def test_lock_opens_and_closes_critical_object_alarm(client, auth_headers, incubator):
+    def post(locked: bool) -> None:
+        response = client.post(
+            "/api/v1/telemetry",
+            headers=auth_headers,
+            json={
+                "incubator_code": incubator["code"],
+                "temperature_c": 37.5,
+                "humidity_pct": 58,
+                "system_locked": locked,
+            },
+        )
+        assert response.status_code == 201, response.text
+
+    def active_kinds() -> set[str]:
+        response = client.get(
+            f"/api/v1/incubators/{incubator['id']}/alarms?active_only=true",
+            headers=auth_headers,
+        )
+        return {alarm["kind"] for alarm in response.json()}
+
+    post(True)
+    assert "object_detected" in active_kinds()
+    post(False)
+    assert "object_detected" not in active_kinds()

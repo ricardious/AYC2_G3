@@ -17,12 +17,15 @@ services:
           smartegg-grafana "$$MQTT_GRAFANA_PASSWORD"
         mosquitto_passwd -b /mosquitto/secrets/passwords \
           smartegg-gateway "$$MQTT_GATEWAY_PASSWORD"
+        mosquitto_passwd -b /mosquitto/secrets/passwords \
+          smartegg-vision "$$MQTT_VISION_PASSWORD"
         chown 1883:1883 /mosquitto/secrets/passwords
     environment:
       MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
       MQTT_FRONTEND_PASSWORD: ${MQTT_FRONTEND_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
       MQTT_GRAFANA_PASSWORD: ${MQTT_GRAFANA_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
       MQTT_GATEWAY_PASSWORD: ${MQTT_GATEWAY_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
+      MQTT_VISION_PASSWORD: ${MQTT_VISION_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
     volumes:
       - mosquitto_secrets:/mosquitto/secrets
 
@@ -113,6 +116,7 @@ services:
       SMARTEGG_MQTT_USERNAME: smartegg
       SMARTEGG_MQTT_PASSWORD: ${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}
       SMARTEGG_MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-smartegg-backend}
+      SMARTEGG_VISION_UNLOCK_GRACE_SECONDS: ${VISION_UNLOCK_GRACE_SECONDS:-30}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     healthcheck:
@@ -127,6 +131,29 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    networks:
+      - smartegg
+
+  vision:
+    build:
+      context: ./vision
+      dockerfile: Dockerfile
+    image: smartegg-vision:local
+    restart: unless-stopped
+    init: true
+    depends_on:
+      broker:
+        condition: service_healthy
+    environment:
+      MQTT_HOST: broker
+      MQTT_PORT: 1883
+      MQTT_USERNAME: smartegg-vision
+      MQTT_PASSWORD: ${MQTT_VISION_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
+      VISION_WINDOW: ${VISION_WINDOW:-5}
+      VISION_VOTES: ${VISION_VOTES:-3}
+    volumes:
+      # Modelo entrenado en ml/vision; reentrenar solo requiere reiniciar.
+      - ./ml/vision/modelo:/app/modelo:ro
     networks:
       - smartegg
 

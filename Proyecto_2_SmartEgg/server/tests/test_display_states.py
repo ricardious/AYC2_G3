@@ -29,3 +29,23 @@ def test_legacy_states_are_unknown():
     payload = parse_serial_line("TEMP:37.5,HUM:58", "NODE-01")
     assert payload.system_enabled is None
     assert payload.sensor_ok is None
+
+
+def test_lock_field_is_parsed_and_stored(client, auth_headers, incubator):
+    for locked in (True, False):
+        payload = parse_serial_line(
+            f"MSG:1,TEMP:37.5,HUM:58,POWER:1,SENSOR:1,LOCK:{int(locked)}",
+            incubator["code"],
+        )
+        assert payload.system_locked is locked
+        response = client.post(
+            "/api/v1/telemetry",
+            headers=auth_headers,
+            json=payload.model_dump(mode="json"),
+        )
+        assert response.status_code == 201, response.text
+        assert response.json()["system_locked"] is locked
+
+
+def test_frames_without_lock_field_leave_it_unknown():
+    assert parse_serial_line("TEMP:37.5,HUM:58", "NODE-01").system_locked is None

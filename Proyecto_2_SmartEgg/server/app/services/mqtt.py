@@ -34,6 +34,7 @@ class MqttSnapshot:
     critical_alarm: dict[str, object] | None
     system_enabled: bool | None = None
     sensor_ok: bool | None = None
+    system_locked: bool | None = None
 
 
 def build_mqtt_snapshot(
@@ -69,6 +70,7 @@ def build_mqtt_snapshot(
         door_open=reading.door_open,
         system_enabled=reading.system_enabled,
         sensor_ok=reading.sensor_ok,
+        system_locked=reading.system_locked,
         occupied_slots=reading.occupied_slots,
         available_slots=reading.available_slots,
         recorded_at=reading.recorded_at,
@@ -191,6 +193,7 @@ class MqttPublisher:
                 "door_open": snapshot.door_open,
                 "system_enabled": snapshot.system_enabled,
                 "sensor_ok": snapshot.sensor_ok,
+                "system_locked": snapshot.system_locked,
                 "occupied_slots": snapshot.occupied_slots,
                 "available_slots": snapshot.available_slots,
                 "recorded_at": recorded_at,
@@ -198,6 +201,10 @@ class MqttPublisher:
             qos=0,
             retain=True,
         )
+        if snapshot.system_locked is not None:
+            self.publish_system_state(
+                prefix, snapshot.system_locked, snapshot.recorded_at
+            )
         self._publish(
             self._topic(prefix, "actuadores/estado"),
             {
@@ -228,6 +235,7 @@ class MqttPublisher:
                 "door_open": payload.door_open,
                 "system_enabled": payload.system_enabled,
                 "sensor_ok": payload.sensor_ok,
+                "system_locked": payload.system_locked,
                 "occupied_slots": payload.occupied_slots,
                 "recorded_at": (
                     payload.recorded_at or datetime.now(UTC)
@@ -235,6 +243,22 @@ class MqttPublisher:
             },
             qos=0,
             retain=False,
+        )
+
+    def publish_system_state(
+        self, node_code: str, locked: bool, recorded_at: datetime
+    ) -> mqtt.MQTTMessageInfo | None:
+        """Estado normal/bloqueado que confirma la ESP32, para la página y Grafana."""
+        return self._publish(
+            self._topic(node_code, "sistema/estado"),
+            {
+                "state": "locked" if locked else "normal",
+                "locked": locked,
+                "reason": "object_detected" if locked else None,
+                "recorded_at": recorded_at.isoformat(),
+            },
+            qos=1,
+            retain=True,
         )
 
     def publish_access_event(

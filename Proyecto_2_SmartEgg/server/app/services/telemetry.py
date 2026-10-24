@@ -136,6 +136,7 @@ def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
         door_open=payload.door_open,
         system_enabled=payload.system_enabled,
         sensor_ok=payload.sensor_ok,
+        system_locked=payload.system_locked,
         occupied_slots=occupied_slots,
         available_slots=incubator.capacity - occupied_slots,
         source=payload.source,
@@ -225,6 +226,18 @@ def ingest_telemetry(db: Session, payload: TelemetryCreate) -> TelemetryReading:
         payload.humidity_pct,
         recorded_at,
     )
+    if payload.system_locked is not None:
+        # Abierta mientras la ESP32 sigue bloqueada; se cierra con la tarjeta RFID.
+        _sync_alarm(
+            db,
+            incubator.id,
+            "object_detected",
+            payload.system_locked,
+            "critical",
+            "Objeto extraño detectado: sistema bloqueado",
+            None,
+            recorded_at,
+        )
     _sync_alarm(
         db,
         incubator.id,

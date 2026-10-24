@@ -25,8 +25,27 @@ export interface MqttTelemetry {
   recorded_at: string;
 }
 
+/** Estado normal/bloqueado que confirma la ESP32 (topic `sistema/estado`). */
+export interface MqttSystemState {
+  locked: boolean;
+  reason: string | null;
+  recorded_at: string;
+}
+
+/** Última foto clasificada por el servicio de visión (`vision/resultado`). */
+export interface MqttVisionResult {
+  clase: string;
+  confianza: number;
+  votos_objeto: number;
+  ventana: number;
+  objeto_detectado: boolean;
+  recorded_at: string;
+}
+
 export type SmartEggMqttMessage =
   | { type: "alarm"; alarm: MqttCriticalAlarm | null }
+  | { type: "system"; system: MqttSystemState }
+  | { type: "vision"; vision: MqttVisionResult }
   | { type: "status"; online: boolean }
   | { type: "actuators"; actuators: MqttActuatorState }
   | { type: "telemetry"; telemetry: MqttTelemetry };
@@ -105,6 +124,44 @@ export function parseMqttMessage(
         message: data.message,
         value: data.value,
         occurred_at: data.occurred_at,
+      },
+    };
+  }
+
+  if (suffix === "sistema/estado") {
+    if (
+      typeof data.locked !== "boolean" ||
+      (data.reason !== null && typeof data.reason !== "string") ||
+      typeof data.recorded_at !== "string"
+    ) {
+      return null;
+    }
+    return {
+      type: "system",
+      system: { locked: data.locked, reason: data.reason, recorded_at: data.recorded_at },
+    };
+  }
+
+  if (suffix === "vision/resultado") {
+    if (
+      typeof data.clase !== "string" ||
+      typeof data.confianza !== "number" ||
+      !Number.isInteger(data.votos_objeto) ||
+      !Number.isInteger(data.ventana) ||
+      typeof data.objeto_detectado !== "boolean" ||
+      typeof data.recorded_at !== "string"
+    ) {
+      return null;
+    }
+    return {
+      type: "vision",
+      vision: {
+        clase: data.clase,
+        confianza: data.confianza,
+        votos_objeto: data.votos_objeto as number,
+        ventana: data.ventana as number,
+        objeto_detectado: data.objeto_detectado,
+        recorded_at: data.recorded_at,
       },
     };
   }

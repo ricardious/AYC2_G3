@@ -227,3 +227,40 @@ def test_api_telemetry_publishes_database_snapshot(
     assert captured[1].buzzer is True
     assert captured[1].critical_alarm is not None
     assert captured[1].critical_alarm["kind"] == "temperature_high"
+
+
+def test_snapshot_publishes_retained_system_state_on_lock() -> None:
+    publisher, fake = build_publisher()
+    recorded_at = datetime(2026, 10, 23, 22, 15, tzinfo=UTC)
+    publisher.publish_snapshot(
+        MqttSnapshot(
+            node_code="NODE-01",
+            temperature_c=37.5,
+            humidity_pct=58,
+            door_open=False,
+            occupied_slots=3,
+            available_slots=1,
+            recorded_at=recorded_at,
+            heater=False,
+            fan=False,
+            servo_angle=None,
+            buzzer=True,
+            critical_alarm=None,
+            system_locked=True,
+        )
+    )
+
+    messages = {
+        topic: (payload, qos, retained)
+        for topic, payload, qos, retained in fake.published
+    }
+    payload, qos, retained = messages["smartegg/NODE-01/sistema/estado"]
+    assert (qos, retained) == (1, True)
+    assert json.loads(payload) == {
+        "state": "locked",
+        "locked": True,
+        "reason": "object_detected",
+        "recorded_at": recorded_at.isoformat(),
+    }
+    telemetry = json.loads(messages["smartegg/NODE-01/telemetria"][0])
+    assert telemetry["system_locked"] is True

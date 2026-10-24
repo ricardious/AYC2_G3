@@ -139,3 +139,49 @@ def test_serial_lines_and_commands_cross_the_bridge() -> None:
     statuses = [json.loads(p) for p in published_on(fake, gateway.status_topic)]
     assert statuses[0]["serial"] == "connected"
     assert statuses[-1]["reason"] == "graceful_shutdown"
+
+
+def build_camera_gateway(fetcher) -> tuple[Gateway, FakeClient]:  # type: ignore[no-untyped-def]
+    fake = FakeClient()
+    config = GatewayConfig(**{**CONFIG.__dict__, "camera_url": "http://camara/shot.jpg"})
+    gateway = Gateway(
+        config,
+        serial_factory=serial.serial_for_url,
+        client_factory=lambda *_args, **_kwargs: fake,
+        photo_fetcher=fetcher,
+    )
+    gateway.start_mqtt()
+    return gateway, fake
+
+
+def test_camera_photo_is_published_without_retain() -> None:
+    photo = b"\xff\xd8 jpeg \xff\xd9"
+    gateway, fake = build_camera_gateway(lambda _url: photo)
+
+    assert gateway.capture_photo() is True
+
+    photos = [entry for entry in fake.published if entry[0] == "smartegg/NODE-01/camara/foto"]
+    assert photos == [("smartegg/NODE-01/camara/foto", photo, 0, False)]
+    status = json.loads(published_on(fake, gateway.status_topic)[-1])
+    assert status["camera"] == "ok"
+
+
+def test_camera_failure_is_reported_once_in_status() -> None:
+    def broken(_url: str) -> bytes:
+        raise OSError("connection refused")
+
+    gateway, fake = build_camera_gateway(broken)
+
+    assert gateway.capture_photo() is False
+    assert gateway.capture_photo() is False
+
+    statuses = [json.loads(p) for p in published_on(fake, gateway.status_topic)]
+    assert [s["camera"] for s in statuses] == ["error"]
+    assert not [entry for entry in fake.published if entry[0].endswith("camara/foto")]
+
+
+def test_camera_rejects_responses_that_are_not_jpeg() -> None:
+    gateway, fake = build_camera_gateway(lambda _url: b"<html>login</html>")
+
+    assert gateway.capture_photo() is False
+    assert not [entry for entry in fake.published if entry[0].endswith("camara/foto")]
