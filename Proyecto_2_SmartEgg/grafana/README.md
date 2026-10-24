@@ -118,9 +118,24 @@ puente serial esté recibiendo tramas o generamos datos con
 ```text
 grafana/
 ├── dashboards/
+│   ├── smartegg-energia.json
 │   ├── smartegg-historical.json
 │   └── smartegg-realtime.json
 └── provisioning/
+    ├── alerting/smartegg-consumo.yml
     ├── dashboards/smartegg.yml
     └── datasources/smartegg.yml
 ```
+
+## Consumo eléctrico
+
+El tablero **SmartEgg - Consumo eléctrico** (`smartegg-energia`) lee la tabla
+`energy_samples` que llena el backend con cada lectura: potencia actual, energía
+y costo del día, uso del límite diario, promedio de la última hora, potencia por
+componente, energía por día y las alarmas de consumo. El cálculo está explicado
+en [`docs/CONSUMO_ELECTRICO.md`](../docs/CONSUMO_ELECTRICO.md).
+
+La regla de alerta **Consumo eléctrico anómalo o límite superado**
+(`provisioning/alerting/smartegg-consumo.yml`) se evalúa cada minuto y pasa a
+*firing* cuando lleva 1 minuto abierta una alarma `energy_anomaly` o
+`energy_limit`. Se ve en *Alerting → Alert rules*, carpeta SmartEgg.
