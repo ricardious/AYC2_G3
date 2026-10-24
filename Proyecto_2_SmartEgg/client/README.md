@@ -56,7 +56,14 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_MQTT_PASSWORD` | Contraseña MQTT usada por el navegador |
 
 La cuenta esperada es `smartegg-frontend`. La ACL le permite suscribirse a alarmas,
-estado y actuadores, pero no publicar ni leer telemetría ajena a esos canales.
+estado, actuadores, visión y la foto de la bandeja (`camara/foto`), pero no publicar
+ni leer telemetría ajena a esos canales.
+
+El panel **CÁMARA · VISIÓN** del Centro de control muestra esa foto (una por
+segundo, la publica el gateway) junto al veredicto del modelo: clase de la última
+foto, probabilidad media de `objeto` en las últimas 5 y si el servicio decidió
+bloquear. Si pasan 5 s sin fotos marca **SIN SEÑAL**. Durante un bloqueo, la misma
+foto aparece en la pantalla de bloqueo.
 
 Si `NEXT_PUBLIC_API_URL` no está definida, el navegador usa automáticamente su propio
 hostname con el puerto `8000`. Así, al visitar `http://192.168.1.20:3000` desde un móvil,
