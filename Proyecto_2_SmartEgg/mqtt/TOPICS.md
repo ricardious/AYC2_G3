@@ -29,6 +29,8 @@ Definimos los topics de la siguiente forma:
 | `smartegg/vision/estado` | Visión/LWT | Frontend, Grafana | 1 | Sí |
 | `smartegg/{id}/ml/anomalia` | Anomalías | Backend, Frontend, Grafana | 0 | Sí |
 | `smartegg/ml/estado` | Anomalías/LWT | Frontend, Grafana | 1 | Sí |
+| `smartegg/{id}/energia` | Backend | Frontend, Grafana | 0 | Sí |
+| `smartegg/{id}/comandos/energia` | Frontend | Backend | 1 | No |
 | `smartegg/{id}/sistema/estado` | Backend | Frontend, Grafana | 1 | Sí |
 
 El frontend recibe los eventos de acceso por el WebSocket de FastAPI, no por
@@ -377,3 +379,66 @@ mientras `alerta` sea `true`.
 ```
 
 El Last Will retenido es `{"status":"offline"}`.
+
+## Consumo eléctrico
+
+El nodo no mide corriente: el backend estima la potencia de cada lectura con el
+estado real del foco, el ventilador y el buzzer y la potencia nominal de cada
+componente (justificación en [`docs/CONSUMO_ELECTRICO.md`](../docs/CONSUMO_ELECTRICO.md)).
+
+### Estado (`energia`)
+
+Se publica retenido con cada lectura guardada:
+
+```json
+{
+  "potencia_w": 41.41,
+  "desglose_w": {"foco": 40.0, "ventilador": 0.0, "otros": 1.41},
+  "energia_hoy_wh": 512.3,
+  "costo_hoy_q": 0.7736,
+  "promedio_1h_w": 31.2,
+  "limite_wh": 800.0,
+  "uso_limite_pct": 64.0,
+  "accion_limite": "alert",
+  "tarifa_q_kwh": 1.51,
+  "tarifa": "EEGSA tarifa no social, ago-oct 2026",
+  "anomalia": null,
+  "horarios": [{"device": "fan", "start": "22:00", "end": "06:00", "state": "off"}],
+  "temporizador": {"device": "fan", "state": "on", "until": "2026-10-24T03:15:00+00:00"},
+  "reglas_activas": {"fan": {"enabled": true, "reason": "temporizador"}},
+  "potencias_w": {"foco": 40.0, "ventilador": 0.31, "rele": 0.35, "buzzer": 0.15, "electronica": 1.06},
+  "recorded_at": "2026-10-24T03:05:00+00:00",
+  "fecha_local": "2026-10-23"
+}
+```
+
+`energia_hoy_wh` se reinicia a medianoche (hora de Guatemala). `anomalia` es la
+regla que se cumplió en esa lectura: `foco_con_temperatura_alta`,
+`consumo_sistema_apagado` o `promedio_alto`. El backend abre las alarmas
+`energy_limit` y `energy_anomaly` (severidad `warning`).
+
+### Configuración (`comandos/energia`)
+
+Cambio parcial; solo se tocan los campos enviados. La respuesta llega en
+`comandos/resultado` como los demás comandos.
+
+```json
+{"request_id": "e1", "daily_limit_wh": 800, "limit_action": "heater_off",
+ "schedules": [{"device": "fan", "start": "22:00", "end": "06:00", "state": "off"}],
+ "timer": {"device": "fan", "state": "on", "minutes": 15}}
+```
+
+| Campo | Qué hace |
+|---|---|
+| `heater_w`, `fan_w`, `relay_w`, `buzzer_w`, `base_w` | potencias usadas en el cálculo (W) |
+| `tariff_q_per_kwh`, `tariff_label` | tarifa y de dónde sale |
+| `daily_limit_wh` | límite diario; al pasarlo se abre `energy_limit` |
+| `limit_action` | `alert` (solo avisa) o `heater_off` (apaga el foco hasta medianoche) |
+| `anomaly_avg_w` | promedio de la última hora que se considera anómalo |
+| `schedules` | franjas diarias en las que `heater` o `fan` quedan en `on`/`off` |
+| `timer` | enciende o apaga un dispositivo por `minutes`; `null` lo cancela |
+
+Prioridad: temporizador, luego límite, luego horarios. Sin ninguna regla, el
+dispositivo vuelve al control automático de la ESP32. La seguridad del firmware
+sigue mandando: con la temperatura en el máximo el foco se apaga aunque una
+regla lo pida encendido.
