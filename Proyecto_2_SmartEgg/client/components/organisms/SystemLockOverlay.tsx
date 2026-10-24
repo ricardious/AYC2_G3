@@ -1,4 +1,5 @@
 import { StatusDot } from "@/components/atoms/StatusDot";
+import { CameraFeed } from "@/components/organisms/CameraPanel";
 import { DANGER } from "@/lib/smartegg/theme";
 import { useSmartEgg } from "@/lib/state/hooks";
 
@@ -47,6 +48,7 @@ export function SystemLockOverlay() {
           Pase una <strong>tarjeta RFID autorizada</strong> en el lector de la incubadora y
           retire el objeto.
         </p>
+        <CameraFeed alert className="mx-auto mt-5 w-full max-w-[360px]" />
         <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-[11px] tracking-[0.08em]">
           <dt className="text-foreground-faint">BLOQUEADO DESDE</dt>
           <dd className="text-danger-text">{since}</dd>
