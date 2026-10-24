@@ -1,5 +1,5 @@
 # Proyecto 2 — SmartEgg
-# Grupo 3
+# Grupo 3.
 
 Desarrollamos SmartEgg como una incubadora inteligente IoT a partir de la
 Práctica 1. Migramos el nodo a una ESP32 que mide el ambiente, controla los
