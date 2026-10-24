@@ -266,7 +266,7 @@ sequenceDiagram
     participant BE as Backend
     participant ESP as ESP32
     GW->>VIS: camara/foto (1 por segundo)
-    VIS->>BE: vision/resultado · objeto_detectado=true (3 de 5 fotos)
+    VIS->>BE: vision/resultado · objeto_detectado=true (media de objeto ≥ 65 % en 5 fotos)
     BE->>ESP: gateway/tx · {"type":"system","action":"lock"}
     ESP->>BE: gateway/rx · MSG:1,...,LOCK:1
     BE-->>BE: alarma crítica object_detected
@@ -288,7 +288,8 @@ broker va lento se pierde una foto en vez de acumular fotos viejas.
   "clase": "objeto",
   "confianza": 0.9132,
   "probabilidades": {"huevo": 0.0521, "objeto": 0.9132, "vacio": 0.0347},
-  "votos_objeto": 3,
+  "votos_objeto": 4,
+  "prob_objeto_media": 0.7412,
   "ventana": 5,
   "objeto_detectado": true,
   "inferencia_ms": 18.4,
@@ -296,14 +297,15 @@ broker va lento se pierde una foto en vez de acumular fotos viejas.
 }
 ```
 
-`objeto_detectado` aplica la regla de 3 de las últimas 5 fotos. El backend solo
+`objeto_detectado` vale `true` cuando la probabilidad media de `objeto` en las
+últimas 5 fotos llega al 65 % (`VISION_MIN_PROBABILITY`). El backend solo
 reacciona a resultados en vivo: ignora el retenido que el broker reenvía al
 reconectar, que puede tener minutos.
 
 ### Estado del servicio de visión (`vision/estado`)
 
 ```json
-{"status":"online","modelo":"smartegg_vision.onnx","clases":["huevo","objeto","vacio"],"regla":"3 de 5 fotos","recorded_at":"2026-10-23T22:14:00Z"}
+{"status":"online","modelo":"smartegg_vision.onnx","clases":["huevo","objeto","vacio"],"regla":"objeto medio >= 65% en 5 fotos","recorded_at":"2026-10-23T22:14:00Z"}
 ```
 
 El Last Will retenido es `{"status":"offline"}`.

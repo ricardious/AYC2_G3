@@ -150,7 +150,7 @@ services:
       MQTT_USERNAME: smartegg-vision
       MQTT_PASSWORD: ${MQTT_VISION_PASSWORD:-${MQTT_PASSWORD:?Define MQTT_PASSWORD in .env}}
       VISION_WINDOW: ${VISION_WINDOW:-5}
-      VISION_VOTES: ${VISION_VOTES:-3}
+      VISION_MIN_PROBABILITY: ${VISION_MIN_PROBABILITY:-0.65}
     volumes:
       # Modelo entrenado en ml/vision; reentrenar solo requiere reiniciar.
       - ./ml/vision/modelo:/app/modelo:ro

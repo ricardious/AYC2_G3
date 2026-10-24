@@ -16,12 +16,19 @@ flowchart LR
     MQ --> GW --> ESP["ESP32<br/>buzzer + LED + LCD"]
 ```
 
-## Regla de 3 de 5
+## Regla: probabilidad media de las últimas 5 fotos
 
-El modelo se equivoca en fotos sueltas, así que una sola foto no bloquea la
-incubadora. El servicio guarda las últimas 5 fotos de cada nodo y confirma el
-objeto cuando **3 o más** salen como `objeto`. Con una foto por segundo, el
-bloqueo llega unos 3 s después de poner el objeto.
+Una sola foto no bloquea la incubadora. El servicio guarda las últimas 5 fotos
+de cada nodo y confirma el objeto cuando la **probabilidad media de `objeto`**
+en esas 5 fotos llega al **65 %**.
+
+Primero contábamos votos (3 de 5 fotos como `objeto`), pero en la prueba en vivo
+una bandeja con huevos quedaba justo en el borde: el modelo oscilaba entre 45 %
+y 55 % de `objeto` y tarde o temprano juntaba 3 votos y bloqueaba sin motivo.
+Con el promedio, esa escena se queda cerca del 50 % y no bloquea. Un objeto que
+el modelo ve claro (90 % o más) bloquea en la 4.ª foto, unos 4 s después de
+ponerlo. El costo es que un objeto que el modelo ve con poca seguridad (60–65 %)
+tampoco bloquea; se puede ajustar con `VISION_MIN_PROBABILITY`.
 
 ## Topics
 
@@ -38,7 +45,8 @@ Ejemplo de `vision/resultado`:
   "clase": "objeto",
   "confianza": 0.9132,
   "probabilidades": {"huevo": 0.0521, "objeto": 0.9132, "vacio": 0.0347},
-  "votos_objeto": 3,
+  "votos_objeto": 4,
+  "prob_objeto_media": 0.7412,
   "ventana": 5,
   "objeto_detectado": true,
   "inferencia_ms": 18.4,
@@ -46,8 +54,10 @@ Ejemplo de `vision/resultado`:
 }
 ```
 
-`objeto_detectado` es el resultado de la regla de 3 de 5: es lo que el backend usa
-para bloquear el nodo. `clase` y `confianza` son de la última foto.
+`objeto_detectado` es el resultado de la regla (`prob_objeto_media` ≥ 0.65 con la
+ventana llena): es lo que el backend usa para bloquear el nodo. `clase` y
+`confianza` son de la última foto; `votos_objeto` cuenta cuántas de las 5 fotos
+salieron como `objeto` y es solo informativo.
 
 ## Uso
 
@@ -64,7 +74,7 @@ uv run vision_service.py --broker localhost --clave '<clave-de-smartegg-vision>'
 | `VISION_MODEL_PATH` | `--modelo` | `../ml/vision/modelo/smartegg_vision.onnx` |
 | `MQTT_HOST` / `MQTT_PORT` | `--broker` / `--puerto-mqtt` | `localhost` / `1883` |
 | `MQTT_USERNAME` / `MQTT_PASSWORD` | `--usuario` / `--clave` | `smartegg-vision` / — |
-| `VISION_WINDOW` / `VISION_VOTES` | `--ventana` / `--votos` | `5` / `3` |
+| `VISION_WINDOW` / `VISION_MIN_PROBABILITY` | `--ventana` / `--umbral` | `5` / `0.65` |
 | `MQTT_TLS` / `MQTT_CA_CERT` | `--tls` / `--ca` | `false` / — |
 
 ## Pruebas
