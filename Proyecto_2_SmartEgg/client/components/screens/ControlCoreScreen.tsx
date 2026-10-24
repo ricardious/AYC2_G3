@@ -1,6 +1,7 @@
 "use client";
 
 import { ActuatorPanel } from "@/components/organisms/ActuatorPanel";
+import { CameraPanel } from "@/components/organisms/CameraPanel";
 import { CriticalAlertBanner } from "@/components/organisms/CriticalAlertBanner";
 import { EventFeed } from "@/components/organisms/EventFeed";
 import { HumidityColumn } from "@/components/organisms/HumidityColumn";
@@ -55,6 +56,10 @@ export function ControlCoreScreen() {
 
       <StageBlock top={452} x={1226} anchor="right" fillRight fluid>
         <SensorPanel />
+      </StageBlock>
+
+      <StageBlock top={584} x={1226} anchor="right" fillRight fluid>
+        <CameraPanel />
       </StageBlock>
 
       <StageBlock top={806} x={176} wide fluid>
