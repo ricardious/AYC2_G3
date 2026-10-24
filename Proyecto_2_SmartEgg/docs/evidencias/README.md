@@ -4,6 +4,60 @@ Este índice separa capturas de interfaz, datos de demostración y pruebas de
 funcionamiento físico. Ninguna imagen de esta carpeta se presenta como una
 medición real de la ESP32 si no se ha verificado su origen.
 
+## Fase 3 · Consola web y cámara
+
+Capturas del 24-10-2026 en [`consola/`](consola/) y [`camara/`](camara/).
+
+| Archivo | Qué acredita | Límite |
+|---|---|---|
+| [ui_bloqueo_seguridad.png](consola/ui_bloqueo_seguridad.png) | La página bloqueada por la cámara (**SISTEMA BLOQUEADO** desde las 15:20:54) con la foto y la instrucción de desbloqueo | La última foto ya es *huevo*: el objeto se retiró y se espera la tarjeta |
+| [ui_centro_de_control.png](consola/ui_centro_de_control.png) | Alerta crítica `object_detected` en la consola y en *Eventos · en vivo* | — |
+| [ui_panel_camara.png](consola/ui_panel_camara.png) | Una foto como *objeto extraño* con media de 22 %: la decisión sigue en *VIGILANDO* | — |
+| [ui_observatorio.png](consola/ui_observatorio.png) | Observatorio 3D con telemetría activa | Modelo ilustrativo |
+| [ui_incubacion.png](consola/ui_incubacion.png) | Posiciones detectadas por los microinterruptores | Los huevos no tienen ficha registrada |
+| [ui_historial.png](consola/ui_historial.png) | 240 lecturas reales en ECharts | — |
+| [ui_reportes.png](consola/ui_reportes.png) | Pantalla de reportes | Es la vista previa, no el PDF descargado |
+| [ui_perfiles.png](consola/ui_perfiles.png) | Perfil del operador con sus contadores | — |
+| [camara/](camara/) | 6 fotos JPEG reales de la cámara, una por segundo, y la lámina `camara-secuencia.png` | — |
+
+En las capturas de la consola el encabezado dice **CONEXIÓN · REST**: esa
+etiqueta indica el estado del WebSocket del backend, no el de MQTT.
+
+## Fase 3 · Nube (AWS)
+
+Capturas del 24-10-2026 en [`nube/`](nube/).
+
+| Archivo | Qué acredita | Límite |
+|---|---|---|
+| [01-docker-compose-ps.png](nube/01-docker-compose-ps.png) | Los 7 servicios del stack corriendo en la EC2 `i-048526fe56ba8e80b`; backend, broker y base *healthy*; la base solo en `127.0.0.1` | Estado en ese momento |
+| [02-instancia-ec2.png](nube/02-instancia-ec2.png) | Instancia `smartegg-fase3` *running* (`t3.medium`, `us-east-1c`) e IP elástica `100.63.122.66` | — |
+| [03-grupo-seguridad.png](nube/03-grupo-seguridad.png) | Puertos abiertos de `smartegg-sg` con su uso | — |
+| [04-consola-instancias.jpg](nube/04-consola-instancias.jpg) | Instancia en ejecución con 3/3 comprobaciones de estado | — |
+| [05-consola-detalle-instancia.jpg](nube/05-consola-detalle-instancia.jpg) | IP pública, red y configuración de la instancia | — |
+| [06-consola-grupo-seguridad.jpg](nube/06-consola-grupo-seguridad.jpg) | Las 7 reglas de entrada del grupo de seguridad | — |
+
+## Fase 3 · Grafana
+
+Capturas tomadas el 24-10-2026 del Grafana desplegado en la EC2
+(<http://100.63.122.66:3001>), con el nodo `NODE-01` enviando datos. Están en [`grafana/`](grafana/).
+
+| Archivo | Qué acredita | Límite |
+|---|---|---|
+| [grafana-centro-control.png](grafana/grafana-centro-control.png) | Nodo, visión y detector ML en línea; sistema en estado normal; resultado de visión de la última foto (clase, probabilidades y ventana de 5 fotos) | El panel del puntaje LOF en vivo no tenía puntos en esa ventana; el estado no estaba bloqueado al momento de la captura |
+| [grafana-tiempo-real.png](grafana/grafana-tiempo-real.png) | Telemetría por MQTT: temperatura, humedad, puerta, ocupación, actuadores y ángulo de la bandeja | El panel de alarma crítica estaba vacío porque no había una alarma crítica activa |
+| [grafana-historico.png](grafana/grafana-historico.png) | Histórico de 24 h desde PostgreSQL: 6 611 lecturas, aperturas con RFID, lotes y alarmas, incluidas 2 `object_detected` y 2 `ml_anomaly` | Muestra que esas alarmas existieron, no el momento en que ocurrieron |
+| [grafana-consumo.png](grafana/grafana-consumo.png) | Potencia, energía y costo del día, uso del límite y potencia por componente | Es consumo estimado, no medido con sensor de corriente |
+| [grafana-regla-alerta.png](grafana/grafana-regla-alerta.png) | Regla de alerta provisionada y evaluada cada minuto | Estaba en *Normal*, no en *Firing* |
+
+## Fase 3 · Visión y API
+
+| Archivo | Qué acredita | Límite |
+|---|---|---|
+| [vision/vision-ejemplos.png](vision/vision-ejemplos.png) | 12 fotos reales de la bandeja (4 por clase) clasificadas por el modelo ONNX con el preprocesamiento OpenCV del servicio, con la predicción y las tres probabilidades | Las fotos forman parte del dataset de entrenamiento del modelo final; el desempeño honesto es el de la validación cruzada (exactitud 0.89) |
+| [api/api-swagger.png](api/api-swagger.png) | Swagger UI del backend desplegado con los 39 endpoints de `SmartEgg API 1.0.0`; ninguno acciona actuadores | Muestra el contrato, no una llamada ejecutada |
+
+## Fase 2
+
 | Archivo | Qué acredita | Límite |
 |---|---|---|
 | [login-rfid.png](login-rfid.png) | Diseño de la pantalla de ingreso y estado del lector | No prueba lectura de una tarjeta física. |

@@ -1,12 +1,20 @@
 # Broker MQTT
 
-Para el proyecto usamos Eclipse Mosquitto como broker MQTT. Por medio de este broker
-conectamos el backend con el frontend y Grafana para enviar la telemetría y las alarmas
-en tiempo real.
+Para el proyecto usamos Eclipse Mosquitto como broker MQTT. En la Fase 3 es el
+**único canal de control**: conecta el gateway de la ESP32, el backend, los servicios de
+visión y de anomalías, la consola web y Grafana.
 
-Dejamos habilitada la autenticación por usuario y contraseña con mínimo privilegio:
-`smartegg` publica desde el backend, `smartegg-frontend` sólo lee los tres topics de la
-consola y `smartegg-grafana` sólo lee la jerarquía de SmartEgg.
+Dejamos habilitada la autenticación por usuario y contraseña con mínimo privilegio
+([`config/acl`](config/acl)):
+
+| Cuenta | Uso |
+|---|---|
+| `smartegg` | Backend; única cuenta que escribe el estado y `gateway/tx` |
+| `smartegg-gateway` | Gateway USB ↔ MQTT y fotos de la cámara |
+| `smartegg-vision` | Servicio de visión |
+| `smartegg-ml` | Servicio de anomalías |
+| `smartegg-frontend` | Consola web: lee el estado y solo escribe en `comandos/*` |
+| `smartegg-grafana` | Solo lectura de `smartegg/#` |
 
 ## Levantar Mosquitto
 
@@ -17,7 +25,8 @@ cp .env.example .env
 ```
 
 En ese archivo cambiamos `MQTT_PASSWORD`, `MQTT_FRONTEND_PASSWORD`,
-`MQTT_GRAFANA_PASSWORD` y `POSTGRES_PASSWORD`. Luego levantamos el broker desde la raíz
+`MQTT_GRAFANA_PASSWORD`, `MQTT_GATEWAY_PASSWORD`, `MQTT_VISION_PASSWORD`,
+`MQTT_ML_PASSWORD` y `POSTGRES_PASSWORD`. Luego levantamos el broker desde la raíz
 del proyecto:
 
 ```bash
@@ -27,11 +36,11 @@ docker compose ps
 
 Usamos los siguientes puertos:
 
-- `1883` para la conexión MQTT del backend y Grafana.
+- `1883` para la conexión MQTT del gateway, el backend, los servicios de ML y Grafana.
 - `9001` para la conexión MQTT sobre WebSocket del frontend.
 
-El servicio `mqtt-password-init` regenera las tres cuentas usando esas contraseñas. Para
-compatibilidad con instalaciones anteriores, las dos claves de lectura heredan
+El servicio `mqtt-password-init` regenera las seis cuentas usando esas contraseñas. Para
+compatibilidad con instalaciones anteriores, las claves que no se definan heredan
 `MQTT_PASSWORD` cuando todavía no están definidas; conviene separarlas antes de exponer
 el broker. El archivo y los datos se guardan en volúmenes de Docker y no se suben al
 repositorio.
@@ -62,12 +71,14 @@ para retained y LWT se siguen las comprobaciones de la hoja de calificación.
 El contrato de aplicación, los niveles de QoS y los payloads están en
 [`TOPICS.md`](TOPICS.md) y en el README principal.
 
-## Despliegue en AWS
+## Despliegue en la nube
 
-El despliegue documentado en este repositorio usa Mosquitto local mediante
-Docker Compose. La configuración para AWS queda como alternativa, no como
-evidencia de un despliegue remoto ya realizado.
+En la Fase 3 el broker corre en la VM de AWS con el mismo `docker-compose.yml`, junto al
+backend, la base de datos, los servicios de ML y Grafana. Dentro de la red Docker los
+servicios lo encuentran como `broker:1883`; desde fuera, el gateway usa
+`100.63.122.66:1883` y la consola `ws://100.63.122.66:9001`. El grupo de seguridad solo
+abre esos puertos y todas las conexiones exigen usuario y contraseña. Los pasos completos
+están en el [README principal](../README.md#4-infraestructura-en-la-nube).
 
-En AWS harían falta TLS y reglas de red para no publicar directamente los puertos inseguros.
-Dejamos `config/mosquitto-tls.conf.example` como base para configurar los certificados.
+Para cifrar las conexiones dejamos `config/mosquitto-tls.conf.example` como base.
 Los certificados, contraseñas y archivos `.env` no se incluyen en Git.

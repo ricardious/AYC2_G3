@@ -1,6 +1,6 @@
 # Grafana
 
-Usamos Grafana local para visualizar los datos de SmartEgg. Dejamos dos datasources
+Usamos Grafana para visualizar los datos de SmartEgg; en la Fase 3 corre en la VM de la nube con el resto del stack (`http://100.63.122.66:3001`). Dejamos dos datasources
 configurados automáticamente:
 
 - PostgreSQL para consultar el historial guardado.
@@ -8,7 +8,7 @@ configurados automáticamente:
 
 ## Iniciar
 
-Desde la carpeta `Proyecto_1_SmartEgg` ejecutamos:
+Desde la carpeta `Proyecto_2_SmartEgg` ejecutamos:
 
 ```bash
 cp .env.example .env
@@ -60,6 +60,8 @@ Cada dashboard empieza con el mismo encabezado y una navegación entre los cuatr
 
 ## SmartEgg · Centro de control
 
+![Centro de control](../docs/evidencias/grafana/grafana-centro-control.png)
+
 Portada (`smartegg-centro`), en vivo por MQTT. Cubre la salida de los modelos y el estado
 normal o bloqueado que pide la Fase 3.
 
@@ -81,6 +83,8 @@ estado lo dice **o** si su flujo de datos (`telemetria`, `vision/resultado`,
 
 ## SmartEgg · Tiempo real
 
+![SmartEgg · Tiempo real](../docs/evidencias/grafana/grafana-tiempo-real.png)
+
 Se alimenta del broker MQTT. Los paneles se actualizan solos con cada mensaje, por eso el
 dashboard no tiene refresco automático: refrescar cada pocos segundos vuelve a lanzar las
 suscripciones y deja los paneles vacíos. El nodo se elige con la variable `node_code`, que
@@ -101,6 +105,8 @@ por defecto vale `NODE-01`.
 | Alarmas y accesos | Eventos de acceso | `acceso/eventos` | Autorizaciones RFID, aperturas y cierres |
 
 ## SmartEgg · Histórico
+
+![SmartEgg · Histórico](../docs/evidencias/grafana/grafana-historico.png)
 
 Se alimenta de PostgreSQL con los rangos de tiempo del selector (última hora, 24 horas,
 última semana). Tiene cuatro variables: **Incubadora**, **Lote**, **Huevo** y
@@ -142,7 +148,7 @@ En local dejamos esta dirección:
 GRAFANA_MQTT_URI=tcp://broker:1883
 ```
 
-Cuando el broker esté en AWS cambiamos `GRAFANA_MQTT_URI` por su dirección externa. Si
+En la nube el broker corre en el mismo Compose que Grafana, así que el valor no cambia. Solo si el broker estuviera en otra máquina cambiaríamos `GRAFANA_MQTT_URI` por su dirección externa. Si
 activamos TLS también actualizamos la configuración del datasource en
 `provisioning/datasources/smartegg.yml`.
 
@@ -186,6 +192,8 @@ grafana/
 ```
 
 ## Consumo eléctrico
+
+![Consumo eléctrico](../docs/evidencias/grafana/grafana-consumo.png)
 
 El tablero **SmartEgg · Consumo eléctrico** (`smartegg-energia`) lee la tabla
 `energy_samples` que llena el backend con cada lectura: potencia actual, energía

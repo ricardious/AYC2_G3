@@ -1,6 +1,6 @@
 # Firmware ESP32
 
-El nodo de Proyecto 1 conserva la arquitectura modular y la lógica de control de la
+El nodo del Proyecto 2 (Fase 3) conserva la arquitectura modular y la lógica de control de la
 Práctica 1, adaptadas a una ESP32 DevKit con ESP-IDF y FreeRTOS nativos. No requiere
 el framework ni bibliotecas de Arduino. La misma placa controla la incubadora, lee el
 RC522, mueve el servo de acceso y envía los eventos de puerta al backend.
@@ -88,7 +88,7 @@ fuente externa de 5 V con GND común.
 
 ## Compilar y grabar la ESP32
 
-Los comandos de esta sección se ejecutan **desde `Proyecto_1_SmartEgg`**, la carpeta
+Los comandos de esta sección se ejecutan **desde `Proyecto_2_SmartEgg`**, la carpeta
 que contiene `firmware/` y `docker-compose.yml`. El proyecto está configurado para
 una ESP32 DevKit (`esp32dev`) con ESP-IDF; no se abre ni se compila con Arduino IDE.
 
@@ -185,6 +185,14 @@ y para liberar el sistema, normalmente después de validar una tarjeta RFID:
 | Comandos manuales (actuador, rotación) | Se rechazan con `MSG:4,ERROR:7` |
 | Control automático de temperatura y rotación periódica | Siguen activos para no dañar los huevos |
 | Telemetría | Agrega `LOCK:1` (`LOCK:0` sin bloqueo) |
+| Lector RFID | Acepta una tarjeta aunque haya una sesión abierta y la puerta siga abierta |
+
+Fuera del bloqueo, una sesión abierta ignora otras tarjetas hasta que la puerta
+se cierra. Durante el bloqueo no: el objeto suele detectarse con la puerta
+abierta y el operador frente a la bandeja, y la tarjeta es la única forma de
+liberar el sistema. Al autorizar la nueva tarjeta, el backend cierra la sesión
+anterior con `ended_reason = "replaced"` y, si la puerta llegó a abrirse,
+registra esa apertura en `door_events`.
 
 El cambio de estado emite `MSG:3,EVENT:10` al bloquear y `MSG:3,EVENT:11` al
 desbloquear. El bloqueo también se acepta con el switch general apagado, para no

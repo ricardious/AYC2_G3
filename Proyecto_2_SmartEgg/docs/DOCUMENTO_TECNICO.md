@@ -3,6 +3,10 @@
 Proyecto 1 — Arquitectura de Computadoras y Ensambladores 2.
 Grupo 3
 
+> Este documento describe la base de la Fase 2. El documento técnico de la Fase 3
+> (anomalías, visión, bloqueo, consumo y nube) es el
+> [manual técnico del README](../README.md#manual-técnico).
+
 ## Alcance y solución
 
 SmartEgg integra una incubadora física con una consola de operación y una plataforma de observabilidad. La ESP32 lee temperatura, humedad, cuatro posiciones de huevos, RFID y el estado de la puerta; ejecuta el control local de calefacción, ventilación, giro, alarma y cerradura. FastAPI recibe las tramas por UART/USB, valida el acceso, guarda lecturas y eventos en PostgreSQL, y publica cambios en Mosquitto. Next.js presenta el estado y permite las operaciones autorizadas; Grafana separa el estado MQTT en vivo del historial SQL.

@@ -10,7 +10,7 @@ importarlas en dbdiagram.io.
 
 ## Inicio local
 
-Desde la raíz de `Proyecto_1_SmartEgg`:
+Desde la raíz de `Proyecto_2_SmartEgg`:
 
 ```bash
 cp .env.example .env

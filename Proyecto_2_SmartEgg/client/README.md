@@ -1,6 +1,6 @@
 # SmartEgg · Cliente
 
-Consola web de la incubadora inteligente **SmartEgg** (Proyecto 1 · Arquitectura
+Consola web de la incubadora inteligente **SmartEgg** (Proyecto 2 · Fase 3 · Arquitectura
 de Computadoras y Ensambladores 2). Reconstruye el diseño
 `SmartEgg Control Core` como componentes React/Next.js, sin iframes ni HTML
 embebido.
