@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { ConsoleStage } from "@/components/templates/ConsoleStage";
 import { EggRegistrationDialog } from "@/components/organisms/EggRegistrationDialog";
 import { DoorOperationDialog } from "@/components/organisms/DoorOperationDialog";
+import { SystemLockOverlay } from "@/components/organisms/SystemLockOverlay";
 import { DEFAULT_CONFIG } from "@/lib/smartegg/config";
 import type { SmartEggConfig } from "@/lib/smartegg/types";
 import { SmartEggProvider } from "@/lib/state/SmartEggProvider";
@@ -62,6 +63,7 @@ function DashboardContent() {
       {doorOperationOpen && technician && canOpenDoor(technician.role) ? (
         <DoorOperationDialog />
       ) : null}
+      <SystemLockOverlay />
     </ConnectionGate>
   );
 }
