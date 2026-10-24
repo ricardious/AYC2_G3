@@ -1,0 +1,150 @@
+/*
+ * SmartEgg · Observatorio
+ * Identidad visual de Grafana tomada de la consola web (client/styles/theme.css,
+ * modo oscuro): fondo negro azulado con retícula cian, paneles de "vidrio" con
+ * filo de luz arriba, Space Grotesk para títulos e IBM Plex Mono para datos.
+ *
+ * Grafana genera clases con emotion (css-xxxx), así que solo se usan selectores
+ * estables: data-testid, las etiquetas de emotion (-panel-container, ...) y las
+ * clases fijas de body. Si una actualización de Grafana las cambia, la página
+ * vuelve al tema por defecto sin romperse.
+ */
+
+:root {
+  --se-canvas: #05070a;
+  --se-canvas-top: #0d1319;
+  --se-cyan: #5fe3e8;
+  --se-cyan-soft: rgba(95, 227, 232, 0.14);
+  --se-heat: #f0a44a;
+  --se-alarm: #ff5a4d;
+  --se-ok: #6fe2a0;
+  --se-text: #d1e1e5;
+  --se-text-muted: #8fa3ad;
+  --se-hairline: rgba(160, 190, 205, 0.14);
+  --se-hairline-strong: rgba(160, 190, 205, 0.26);
+  --se-grid: rgba(95, 227, 232, 0.045);
+  --se-shell: linear-gradient(150deg, rgba(30, 38, 46, 0.86), rgba(12, 16, 21, 0.94));
+  --se-display: "Space Grotesk", "Inter", Helvetica, sans-serif;
+  --se-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* Lienzo: degradado de la consola + retícula de 32 px. */
+body.theme-dark {
+  background-color: var(--se-canvas);
+  background-image:
+    linear-gradient(var(--se-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--se-grid) 1px, transparent 1px),
+    radial-gradient(120% 90% at 50% 0%, var(--se-canvas-top) 0%, #080b10 45%, var(--se-canvas) 100%);
+  background-size: 32px 32px, 32px 32px, 100% 100%;
+  background-attachment: fixed;
+  font-family: var(--se-display);
+}
+
+body.theme-dark .main-view > header {
+  background: rgba(8, 11, 16, 0.82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--se-hairline);
+}
+
+/* Nombre del producto en el menú lateral. */
+[data-testid="data-testid Home breadcrumb"] + a[title="Home"] span {
+  font-size: 0;
+}
+
+[data-testid="data-testid Home breadcrumb"] + a[title="Home"] span::after {
+  content: "SmartEgg";
+  font-family: var(--se-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--se-text);
+}
+
+/* Paneles: vidrio oscuro con filo de luz superior. */
+body.theme-dark section[class*="-panel-container"] {
+  background: var(--se-shell);
+  border: 1px solid var(--se-hairline);
+  border-radius: 10px;
+  box-shadow:
+    0 24px 60px -32px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(220, 240, 245, 0.07);
+  transition: border-color 160ms ease;
+}
+
+body.theme-dark section[class*="-panel-container"]:hover {
+  border-color: var(--se-hairline-strong);
+}
+
+/* Paneles sin marco (encabezados de Business Text) se quedan transparentes. */
+body.theme-dark section[class*="-panel-container"][class*="transparent"],
+body.theme-dark section[class*="-panel-container"]:has([data-se-frameless]) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Títulos de panel: rótulo técnico en mayúsculas, como las etiquetas de la consola. */
+body.theme-dark [class*="-panel-title"] h2 {
+  font-family: var(--se-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--se-text-muted);
+}
+
+body.theme-dark [class*="-panel-title"] h2::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 1px;
+  background: var(--se-cyan);
+  box-shadow: 0 0 8px var(--se-cyan);
+  vertical-align: 1px;
+}
+
+/* Filas: título grande con regla fina hacia la derecha. */
+body.theme-dark [data-testid^="data-testid dashboard-row-title-"] {
+  font-family: var(--se-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--se-text);
+}
+
+body.theme-dark .dashboard-row-wrapper,
+body.theme-dark [data-testid^="data-testid dashboard-row-wrapper-for-"] {
+  border-bottom: 1px solid var(--se-hairline);
+}
+
+/* Números y tablas en monoespaciada, como los datos de la consola. */
+body.theme-dark [data-testid^="data-testid Panel header"] table,
+body.theme-dark [data-testid^="data-testid Panel header"] [role="cell"],
+body.theme-dark [data-testid^="data-testid Panel header"] [role="columnheader"] {
+  font-family: var(--se-mono);
+}
+
+/* Botones y selectores de la barra con el cian de marca al enfocar. */
+body.theme-dark button:focus-visible,
+body.theme-dark a:focus-visible,
+body.theme-dark input:focus-visible {
+  outline: 2px solid var(--se-cyan);
+  outline-offset: 2px;
+}
+
+/* Pantalla de inicio de sesión. */
+body.theme-dark.page-login,
+body.theme-dark [class*="login-page"] {
+  font-family: var(--se-display);
+}
+
+::selection {
+  background: rgba(95, 227, 232, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.theme-dark section[class*="-panel-container"] {
+    transition: none;
+  }
+}

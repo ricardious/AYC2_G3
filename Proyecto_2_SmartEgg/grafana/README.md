@@ -16,7 +16,8 @@ docker compose up -d grafana
 ```
 
 Entramos en `http://localhost:3001` con el usuario y la contraseña definidos en `.env`.
-Los dashboards aparecen en la carpeta **SmartEgg**.
+La portada es **SmartEgg · Centro de control** y los demás dashboards aparecen en la
+carpeta **SmartEgg**.
 
 Para ver el historial primero aplicamos las migraciones desde `server` con:
 
@@ -27,6 +28,56 @@ uv run alembic upgrade head
 El usuario `grafana_reader` solamente tiene permisos de lectura en PostgreSQL. El script
 que crea este usuario se ejecuta cuando se crea por primera vez el volumen de la base de
 datos.
+
+## Identidad visual
+
+Grafana se construye con [`Dockerfile`](Dockerfile) a partir de `grafana/grafana:13.2.0`
+para que tenga la misma identidad que la consola web:
+
+- **Logo y favicon** del huevo con estratos (`branding/`), y el título de la pestaña
+  `SmartEgg · Observatorio`.
+- **Hoja de estilos** [`branding/smartegg.css`](branding/smartegg.css): fondo negro azulado
+  con retícula cian, paneles de vidrio, Space Grotesk en títulos e IBM Plex Mono en
+  datos. Usa solo selectores estables (`data-testid` y etiquetas de clase de Grafana);
+  si una versión nueva los cambia, la página vuelve al tema normal sin romperse.
+- **Paleta** de la consola en todos los paneles: cian `#5fe3e8` (humedad, datos),
+  ámbar `#f0a44a` (calor), verde `#6fe2a0` (óptimo), rojo `#ff5a4d` (alarma).
+- **Plugins** instalados en la imagen con versión fija, en `/opt/smartegg/plugins`:
+
+| Plugin | Versión | Uso |
+|---|---|---|
+| `grafana-mqtt-datasource` | 1.3.6 | Datos en vivo del broker |
+| `marcusolsson-dynamictext-panel` (Business Text) | 6.3.0 | Encabezado, tarjetas de estado, visión y bloqueo con HTML propio |
+| `volkovlabs-echarts-panel` (Business Charts) | 7.2.5 | Gauges con forma de huevo y puntaje de anomalías |
+| `grafana-polystat-panel` | 2.1.16 | Disponible para estados en hexágonos |
+| `grafana-clock-panel` | 3.2.4 | Reloj de la portada (hora de Guatemala) |
+
+Business Text necesita conservar `class` y `style` en su HTML, por eso Compose define
+`GF_PANELS_DISABLE_SANITIZE_HTML=true`. Es seguro aquí porque solo el administrador
+puede editar paneles y los dashboards vienen de archivos versionados.
+
+Cada dashboard empieza con el mismo encabezado y una navegación entre los cuatro.
+
+## SmartEgg · Centro de control
+
+Portada (`smartegg-centro`), en vivo por MQTT. Cubre la salida de los modelos y el estado
+normal o bloqueado que pide la Fase 3.
+
+| Fila | Panel | Fuente | Qué muestra |
+|---|---|---|---|
+| — | Estado del sistema | `status`, `sistema/estado`, `telemetria`, `actuadores/estado`, `vision/estado`, `ml/estado` | Ocho tarjetas: nodo, sistema normal o bloqueado, puerta, calefactor, ventilador, buzzer y los servicios de visión y anomalías |
+| Condiciones | Temperatura · Humedad | `sensores/*` | Gauges con silueta de huevo y bandas óptimas |
+| Condiciones | Temperatura en vivo | `sensores/temperatura` | Serie con la banda 37 – 38 °C |
+| Inteligencia | Visión | `vision/resultado` | Clase de la última foto, confianza, probabilidades, ventana de 5 fotos y aviso de objeto confirmado |
+| Inteligencia | Detector de anomalías | `ml/anomalia` | Puntaje LOF (escala log) con el umbral; los puntos sobre el umbral salen en rojo |
+| Inteligencia | Estado normal / bloqueado | `sistema/estado` | Escudo verde o candado rojo, motivo y cómo desbloquear |
+| Historial | Bloqueos del sistema | `telemetry_readings.system_locked` | Línea de tiempo normal / bloqueado |
+| Historial | Puntaje de anomalías guardado | `anomaly_scores` | Puntajes guardados con el umbral |
+
+Un mensaje retenido de estado llega una sola vez y el plugin MQTT puede perderlo si el
+panel se suscribe un instante tarde. Por eso un servicio cuenta como en línea si su
+estado lo dice **o** si su flujo de datos (`telemetria`, `vision/resultado`,
+`ml/anomalia`) trajo mensajes en los últimos 15 s.
 
 ## SmartEgg · Tiempo real
 
@@ -117,7 +168,14 @@ puente serial esté recibiendo tramas o generamos datos con
 
 ```text
 grafana/
+├── Dockerfile
+├── branding/
+│   ├── apple-touch-icon.png
+│   ├── fav32.png
+│   ├── smartegg-mark.svg
+│   └── smartegg.css
 ├── dashboards/
+│   ├── smartegg-centro.json
 │   ├── smartegg-energia.json
 │   ├── smartegg-historical.json
 │   └── smartegg-realtime.json
@@ -129,7 +187,7 @@ grafana/
 
 ## Consumo eléctrico
 
-El tablero **SmartEgg - Consumo eléctrico** (`smartegg-energia`) lee la tabla
+El tablero **SmartEgg · Consumo eléctrico** (`smartegg-energia`) lee la tabla
 `energy_samples` que llena el backend con cada lectura: potencia actual, energía
 y costo del día, uso del límite diario, promedio de la última hora, potencia por
 componente, energía por día y las alarmas de consumo. El cálculo está explicado
