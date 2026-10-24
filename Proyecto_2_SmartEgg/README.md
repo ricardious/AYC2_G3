@@ -443,7 +443,7 @@ del montaje, pantallas de la plataforma, panel histórico y capturas de MQTT.
 
 ## Visualización de datos
 
-Los mismos datos se leen en cuatro superficies, cada una con su librería y su origen:
+Los mismos datos se leen en cuatro diferentes superficies, cada una con su librería y su origen:
 
 ```mermaid
 flowchart LR
