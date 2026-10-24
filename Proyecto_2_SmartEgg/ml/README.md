@@ -4,7 +4,7 @@ Aquí está el código de **entrenamiento**. Se corre en la laptop (o en Colab) 
 
 | Carpeta | Modelo | Estado |
 | --- | --- | --- |
-| [`vision/`](vision/) | Clasificador de fotos `huevo` / `objeto` / `vacio` (MobileNetV2, transfer learning) | listo para entrenar |
+| [`vision/`](vision/) | Clasificador de fotos `huevo` / `objeto` / `vacio` (MobileNetV2, transfer learning) | entrenado: exactitud 0.89 ± 0.04, recall de objeto 0.74 ± 0.14 (validación cruzada, 800 fotos) |
 | `anomalias/` | Detección de anomalías en la telemetría | pendiente |
 
 ## Visión
@@ -49,7 +49,7 @@ pip install -r ml/requirements.txt --extra-index-url https://download.pytorch.or
 jupyter lab ml/vision/entrenar_vision.ipynb
 ```
 
-Ejecutar todas las celdas (*Run → Run All Cells*). En CPU tarda unos 10 a 15 minutos con 750 fotos.
+Ejecutar todas las celdas (*Run → Run All Cells*). Primero hace una validación cruzada por tandas (5 modelos, uno por partición) para medir el método, y después entrena el modelo final con todas las fotos. En CPU tarda alrededor de 1 hora con 800 fotos.
 
 **Desde la terminal**, con el mismo resultado y sin gráficas en pantalla:
 
@@ -60,7 +60,7 @@ python ml/vision/smartegg_vision.py
 Las dos formas generan:
 
 - `ml/vision/modelo/smartegg_vision.onnx` y `clases.json`.
-- `ml/vision/resultados/`: `matriz_confusion.png`, `curvas_entrenamiento.png`, `errores.png`, `reporte.txt` (precision, recall y F1 por clase) y `metricas.json`.
+- `ml/vision/resultados/`: `validacion_cruzada.png` (métricas por partición), `matriz_confusion.png` y `errores.png` (de la validación cruzada), `curvas_entrenamiento.png` (del modelo final), `reporte.txt` (media ± desviación y precision, recall y F1 por clase) y `metricas.json`.
 
 ### 4. Probar el modelo
 
