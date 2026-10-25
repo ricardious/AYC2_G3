@@ -1,0 +1,30 @@
+SmartEgg - clasificador de visión (MobileNetV2, transfer learning)
+
+Validación cruzada por tandas (5 particiones, 800 fotos):
+métrica                P1     P2     P3     P4     P5   media ± desv.
+exactitud           0.870  0.920  0.933  0.910  0.827    0.892 ± 0.039
+F1 macro            0.874  0.921  0.934  0.908  0.814    0.890 ± 0.043
+recall huevo        1.000  0.865  0.963  1.000  1.000    0.966 ± 0.052
+recall objeto       0.717  0.900  0.850  0.745  0.509    0.744 ± 0.135
+recall vacio        0.920  1.000  1.000  1.000  1.000    0.984 ± 0.032
+precisión objeto    0.915  0.885  0.962  1.000  1.000    0.952 ± 0.046
+
+Predicciones de las 5 particiones juntas (cada foto la predice el modelo que no la vio):
+Exactitud: 0.892
+F1 macro:  0.892
+
+              precision    recall  f1-score   support
+
+       huevo      0.857     0.965     0.908       260
+      objeto      0.943     0.748     0.835       290
+       vacio      0.888     0.984     0.934       250
+
+    accuracy                          0.892       800
+   macro avg      0.896     0.899     0.892       800
+weighted avg      0.898     0.892     0.889       800
+
+Modelo final exportado (todas las fotos; la validación solo elige la mejor época):
+conjunto         huevo  objeto   vacio   total
+entrenamiento      220     245     210     675
+validación          40      45      40     125
+prueba               0       0       0       0

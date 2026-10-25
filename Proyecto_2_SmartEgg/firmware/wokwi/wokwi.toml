@@ -1,0 +1,10 @@
+[wokwi]
+version = 1
+
+# Rutas relativas a este archivo: el build de PlatformIO queda un nivel arriba.
+firmware = "../.pio/build/esp32dev/firmware.bin"
+elf = "../.pio/build/esp32dev/firmware.elf"
+
+# Publica el puerto serial simulado por TCP para que el puente serial del backend
+# pueda leer las tramas del nodo simulado. Ver README.md.
+rfc2217ServerPort = 4000

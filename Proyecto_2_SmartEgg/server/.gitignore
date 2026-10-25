@@ -1,0 +1,26 @@
+# Virtual environment
+.venv/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.egg-info/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Local databases
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Test and type-checker caches
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

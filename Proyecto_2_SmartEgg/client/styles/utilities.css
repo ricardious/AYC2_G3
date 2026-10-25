@@ -1,0 +1,266 @@
+/* Materiales de la consola: los degradados, sombras y siluetas que
+   describen un objeto físico del diseño. Se nombran una sola vez aquí para
+   que el JSX se quede con la composición (posición, tamaño, tipografía). */
+
+/* --------------------------------------------- columnas del plano elástico
+
+   El plano se ensancha hasta cubrir la ventana y publica el ancho de más en
+   `--stage-slack`. Los anclajes lo reparten: la columna izquierda no se mueve,
+   la central se desplaza la mitad y la derecha todo. Crecen los huecos, no los
+   instrumentos.
+
+   `--stage-x` y `--stage-top` son las coordenadas del diseño sobre el plano de
+   1680 × 1000. Sólo se usan con el prefijo `console:`. */
+
+@utility stage-left {
+  position: absolute;
+  top: var(--stage-top);
+  left: var(--stage-x);
+}
+
+@utility stage-center {
+  position: absolute;
+  top: var(--stage-top);
+  left: calc(var(--stage-x) + var(--stage-slack) / 2);
+}
+
+@utility stage-right {
+  position: absolute;
+  top: var(--stage-top);
+  left: calc(var(--stage-x) + var(--stage-slack));
+}
+
+/* ------------------------------------------------------------- escenario */
+
+@utility console-backdrop {
+  background: var(--console-backdrop);
+}
+
+@utility console-grid {
+  background-image: linear-gradient(
+      var(--console-grid-line) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, var(--console-grid-line) 1px, transparent 1px);
+  background-size: 120px 120px;
+}
+
+@utility console-glow {
+  background: radial-gradient(
+    60% 45% at 50% 45%,
+    var(--console-glow-color),
+    transparent 70%
+  );
+}
+
+@utility console-vignette {
+  box-shadow: var(--console-vignette-shadow);
+}
+
+/* ----------------------------------------------------------------- huevo */
+
+@utility egg-shape {
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+}
+
+/* Cuatro capas, de arriba abajo del apilado: rebote, oclusión y forma. El
+   especular va aparte, en `egg-specular`, porque tiene que poder girar solo.
+
+   Los degradados van a color con alfa 0 y no a `transparent`: `transparent`
+   es negro transparente y al interpolar en sRGB ensucia el borde de gris. */
+@utility egg-fill {
+  background:
+    /* Luz rebotada en el canto en sombra: sin esto el lado oscuro se apaga en
+       un gris plano y la cáscara se lee como un óvalo pintado. Va pegada al
+       borde y con caída corta — extendida hacia el centro deja de leerse
+       como un rebote y mancha el cuerpo. */
+    radial-gradient(
+      ellipse 54% 50% at 94% 86%,
+      var(--egg-bounce),
+      var(--egg-bounce-0) 58%
+    ),
+    /* Oclusión donde la cáscara se acerca a la bandeja. */
+    radial-gradient(
+      ellipse 52% 22% at 50% 101%,
+      var(--egg-occ),
+      var(--egg-occ-0) 78%
+    ),
+    /* Forma: la luz entra por arriba a la izquierda. */
+    radial-gradient(
+      ellipse 96% 92% at 31% 24%,
+      var(--egg-hi) 0%,
+      var(--egg-mid) 34%,
+      var(--egg-lo) 73%,
+      var(--egg-core) 100%
+    );
+}
+
+@utility egg-glow {
+  box-shadow: var(--egg-shadow);
+}
+
+@utility egg-glow-alarm {
+  box-shadow: var(--egg-shadow-alarm);
+}
+
+@utility egg-glow-hot {
+  box-shadow: var(--egg-shadow-hot);
+}
+
+@utility egg-glow-chip {
+  box-shadow: var(--egg-shadow-chip);
+}
+
+/* Brillo especular; `--specular-alpha` ajusta la intensidad.
+
+   Va en su propio elemento y no en `egg-fill` porque la luz pertenece a la
+   sala, no al huevo: cuando el servo inclina la bandeja el cuerpo gira y el
+   brillo se queda donde estaba. Fuera de la cámara `--tilt` no existe y el
+   contragiro vale cero. */
+@utility egg-specular {
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(150deg, var(--egg-spec), var(--egg-spec-0) 72%);
+    opacity: var(--specular-alpha, 0.55);
+    transform: rotate(calc(-1 * var(--tilt, 0deg)));
+    transition: transform 1200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@utility rail-metal {
+  background: var(--material-rail);
+}
+
+/* ----------------------------------------------------------- incubadora */
+
+@utility chamber-shell {
+  background: var(--material-shell);
+  box-shadow: var(--material-shell-shadow);
+}
+
+@utility chamber-glass {
+  background: var(--material-glass);
+}
+
+@utility chamber-plate {
+  background: var(--material-plate);
+}
+
+@utility edge-light {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--material-edge-light),
+    transparent
+  );
+}
+
+@utility glass-sheen {
+  background: linear-gradient(100deg, var(--material-sheen), transparent);
+}
+
+@utility tray-hairline {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--material-tray-line),
+    transparent
+  );
+}
+
+@utility scan-beam {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-beam),
+    transparent
+  );
+}
+
+@utility heat-plume {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    var(--heat-plume-color),
+    transparent 70%
+  );
+}
+
+@utility alarm-plume {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    var(--alarm-plume-color),
+    transparent 70%
+  );
+}
+
+@utility flow-bars {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--accent-bars) 0 1px,
+    transparent 1px 6px
+  );
+}
+
+@utility heat-bar {
+  background: linear-gradient(180deg, var(--heat-bar-color), transparent);
+}
+
+/* ------------------------------------------------------------- humedad */
+
+@utility humidity-tube {
+  background: var(--humidity-tube);
+}
+
+@utility humidity-fill {
+  background: var(--humidity-fill);
+  box-shadow: var(--humidity-fill-glow);
+}
+
+@utility humidity-graduations {
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--humidity-grad-line) 0 1px,
+    transparent 1px 21px
+  );
+}
+
+/* ---------------------------------------------------------- plataforma */
+
+@utility platform-face {
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--accent-face),
+    transparent 68%
+  );
+}
+
+@utility platform-sweep {
+  background: conic-gradient(
+    from 0deg,
+    var(--accent-sweep),
+    transparent 25%,
+    transparent 100%
+  );
+}
+
+/* ------------------------------------------------- estación y reportes */
+
+@utility bench-surface {
+  background: var(--material-bench);
+  box-shadow: var(--material-bench-shadow);
+}
+
+@utility bench-pad {
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    var(--accent-halo),
+    transparent 70%
+  );
+}
+
+@utility report-surface {
+  background: var(--material-report);
+  box-shadow: var(--material-report-shadow);
+}

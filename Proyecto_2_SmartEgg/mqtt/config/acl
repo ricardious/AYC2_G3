@@ -1,0 +1,52 @@
+# Backend publisher. It is the only account allowed to write application topics.
+user smartegg
+topic read $SYS/#
+topic readwrite smartegg/#
+
+# Laptop gateway attached to the ESP32 over USB. It forwards serial lines and
+# receives the commands addressed to the node.
+user smartegg-gateway
+topic write smartegg/+/gateway/rx
+topic readwrite smartegg/+/gateway/status
+topic read smartegg/+/gateway/tx
+topic write smartegg/+/camara/foto
+
+# Vision service. Classifies the gateway photos and publishes the verdict; the
+# backend decides the lock, so this account cannot reach the node.
+user smartegg-vision
+topic read smartegg/+/camara/foto
+topic write smartegg/+/vision/resultado
+topic readwrite smartegg/vision/estado
+
+# Anomaly detection service. Scores the live telemetry and publishes the
+# result; the backend stores it and opens the alarm.
+user smartegg-ml
+topic read smartegg/+/telemetria
+topic write smartegg/+/ml/anomalia
+topic readwrite smartegg/ml/estado
+
+# Browser client. Reads live state and publishes control commands, which the
+# backend validates before forwarding them to the node.
+user smartegg-frontend
+topic read smartegg/+/telemetria
+topic read smartegg/+/alarmas/critica
+topic read smartegg/+/status
+topic read smartegg/+/actuadores/estado
+topic read smartegg/+/gateway/status
+topic read smartegg/+/sistema/estado
+topic read smartegg/+/vision/resultado
+topic read smartegg/+/camara/foto
+topic read smartegg/vision/estado
+topic read smartegg/+/ml/anomalia
+topic read smartegg/ml/estado
+topic read smartegg/+/energia
+topic write smartegg/+/comandos/actuador
+topic write smartegg/+/comandos/rotar
+topic write smartegg/+/comandos/config
+topic write smartegg/+/comandos/energia
+topic read smartegg/+/comandos/resultado
+
+# Grafana datasource. Read-only access to every SmartEgg measurement.
+user smartegg-grafana
+topic read $SYS/#
+topic read smartegg/#

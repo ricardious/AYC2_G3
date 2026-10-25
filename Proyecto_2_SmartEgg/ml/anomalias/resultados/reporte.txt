@@ -1,0 +1,35 @@
+SmartEgg - detector de anomalías (Local Outlier Factor)
+
+Validación cruzada dejando fuera un día (4 particiones): 4275 lecturas de prueba, 833 con fallas simuladas.
+Umbral: percentil 99.9 del puntaje en operación normal. Alerta: 3 de las últimas 3 lecturas anómalas.
+
+métrica (global)                           LOF  reglas fijas
+precisión                                0.843         0.227
+recall                                   0.283         0.899
+F1                                       0.424         0.363
+falsos positivos (%)                     1.278        73.940
+ROC-AUC                                  0.772
+
+Por día (media ± desv.):
+  precisión                    0.861 ± 0.126
+  recall                       0.299 ± 0.086
+  F1                           0.431 ± 0.071
+  falsos positivos (%)         1.133 ± 1.070
+  alertas falsas por hora      6.619 ± 6.876
+
+Recall por tipo de falla (lecturas) y eventos detectados:
+  Pico de temperatura (+6 °C en 2 lecturas)             0.97   45/47 eventos
+  Calentamiento descontrolado (+0.5 °C por lectura)     0.15   16/47 eventos
+  Foco encendido y la temperatura baja                  0.11   3/18 eventos
+  Caída brusca de humedad (−25 %)                       0.98   7/7 eventos
+  Sensor desconectado (0 °C y 0 %)                      1.00   4/4 eventos
+
+Comparación de algoritmos (misma validación, umbral y alerta):
+  modelo                 precisión  recall     F1    AUC   FP %  alertas falsas/h
+  Local Outlier Factor       0.843   0.283  0.424  0.772   1.28               6.6
+  Isolation Forest           0.923   0.072  0.134  0.808   0.15               0.0
+  One-Class SVM              0.767   0.553  0.643  0.821   4.07              28.9
+
+Fallas reales del sensor (lecturas con SENSOR:0, 0 % o < 5 °C): 16 de 49 detectadas
+
+Modelo final: 6802 lecturas normales, umbral 1.1672

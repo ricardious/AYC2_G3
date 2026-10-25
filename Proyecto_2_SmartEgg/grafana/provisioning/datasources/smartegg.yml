@@ -1,0 +1,38 @@
+apiVersion: 1
+
+prune: true
+
+datasources:
+  - name: SmartEgg PostgreSQL
+    uid: smartegg-postgres
+    type: postgres
+    access: proxy
+    url: $__env{GRAFANA_POSTGRES_HOST}:$__env{GRAFANA_POSTGRES_PORT}
+    user: $__env{GRAFANA_POSTGRES_USER}
+    editable: false
+    jsonData:
+      database: $__env{GRAFANA_POSTGRES_DATABASE}
+      sslmode: $__env{GRAFANA_POSTGRES_SSL_MODE}
+      postgresVersion: 1700
+      timescaledb: false
+      maxOpenConns: 10
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+      timeInterval: 5s
+    secureJsonData:
+      password: $__env{GRAFANA_POSTGRES_PASSWORD}
+
+  - name: SmartEgg MQTT
+    uid: smartegg-mqtt
+    type: grafana-mqtt-datasource
+    access: proxy
+    editable: false
+    jsonData:
+      uri: $__env{GRAFANA_MQTT_URI}
+      username: $__env{GRAFANA_MQTT_USERNAME}
+      clientID: grafana-smartegg
+      tlsAuth: false
+      tlsAuthWithCACert: false
+      tlsSkipVerify: false
+    secureJsonData:
+      password: $__env{GRAFANA_MQTT_PASSWORD}

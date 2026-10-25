@@ -1,0 +1,88 @@
+@layer components {
+  /* --------------------------------------------------- suelo tipográfico
+
+     El plano se dibuja a 1680 px y después se escala a la ventana: en un
+     portátil corriente el factor ronda 0.88, así que un rótulo de 8 px llega
+     al ojo como 7. Ningún texto se compone por debajo de 11 px, y el
+     tracking baja a la vez para que el rótulo no crezca a lo ancho.  */
+
+  /* Etiqueta monoespaciada que titula cada instrumento. */
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.2;
+    letter-spacing: 0.16em;
+  }
+
+  /* Variante con más tracking, para los encabezados de pantalla. */
+  .kicker-wide {
+    letter-spacing: 0.19em;
+  }
+
+  /* Leyenda pequeña que acompaña a una lectura. */
+  .caption {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--color-foreground-faint);
+  }
+
+  /* Control delineado: el único cromado de botón del diseño. */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    transition: background-color 0.2s ease;
+
+    /* Fuera del plano, 44 px de mínimo táctil. `border-box` para que el
+       relleno del diseño cuente dentro y no lo dispare. */
+    box-sizing: border-box;
+    min-height: 44px;
+  }
+
+  @media (width >= 1440px) {
+    .btn-ghost {
+      box-sizing: content-box;
+      min-height: 0;
+    }
+  }
+
+  .btn-ghost-danger {
+    padding: 8px 13px;
+    border: 1px solid color-mix(in oklab, var(--color-danger) 45%, transparent);
+    font-size: 11px;
+    letter-spacing: 0.11em;
+    color: var(--color-danger-soft);
+  }
+
+  .btn-ghost-danger:hover {
+    background: color-mix(in oklab, var(--color-danger) 12%, transparent);
+  }
+
+  .btn-ghost-primary {
+    padding: 14px 22px;
+    border: 1px solid color-mix(in oklab, var(--color-primary) 45%, transparent);
+    background: color-mix(in oklab, var(--color-primary) 7%, transparent);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--color-primary-soft);
+  }
+
+  .btn-ghost-primary:hover {
+    background: color-mix(in oklab, var(--color-primary) 16%, transparent);
+  }
+
+  .btn-ghost-dashed {
+    padding: 11px 20px;
+    border: 1px dashed color-mix(in oklab, var(--color-primary) 50%, transparent);
+    font-size: 11px;
+    letter-spacing: 0.13em;
+    color: var(--color-primary);
+  }
+
+  .btn-ghost-dashed:hover {
+    background: color-mix(in oklab, var(--color-primary) 9%, transparent);
+  }
+}

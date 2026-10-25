@@ -1,0 +1,729 @@
+{
+  "uid": "smartegg-energia",
+  "title": "SmartEgg · Consumo eléctrico",
+  "description": "Potencia estimada, energía y costo del día, límite y alarmas de consumo (docs/CONSUMO_ELECTRICO.md).",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "10s",
+  "schemaVersion": 41,
+  "tags": [
+    "smartegg",
+    "energia"
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "America/Guatemala",
+  "version": 1,
+  "links": [],
+  "annotations": {
+    "list": []
+  },
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "postgres",
+          "uid": "smartegg-postgres"
+        },
+        "definition": "SELECT name AS __text, id AS __value FROM incubators ORDER BY name",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Incubadora",
+        "multi": false,
+        "name": "incubator_id",
+        "options": [],
+        "query": "SELECT name AS __text, id AS __value FROM incubators ORDER BY name",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 900,
+      "type": "marcusolsson-dynamictext-panel",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "renderMode": "allRows",
+        "content": "<div class=\"se-header\" data-se-frameless><svg viewBox=\"0 0 64 72\" fill=\"none\" aria-hidden=\"true\"><path d=\"M32 6C43.5 6 53 26.4 53 44C53 56.6 43.5 66 32 66C20.5 66 11 56.6 11 44C11 26.4 20.5 6 32 6Z\" stroke=\"#d7eef0\" stroke-width=\"4\"/><g stroke=\"#5fe3e8\" stroke-width=\"4.4\" stroke-linecap=\"round\"><path d=\"M24.5 30h15\" stroke-opacity=\".34\"/><path d=\"M20 38.5h24\" stroke-opacity=\".56\"/><path d=\"M17 47h30\" stroke-opacity=\".82\"/><path d=\"M19.5 55h25\"/></g></svg><div class=\"se-brand\"><h1>Smart<b>Egg</b> · Observatorio</h1><p>Consumo eléctrico estimado · tarifa EEGSA no social</p></div><nav class=\"se-nav\" aria-label=\"Dashboards SmartEgg\"><a href=\"/d/smartegg-centro\">Centro de control</a><a href=\"/d/smartegg-realtime\">Tiempo real</a><a href=\"/d/smartegg-historical\">Histórico</a><a href=\"/d/smartegg-energia\" aria-current=\"page\">Consumo</a></nav></div>",
+        "defaultContent": "<div class=\"se-header\" data-se-frameless><svg viewBox=\"0 0 64 72\" fill=\"none\" aria-hidden=\"true\"><path d=\"M32 6C43.5 6 53 26.4 53 44C53 56.6 43.5 66 32 66C20.5 66 11 56.6 11 44C11 26.4 20.5 6 32 6Z\" stroke=\"#d7eef0\" stroke-width=\"4\"/><g stroke=\"#5fe3e8\" stroke-width=\"4.4\" stroke-linecap=\"round\"><path d=\"M24.5 30h15\" stroke-opacity=\".34\"/><path d=\"M20 38.5h24\" stroke-opacity=\".56\"/><path d=\"M17 47h30\" stroke-opacity=\".82\"/><path d=\"M19.5 55h25\"/></g></svg><div class=\"se-brand\"><h1>Smart<b>Egg</b> · Observatorio</h1><p>Consumo eléctrico estimado · tarifa EEGSA no social</p></div><nav class=\"se-nav\" aria-label=\"Dashboards SmartEgg\"><a href=\"/d/smartegg-centro\">Centro de control</a><a href=\"/d/smartegg-realtime\">Tiempo real</a><a href=\"/d/smartegg-historical\">Histórico</a><a href=\"/d/smartegg-energia\" aria-current=\"page\">Consumo</a></nav></div>",
+        "editor": {
+          "format": "auto",
+          "language": "html"
+        },
+        "styles": "\nfont-family: 'Space Grotesk', Inter, sans-serif;\ncolor: #d1e1e5;\nheight: 100%;\n.se-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }\n.se-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #8fa3ad; }\n.se-ok { --tone: #6fe2a0; }\n.se-heat { --tone: #f0a44a; }\n.se-alarm { --tone: #ff5a4d; }\n.se-cyan { --tone: #5fe3e8; }\n.se-idle { --tone: #5d6b73; }\n@keyframes se-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }\n@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }\n\n.se-header { display: flex; align-items: center; gap: 18px; height: 100%; padding: 4px 6px; }\n.se-header svg { width: 40px; height: 46px; flex: none; filter: drop-shadow(0 0 14px rgba(95,227,232,.25)); }\n.se-brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }\n.se-brand h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: .01em; color: #e8f6f7; line-height: 1.1; }\n.se-brand h1 b { color: #5fe3e8; font-weight: 600; }\n.se-brand p { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8fa3ad; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n.se-nav { margin-left: auto; display: flex; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; }\n.se-nav a { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #9db2b8; text-decoration: none; padding: 6px 10px; white-space: nowrap; border: 1px solid rgba(160,190,205,.18); border-radius: 999px; background: rgba(12,16,21,.6); transition: border-color .15s, color .15s; }\n.se-nav a:hover { color: #e8f6f7; border-color: rgba(95,227,232,.5); }\n.se-nav a[aria-current=\"page\"] { color: #05070a; background: #5fe3e8; border-color: #5fe3e8; font-weight: 500; }\n@media (max-width: 900px) { .se-nav { display: none; } }\n",
+        "helpers": "",
+        "afterRender": "",
+        "wrap": false,
+        "contentPartials": [],
+        "editors": [],
+        "externalStyles": [],
+        "status": ""
+      },
+      "targets": []
+    },
+    {
+      "id": 100,
+      "type": "row",
+      "title": "Ahora",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Potencia actual",
+      "description": "Estimada con el estado del foco, ventilador, relés y buzzer.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 2,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6fe2a0",
+                "value": null
+              },
+              {
+                "color": "#f0a44a",
+                "value": 37
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT power_w AS \"Potencia\" FROM energy_samples WHERE incubator_id = $incubator_id ORDER BY recorded_at DESC LIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Energía hoy",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6fe2a0",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT energy_today_wh AS \"Energía\" FROM energy_samples WHERE incubator_id = $incubator_id ORDER BY recorded_at DESC LIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "gauge",
+      "title": "Uso del límite diario",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 120,
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6fe2a0",
+                "value": null
+              },
+              {
+                "color": "#f0a44a",
+                "value": 80
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 100
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT s.energy_today_wh / c.daily_limit_wh * 100 AS \"Uso\" FROM energy_samples s JOIN energy_configs c USING (incubator_id) WHERE s.incubator_id = $incubator_id ORDER BY s.recorded_at DESC LIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Costo hoy",
+      "description": "Tarifa configurada (EEGSA no social Q1.51/kWh por defecto).",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyGTQ",
+          "decimals": 2,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6fe2a0",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT cost_today_q AS \"Costo\" FROM energy_samples WHERE incubator_id = $incubator_id ORDER BY recorded_at DESC LIMIT 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Promedio última hora",
+      "description": "Sobre 37 W se abre la alarma de consumo anómalo.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 2,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6fe2a0",
+                "value": null
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 37
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(energy_wh) / NULLIF(EXTRACT(EPOCH FROM (max(recorded_at) - min(recorded_at))) / 3600, 0) AS \"Promedio\" FROM energy_samples WHERE incubator_id = $incubator_id AND recorded_at > now() - interval '1 hour'",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Alarmas de consumo activas",
+      "description": "",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6fe2a0",
+                "value": null
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS \"Activas\" FROM alarms WHERE incubator_id = $incubator_id AND kind IN ('energy_anomaly', 'energy_limit') AND resolved_at IS NULL",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Historial",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Potencia por componente",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 40,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "lineWidth": 1,
+            "showPoints": "never",
+            "lineInterpolation": "stepAfter"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroupAlias(recorded_at, $__interval), avg(heater_w) AS \"Foco\", avg(fan_w) AS \"Ventilador\", avg(other_w) AS \"Electrónica, relés y buzzer\" FROM energy_samples WHERE incubator_id = $incubator_id AND $__timeFilter(recorded_at) GROUP BY 1 ORDER BY 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Energía acumulada del día",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6fe2a0",
+                "value": null
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 800
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "description": "La línea roja es el límite diario por defecto (800 Wh).",
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroupAlias(recorded_at, $__interval), max(energy_today_wh) AS \"Energía del día\" FROM energy_samples WHERE incubator_id = $incubator_id AND $__timeFilter(recorded_at) GROUP BY 1 ORDER BY 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Consumo por día",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Energía (Wh)"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Costo (Q)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyGTQ"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Foco encendido"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT (recorded_at AT TIME ZONE 'America/Guatemala')::date AS \"Día\", max(energy_today_wh) AS \"Energía (Wh)\", max(cost_today_q) AS \"Costo (Q)\", avg((heater_w > 0)::int) AS \"Foco encendido\" FROM energy_samples WHERE incubator_id = $incubator_id AND $__timeFilter(recorded_at) GROUP BY 1 ORDER BY 1 DESC",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Alarmas de consumo",
+      "datasource": {
+        "type": "postgres",
+        "uid": "smartegg-postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "smartegg-postgres"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT occurred_at AS \"Inicio\", resolved_at AS \"Fin\", kind AS \"Tipo\", message AS \"Detalle\", round(value::numeric, 1) AS \"Valor\" FROM alarms WHERE incubator_id = $incubator_id AND kind IN ('energy_anomaly', 'energy_limit') AND $__timeFilter(occurred_at) ORDER BY occurred_at DESC LIMIT 50",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

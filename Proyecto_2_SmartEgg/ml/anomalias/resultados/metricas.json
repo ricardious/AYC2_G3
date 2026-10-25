@@ -1,0 +1,306 @@
+{
+  "lecturas": 4275,
+  "anomalas": 833,
+  "global": {
+    "precision": 0.8428571428571429,
+    "recall": 0.28331332533013204,
+    "f1": 0.42407906558849956,
+    "roc_auc": 0.7724395975705797,
+    "falsos_positivos_pct": 1.2783265543288787,
+    "matriz_confusion": [
+      [
+        3398,
+        44
+      ],
+      [
+        597,
+        236
+      ]
+    ]
+  },
+  "reglas_fijas": {
+    "precision": 0.22738312082574377,
+    "recall": 0.8991596638655462,
+    "f1": 0.36297552701720376,
+    "falsos_positivos_pct": 73.93957001743172
+  },
+  "por_dia": {
+    "precision": [
+      0.8608117315728908,
+      0.12618737436466107
+    ],
+    "recall": [
+      0.29911659123110135,
+      0.0858033525281766
+    ],
+    "f1": [
+      0.43088845727259234,
+      0.07136256547443959
+    ],
+    "falsos_positivos_pct": [
+      1.1331490330516938,
+      1.06964307222693
+    ],
+    "alertas_falsas_por_hora": [
+      6.618662540142099,
+      6.875963663783594
+    ]
+  },
+  "recall_por_tipo": {
+    "pico": 0.9680851063829787,
+    "sobrecalentamiento": 0.14680851063829786,
+    "foco_sin_calentar": 0.10697674418604651,
+    "humedad": 0.9761904761904762,
+    "sensor": 1.0
+  },
+  "eventos_detectados": {
+    "pico": [
+      45,
+      47
+    ],
+    "sobrecalentamiento": [
+      16,
+      47
+    ],
+    "foco_sin_calentar": [
+      3,
+      18
+    ],
+    "humedad": [
+      7,
+      7
+    ],
+    "sensor": [
+      4,
+      4
+    ]
+  },
+  "fallas_reales": [
+    16,
+    49
+  ],
+  "particiones": [
+    {
+      "lecturas": 1422,
+      "anomalas": 234,
+      "precision": 0.7468354430379747,
+      "recall": 0.25213675213675213,
+      "f1": 0.3769968051118211,
+      "roc_auc": 0.7798138075915854,
+      "falsos_positivos_pct": 1.6835016835016834,
+      "matriz_confusion": [
+        [
+          1168,
+          20
+        ],
+        [
+          175,
+          59
+        ]
+      ],
+      "recall_por_tipo": {
+        "pico": 0.9375,
+        "sobrecalentamiento": 0.075,
+        "foco_sin_calentar": 0.3333333333333333,
+        "humedad": 0.8333333333333334
+      },
+      "eventos_detectados": {
+        "pico": [
+          15,
+          16
+        ],
+        "sobrecalentamiento": [
+          2,
+          16
+        ],
+        "foco_sin_calentar": [
+          2,
+          3
+        ],
+        "humedad": [
+          1,
+          1
+        ],
+        "sensor": [
+          0,
+          0
+        ]
+      },
+      "alertas_falsas_por_hora": 8.158508158508157,
+      "dia": "18-22 sep",
+      "umbral": 1.3383227949670358,
+      "fallas_reales": [
+        13,
+        46
+      ]
+    },
+    {
+      "lecturas": 927,
+      "anomalas": 123,
+      "precision": 0.7236842105263158,
+      "recall": 0.44715447154471544,
+      "f1": 0.5527638190954773,
+      "roc_auc": 0.8258099745176555,
+      "falsos_positivos_pct": 2.6119402985074625,
+      "matriz_confusion": [
+        [
+          783,
+          21
+        ],
+        [
+          68,
+          55
+        ]
+      ],
+      "recall_por_tipo": {
+        "pico": 1.0,
+        "sobrecalentamiento": 0.3,
+        "foco_sin_calentar": 0.0,
+        "humedad": 1.0,
+        "sensor": 1.0
+      },
+      "eventos_detectados": {
+        "pico": [
+          8,
+          8
+        ],
+        "sobrecalentamiento": [
+          5,
+          8
+        ],
+        "foco_sin_calentar": [
+          0,
+          1
+        ],
+        "humedad": [
+          2,
+          2
+        ],
+        "sensor": [
+          1,
+          1
+        ]
+      },
+      "alertas_falsas_por_hora": 17.22158438576349,
+      "dia": "2 oct",
+      "umbral": 1.239736504445248,
+      "fallas_reales": [
+        0,
+        0
+      ]
+    },
+    {
+      "lecturas": 248,
+      "anomalas": 63,
+      "precision": 1.0,
+      "recall": 0.23809523809523808,
+      "f1": 0.38461538461538464,
+      "roc_auc": 0.7325611325611325,
+      "falsos_positivos_pct": 0.0,
+      "matriz_confusion": [
+        [
+          185,
+          0
+        ],
+        [
+          48,
+          15
+        ]
+      ],
+      "recall_por_tipo": {
+        "pico": 1.0,
+        "sobrecalentamiento": 0.2,
+        "foco_sin_calentar": 0.0,
+        "sensor": 1.0
+      },
+      "eventos_detectados": {
+        "pico": [
+          3,
+          3
+        ],
+        "sobrecalentamiento": [
+          1,
+          3
+        ],
+        "foco_sin_calentar": [
+          0,
+          2
+        ],
+        "humedad": [
+          0,
+          0
+        ],
+        "sensor": [
+          1,
+          1
+        ]
+      },
+      "alertas_falsas_por_hora": 0.0,
+      "dia": "23 sep",
+      "umbral": 1.430216865538152,
+      "fallas_reales": [
+        0,
+        0
+      ]
+    },
+    {
+      "lecturas": 1678,
+      "anomalas": 413,
+      "precision": 0.9727272727272728,
+      "recall": 0.25907990314769974,
+      "f1": 0.4091778202676864,
+      "roc_auc": 0.8174563829685422,
+      "falsos_positivos_pct": 0.23715415019762848,
+      "matriz_confusion": [
+        [
+          1262,
+          3
+        ],
+        [
+          306,
+          107
+        ]
+      ],
+      "recall_por_tipo": {
+        "pico": 0.975,
+        "sobrecalentamiento": 0.135,
+        "foco_sin_calentar": 0.07692307692307693,
+        "humedad": 1.0,
+        "sensor": 1.0
+      },
+      "eventos_detectados": {
+        "pico": [
+          19,
+          20
+        ],
+        "sobrecalentamiento": [
+          8,
+          20
+        ],
+        "foco_sin_calentar": [
+          1,
+          12
+        ],
+        "humedad": [
+          4,
+          4
+        ],
+        "sensor": [
+          2,
+          2
+        ]
+      },
+      "alertas_falsas_por_hora": 1.0945576162967467,
+      "dia": "25-26 sep",
+      "umbral": 1.2670563802827766,
+      "fallas_reales": [
+        3,
+        3
+      ]
+    }
+  ],
+  "modelo_final": {
+    "lecturas": 6802,
+    "umbral": 1.1671751735110962
+  }
+}

@@ -1,0 +1,245 @@
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from ..database import get_db
+from ..models import (
+    ActuatorState,
+    Alarm,
+    Egg,
+    Incubator,
+    IncubatorConfig,
+    Sensor,
+    Technician,
+    TelemetryReading,
+)
+from ..schemas import (
+    ActuatorRead,
+    AlarmRead,
+    DashboardState,
+    IncubatorConfigRead,
+    IncubatorCreate,
+    IncubatorRead,
+    Occupancy,
+    SensorRead,
+    SensorUpdate,
+)
+from ..security import (
+    ensure_incubator_access,
+    get_current_technician,
+    require_admin,
+    technician_incubator_ids,
+)
+
+router = APIRouter(
+    prefix="/incubators",
+    tags=["incubators"],
+    dependencies=[Depends(get_current_technician)],
+)
+
+
+def get_incubator_or_404(db: Session, incubator_id: int) -> Incubator:
+    incubator = db.get(Incubator, incubator_id)
+    if incubator is None:
+        raise HTTPException(status_code=404, detail="Incubator not found")
+    return incubator
+
+
+@router.post("", response_model=IncubatorRead, status_code=status.HTTP_201_CREATED)
+def create_incubator(
+    payload: IncubatorCreate,
+    db: Session = Depends(get_db),
+    _admin: Technician = Depends(require_admin),
+) -> Incubator:
+    incubator = Incubator(**payload.model_dump())
+    incubator.config = IncubatorConfig()
+    db.add(incubator)
+    try:
+        db.flush()
+        for kind in ("heater", "fan", "servo", "buzzer"):
+            db.add(ActuatorState(incubator_id=incubator.id, kind=kind))
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=409, detail="Incubator code already exists"
+        ) from exc
+    db.refresh(incubator)
+    return incubator
+
+
+@router.get("", response_model=list[IncubatorRead])
+def list_incubators(
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> list[Incubator]:
+    query = select(Incubator)
+    if technician.role != "admin":
+        query = query.where(Incubator.id.in_(technician_incubator_ids(db, technician)))
+    return list(db.scalars(query.order_by(Incubator.code)))
+
+
+@router.get("/{incubator_id}", response_model=IncubatorRead)
+def get_incubator(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> Incubator:
+    ensure_incubator_access(db, technician, incubator_id)
+    return get_incubator_or_404(db, incubator_id)
+
+
+@router.get("/{incubator_id}/config", response_model=IncubatorConfigRead)
+def get_config(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> IncubatorConfig:
+    ensure_incubator_access(db, technician, incubator_id)
+    return get_incubator_or_404(db, incubator_id).config
+
+
+@router.get("/{incubator_id}/sensors", response_model=list[SensorRead])
+def list_sensors(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> list[Sensor]:
+    ensure_incubator_access(db, technician, incubator_id)
+    get_incubator_or_404(db, incubator_id)
+    return list(
+        db.scalars(
+            select(Sensor)
+            .where(Sensor.incubator_id == incubator_id)
+            .order_by(Sensor.code)
+        )
+    )
+
+
+@router.patch("/{incubator_id}/sensors/{sensor_id}", response_model=SensorRead)
+def update_sensor(
+    payload: SensorUpdate,
+    incubator_id: int,
+    sensor_id: int,
+    db: Session = Depends(get_db),
+    _admin: Technician = Depends(require_admin),
+) -> Sensor:
+    sensor = db.scalar(
+        select(Sensor).where(
+            Sensor.id == sensor_id, Sensor.incubator_id == incubator_id
+        )
+    )
+    if sensor is None:
+        raise HTTPException(status_code=404, detail="Sensor not found")
+    sensor.is_active = payload.is_active
+    db.commit()
+    db.refresh(sensor)
+    return sensor
+
+
+@router.get("/{incubator_id}/actuators", response_model=list[ActuatorRead])
+def list_actuators(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> list[ActuatorState]:
+    ensure_incubator_access(db, technician, incubator_id)
+    get_incubator_or_404(db, incubator_id)
+    return list(
+        db.scalars(
+            select(ActuatorState)
+            .where(ActuatorState.incubator_id == incubator_id)
+            .order_by(ActuatorState.kind)
+        )
+    )
+
+
+@router.get("/{incubator_id}/alarms", response_model=list[AlarmRead])
+def list_alarms(
+    incubator_id: int,
+    active_only: bool = False,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> list[Alarm]:
+    ensure_incubator_access(db, technician, incubator_id)
+    get_incubator_or_404(db, incubator_id)
+    query = select(Alarm).where(Alarm.incubator_id == incubator_id)
+    if active_only:
+        query = query.where(Alarm.resolved_at.is_(None))
+    return list(
+        db.scalars(
+            query.order_by(Alarm.occurred_at.desc()).limit(min(max(limit, 1), 500))
+        )
+    )
+
+
+@router.post("/{incubator_id}/alarms/{alarm_id}/acknowledge", response_model=AlarmRead)
+def acknowledge_alarm(
+    incubator_id: int,
+    alarm_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> Alarm:
+    ensure_incubator_access(db, technician, incubator_id)
+    alarm = db.scalar(
+        select(Alarm).where(Alarm.id == alarm_id, Alarm.incubator_id == incubator_id)
+    )
+    if alarm is None:
+        raise HTTPException(status_code=404, detail="Alarm not found")
+    alarm.acknowledged_at = datetime.now(UTC)
+    alarm.acknowledged_by_id = technician.id
+    db.commit()
+    db.refresh(alarm)
+    return alarm
+
+
+@router.get("/{incubator_id}/state", response_model=DashboardState)
+def dashboard_state(
+    incubator_id: int,
+    db: Session = Depends(get_db),
+    technician: Technician = Depends(get_current_technician),
+) -> DashboardState:
+    ensure_incubator_access(db, technician, incubator_id)
+    incubator = get_incubator_or_404(db, incubator_id)
+    latest = db.scalar(
+        select(TelemetryReading)
+        .where(TelemetryReading.incubator_id == incubator_id)
+        .order_by(TelemetryReading.recorded_at.desc())
+    )
+    occupied = (
+        db.scalar(
+            select(func.count(Egg.id)).where(
+                Egg.incubator_id == incubator_id, Egg.status == "incubating"
+            )
+        )
+        or 0
+    )
+    return DashboardState(
+        incubator=IncubatorRead.model_validate(incubator),
+        config=IncubatorConfigRead.model_validate(incubator.config),
+        latest=latest,
+        occupancy=Occupancy(
+            capacity=incubator.capacity,
+            occupied=occupied,
+            available=incubator.capacity - occupied,
+        ),
+        sensors=list(
+            db.scalars(select(Sensor).where(Sensor.incubator_id == incubator_id))
+        ),
+        actuators=list(
+            db.scalars(
+                select(ActuatorState).where(ActuatorState.incubator_id == incubator_id)
+            )
+        ),
+        active_alarms=list(
+            db.scalars(
+                select(Alarm)
+                .where(Alarm.incubator_id == incubator_id, Alarm.resolved_at.is_(None))
+                .order_by(Alarm.occurred_at.desc())
+            )
+        ),
+    )

@@ -1,0 +1,2106 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Estado en vivo de la incubadora SmartEgg alimentado por el broker MQTT.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 900,
+      "type": "marcusolsson-dynamictext-panel",
+      "title": "",
+      "transparent": true,
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "renderMode": "allRows",
+        "content": "<div class=\"se-header\" data-se-frameless><svg viewBox=\"0 0 64 72\" fill=\"none\" aria-hidden=\"true\"><path d=\"M32 6C43.5 6 53 26.4 53 44C53 56.6 43.5 66 32 66C20.5 66 11 56.6 11 44C11 26.4 20.5 6 32 6Z\" stroke=\"#d7eef0\" stroke-width=\"4\"/><g stroke=\"#5fe3e8\" stroke-width=\"4.4\" stroke-linecap=\"round\"><path d=\"M24.5 30h15\" stroke-opacity=\".34\"/><path d=\"M20 38.5h24\" stroke-opacity=\".56\"/><path d=\"M17 47h30\" stroke-opacity=\".82\"/><path d=\"M19.5 55h25\"/></g></svg><div class=\"se-brand\"><h1>Smart<b>Egg</b> · Observatorio</h1><p>Tiempo real por MQTT · Nodo NODE-01</p></div><nav class=\"se-nav\" aria-label=\"Dashboards SmartEgg\"><a href=\"/d/smartegg-centro\">Centro de control</a><a href=\"/d/smartegg-realtime\" aria-current=\"page\">Tiempo real</a><a href=\"/d/smartegg-historical\">Histórico</a><a href=\"/d/smartegg-energia\">Consumo</a></nav></div>",
+        "defaultContent": "<div class=\"se-header\" data-se-frameless><svg viewBox=\"0 0 64 72\" fill=\"none\" aria-hidden=\"true\"><path d=\"M32 6C43.5 6 53 26.4 53 44C53 56.6 43.5 66 32 66C20.5 66 11 56.6 11 44C11 26.4 20.5 6 32 6Z\" stroke=\"#d7eef0\" stroke-width=\"4\"/><g stroke=\"#5fe3e8\" stroke-width=\"4.4\" stroke-linecap=\"round\"><path d=\"M24.5 30h15\" stroke-opacity=\".34\"/><path d=\"M20 38.5h24\" stroke-opacity=\".56\"/><path d=\"M17 47h30\" stroke-opacity=\".82\"/><path d=\"M19.5 55h25\"/></g></svg><div class=\"se-brand\"><h1>Smart<b>Egg</b> · Observatorio</h1><p>Tiempo real por MQTT · Nodo NODE-01</p></div><nav class=\"se-nav\" aria-label=\"Dashboards SmartEgg\"><a href=\"/d/smartegg-centro\">Centro de control</a><a href=\"/d/smartegg-realtime\" aria-current=\"page\">Tiempo real</a><a href=\"/d/smartegg-historical\">Histórico</a><a href=\"/d/smartegg-energia\">Consumo</a></nav></div>",
+        "editor": {
+          "format": "auto",
+          "language": "html"
+        },
+        "styles": "\nfont-family: 'Space Grotesk', Inter, sans-serif;\ncolor: #d1e1e5;\nheight: 100%;\n.se-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }\n.se-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #8fa3ad; }\n.se-ok { --tone: #6fe2a0; }\n.se-heat { --tone: #f0a44a; }\n.se-alarm { --tone: #ff5a4d; }\n.se-cyan { --tone: #5fe3e8; }\n.se-idle { --tone: #5d6b73; }\n@keyframes se-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }\n@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }\n\n.se-header { display: flex; align-items: center; gap: 18px; height: 100%; padding: 4px 6px; }\n.se-header svg { width: 40px; height: 46px; flex: none; filter: drop-shadow(0 0 14px rgba(95,227,232,.25)); }\n.se-brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }\n.se-brand h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: .01em; color: #e8f6f7; line-height: 1.1; }\n.se-brand h1 b { color: #5fe3e8; font-weight: 600; }\n.se-brand p { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8fa3ad; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n.se-nav { margin-left: auto; display: flex; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; }\n.se-nav a { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #9db2b8; text-decoration: none; padding: 6px 10px; white-space: nowrap; border: 1px solid rgba(160,190,205,.18); border-radius: 999px; background: rgba(12,16,21,.6); transition: border-color .15s, color .15s; }\n.se-nav a:hover { color: #e8f6f7; border-color: rgba(95,227,232,.5); }\n.se-nav a[aria-current=\"page\"] { color: #05070a; background: #5fe3e8; border-color: #5fe3e8; font-weight: 500; }\n@media (max-width: 900px) { .se-nav { display: none; } }\n",
+        "helpers": "",
+        "afterRender": "",
+        "wrap": false,
+        "contentPartials": [],
+        "editors": [],
+        "externalStyles": [],
+        "status": ""
+      },
+      "targets": []
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 100,
+      "panels": [],
+      "title": "Estado del nodo",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/status · QoS 1 · retained · Last Will and Testament.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "online": {
+                  "index": 0,
+                  "text": "EN LÍNEA",
+                  "color": "#6fe2a0"
+                },
+                "offline": {
+                  "index": 1,
+                  "text": "DESCONECTADO",
+                  "color": "#ff5a4d"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "Esperando…"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 4
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^status$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/status"
+        }
+      ],
+      "title": "Nodo",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/sensores/temperatura · rango óptimo 37 – 38 °C · crítico desde 39 °C.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5fe3e8",
+                "value": null
+              },
+              {
+                "color": "#6fe2a0",
+                "value": 37
+              },
+              {
+                "color": "#f0c75e",
+                "value": 38
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 39
+              }
+            ]
+          },
+          "unit": "celsius",
+          "decimals": 2,
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 4,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/sensores/temperatura"
+        }
+      ],
+      "title": "Temperatura",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/sensores/humedad · rango óptimo 50 – 65 %.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5fe3e8",
+                "value": null
+              },
+              {
+                "color": "#6fe2a0",
+                "value": 50
+              },
+              {
+                "color": "#f0c75e",
+                "value": 65
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 75
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 1,
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 9,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/sensores/humedad"
+        }
+      ],
+      "title": "Humedad",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Final de carrera de la puerta reportado en la telemetría consolidada.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "false": {
+                  "index": 0,
+                  "text": "CERRADA",
+                  "color": "#6fe2a0"
+                },
+                "true": {
+                  "index": 1,
+                  "text": "ABIERTA",
+                  "color": "#f0a44a"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 14,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^door_open$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/telemetria"
+        }
+      ],
+      "title": "Puerta",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Posiciones ocupadas y libres de la bandeja según la última trama publicada.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "max": 4,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "occupied_slots"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Ocupadas"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#6fe2a0",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "available_slots"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Libres"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#5d6b73",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "displayMode": "lcd",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/telemetria"
+        }
+      ],
+      "title": "Ocupación de la bandeja",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(Time|occupied_slots|available_slots)$"
+            }
+          }
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 106,
+      "panels": [],
+      "title": "Condiciones en vivo",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Última lectura del DHT11. Marcas: óptimo 37 – 38 °C, crítico desde 39 °C.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 41,
+          "min": 34,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5fe3e8",
+                "value": null
+              },
+              {
+                "color": "#6fe2a0",
+                "value": 37
+              },
+              {
+                "color": "#f0c75e",
+                "value": 38
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 39
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 4,
+        "x": 0,
+        "y": 10
+      },
+      "id": 6,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/sensores/temperatura"
+        }
+      ],
+      "title": "Temperatura actual",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/sensores/temperatura. Banda verde: rango óptimo; zona roja: crítico. La serie se dibuja desde que se abre el dashboard.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#f0a44a",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed+area"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "min": 35,
+          "max": 40,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "#6fe2a0",
+                "value": 37
+              },
+              {
+                "color": "transparent",
+                "value": 38
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 39
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Temperatura"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 4,
+        "y": 10
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "min",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/sensores/temperatura"
+        }
+      ],
+      "title": "Temperatura en vivo",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(Time|value)$"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Última lectura del DHT11. Marcas: óptimo 50 – 65 %.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 90,
+          "min": 30,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5fe3e8",
+                "value": null
+              },
+              {
+                "color": "#6fe2a0",
+                "value": 50
+              },
+              {
+                "color": "#f0c75e",
+                "value": 65
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 75
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 4,
+        "x": 12,
+        "y": 10
+      },
+      "id": 8,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/sensores/humedad"
+        }
+      ],
+      "title": "Humedad actual",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/sensores/humedad. Banda verde: rango óptimo 50 – 65 %.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#5fe3e8",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 18,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed+area"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "min": 30,
+          "max": 90,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "#6fe2a0",
+                "value": 50
+              },
+              {
+                "color": "transparent",
+                "value": 65
+              },
+              {
+                "color": "#ff5a4d",
+                "value": 75
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Humedad"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 10
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "min",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/sensores/humedad"
+        }
+      ],
+      "title": "Humedad en vivo",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(Time|value)$"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 116,
+      "panels": [],
+      "title": "Actuadores y sistema",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/actuadores/estado · QoS 1 · retained. Resistencia de calefacción.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "true": {
+                  "index": 0,
+                  "text": "ENCENDIDO",
+                  "color": "#f0a44a"
+                },
+                "false": {
+                  "index": 1,
+                  "text": "APAGADO",
+                  "color": "#5d6b73"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 20
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^heater$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/actuadores/estado"
+        }
+      ],
+      "title": "Calefactor",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/actuadores/estado · QoS 1 · retained. Ventilador de extracción.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "true": {
+                  "index": 0,
+                  "text": "ENCENDIDO",
+                  "color": "#5fe3e8"
+                },
+                "false": {
+                  "index": 1,
+                  "text": "APAGADO",
+                  "color": "#5d6b73"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 20
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^fan$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/actuadores/estado"
+        }
+      ],
+      "title": "Ventilador",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/actuadores/estado · QoS 1 · retained. Alarma sonora del nodo.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "true": {
+                  "index": 0,
+                  "text": "SONANDO",
+                  "color": "#f0a44a"
+                },
+                "false": {
+                  "index": 1,
+                  "text": "SILENCIO",
+                  "color": "#5d6b73"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 20
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^buzzer$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/actuadores/estado"
+        }
+      ],
+      "title": "Buzzer",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/actuadores/estado · QoS 1 · retained. Ángulo actual del servomotor de volteo.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#8968d4",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "degree",
+          "decimals": 0,
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 20
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^servo_angle$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/actuadores/estado"
+        }
+      ],
+      "title": "Bandeja",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Historia en vivo de actuadores, puerta, sensor y sistema desde que se abrió el dashboard.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineWidth": 0,
+            "spanNulls": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "heater"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Calefactor"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "true": {
+                        "index": 0,
+                        "text": "Encendido",
+                        "color": "#f0a44a"
+                      },
+                      "false": {
+                        "index": 1,
+                        "text": "Apagado",
+                        "color": "#1b242c"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fan"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Ventilador"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "true": {
+                        "index": 0,
+                        "text": "Encendido",
+                        "color": "#5fe3e8"
+                      },
+                      "false": {
+                        "index": 1,
+                        "text": "Apagado",
+                        "color": "#1b242c"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "buzzer"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Buzzer"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "true": {
+                        "index": 0,
+                        "text": "Sonando",
+                        "color": "#f0a44a"
+                      },
+                      "false": {
+                        "index": 1,
+                        "text": "Silencio",
+                        "color": "#1b242c"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "door_open"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Puerta"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "true": {
+                        "index": 0,
+                        "text": "Abierta",
+                        "color": "#f0a44a"
+                      },
+                      "false": {
+                        "index": 1,
+                        "text": "Cerrada",
+                        "color": "#1b242c"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sensor_ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensor DHT11"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "true": {
+                        "index": 0,
+                        "text": "OK",
+                        "color": "#1b242c"
+                      },
+                      "false": {
+                        "index": 1,
+                        "text": "Falla",
+                        "color": "#ff5a4d"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "system_enabled"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sistema"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "true": {
+                        "index": 0,
+                        "text": "Activo",
+                        "color": "#1b242c"
+                      },
+                      "false": {
+                        "index": 1,
+                        "text": "Pausado",
+                        "color": "#f0c75e"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 24
+      },
+      "id": 14,
+      "options": {
+        "alignValue": "center",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "showValue": "auto",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/actuadores/estado"
+        },
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "B",
+          "topic": "smartegg/${node_code}/telemetria"
+        }
+      ],
+      "title": "Línea de tiempo del sistema",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(Time|heater|fan|buzzer|door_open|sensor_ok|system_enabled)$"
+            }
+          }
+        }
+      ],
+      "type": "state-timeline"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Ángulo del servomotor de la bandeja reportado en cada trama de actuadores.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#8968d4",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "degree"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "servo_angle"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Ángulo"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 24
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/actuadores/estado"
+        }
+      ],
+      "title": "Posición de la bandeja",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(Time|servo_angle)$"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 129,
+      "panels": [],
+      "title": "Alarmas y accesos",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/alarmas/critica · QoS 1 · retained. Al resolverse la alarma el backend publica un mensaje vacío y la tabla queda sin filas.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "kind"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Tipo"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "temperature_low": {
+                        "index": 0,
+                        "text": "Temperatura baja"
+                      },
+                      "temperature_high": {
+                        "index": 1,
+                        "text": "Temperatura alta"
+                      },
+                      "humidity_low": {
+                        "index": 2,
+                        "text": "Humedad baja"
+                      },
+                      "humidity_high": {
+                        "index": 3,
+                        "text": "Humedad alta"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "message"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Mensaje"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Valor"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "occurred_at"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Detectada"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "severity"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Severidad"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "info": {
+                        "index": 0,
+                        "text": "Informativa",
+                        "color": "#5fe3e8"
+                      },
+                      "warning": {
+                        "index": 1,
+                        "text": "Advertencia",
+                        "color": "#f0c75e"
+                      },
+                      "critical": {
+                        "index": 2,
+                        "text": "Crítica",
+                        "color": "#ff5a4d"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "md",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/alarmas/critica"
+        }
+      ],
+      "title": "Alarma crítica",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "smartegg-mqtt"
+      },
+      "description": "Topic smartegg/${node_code}/acceso/eventos · QoS 1 · sin retención. Autorizaciones RFID, aperturas y cierres de la puerta.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "session_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sesión"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "operator_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Operador"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "recorded_at"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Fecha"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "event"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Evento"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "authorized": {
+                        "index": 0,
+                        "text": "Acceso autorizado",
+                        "color": "#6fe2a0"
+                      },
+                      "door_opened": {
+                        "index": 1,
+                        "text": "Puerta abierta",
+                        "color": "#f0a44a"
+                      },
+                      "door_closed": {
+                        "index": 2,
+                        "text": "Puerta cerrada",
+                        "color": "#5fe3e8"
+                      },
+                      "access_cancelled": {
+                        "index": 3,
+                        "text": "Sesión cancelada",
+                        "color": "#ff5a4d"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "method"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Método"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "rfid": {
+                        "index": 0,
+                        "text": "Tarjeta RFID",
+                        "color": "#5fe3e8"
+                      },
+                      "fingerprint": {
+                        "index": 1,
+                        "text": "Huella",
+                        "color": "#8968d4"
+                      },
+                      "key": {
+                        "index": 2,
+                        "text": "Llave",
+                        "color": "#f0a44a"
+                      },
+                      "password": {
+                        "index": 3,
+                        "text": "Contraseña"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "id": 17,
+      "options": {
+        "cellHeight": "md",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "smartegg-mqtt"
+          },
+          "refId": "A",
+          "topic": "smartegg/${node_code}/acceso/eventos"
+        }
+      ],
+      "title": "Eventos de acceso",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": [
+    "smartegg",
+    "mqtt",
+    "tiempo-real"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "NODE-01",
+          "value": "NODE-01"
+        },
+        "hide": 0,
+        "label": "Nodo",
+        "name": "node_code",
+        "options": [
+          {
+            "selected": true,
+            "text": "NODE-01",
+            "value": "NODE-01"
+          }
+        ],
+        "query": "NODE-01",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "timezone": "browser",
+  "title": "SmartEgg · Tiempo real",
+  "uid": "smartegg-realtime",
+  "version": 3,
+  "weekStart": ""
+}
